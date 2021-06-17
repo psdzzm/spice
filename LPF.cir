@@ -1,0 +1,48 @@
+LPF
+V1 N001 0 SINE(0 1 1e4) AC 1
+C1 N002 0 2e-11
+R1 N002 N001 1e3
+
+.control
+    save all
+    let mc_runs = 100
+  	let run = 0
+    set curplot=new          $ create a new plot
+	set scratch=$curplot     $ store its name to 'scratch'
+    set color0=white
+    let cout = unitvec(mc_runs)
+    let cutoff=unitvec(mc_runs)
+    setseed 10
+
+    dowhile run < mc_runs
+        alter C1 = gauss(2e-11, 0.05, 3)
+        alter R1 = gauss(1000,0.01,3)
+        show C1 : capacitance
+        ac dec 40 1e2 100e6
+
+        let vdb = db(v(N002))
+        meas ac ymax MAX v(N002)
+        let v3db = ymax/sqrt(2)
+        meas ac cut when v(N002)=v3db fall=last
+        let {$scratch}.cutoff[run] = cut
+
+        set run = $&run
+		set dt = $curplot
+		setplot $scratch
+
+        let vout{$run} = {$dt}.v(N002)
+        let cout[$run] = @c1[capacitance]
+        setplot $dt
+		let run = run + 1
+    end
+
+    *let index = sortorder(cout)
+
+    plot db({$scratch}.allv)
+    setplot $scratch
+    print cout cutoff
+    wrdata lpf cutoff
+
+.endc
+
+.end

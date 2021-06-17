@@ -1,0 +1,8 @@
+ Resistor: Simple linear resistor
+     device                    r1
+      model                     R
+ resistance                  1000
+ Capacitor: Fixed capacitor
+     device                    c1
+      model                     C
+capacitance                 2e-11

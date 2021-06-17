@@ -1,0 +1,20 @@
+
+No compatibility mode selected!
+
+
+Circuit: lpf
+
+
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+No. of Data Rows : 1
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+
+No. of Data Rows : 361
+ymax                =  1.000000e+00 at=  1.000000e+00
+fmax                =  1.000000e+00 with=  1.000000e+00
+cut                 =  5.121919e+06
+Note: No ".plot", ".print", or ".fourier" lines; no simulations run

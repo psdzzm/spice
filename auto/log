@@ -1,0 +1,12 @@
+
+No compatibility mode selected!
+
+
+Circuit: * d:\74133\onedrive - university of edinburgh\career\internship\spice\spice\rc3.asc
+
+Error on line 5 :
+  .tran 0.1
+TSTOP is invalid, must be greater than zero.
+    Simulation interrupted due to error!
+
+Note: No ".plot", ".print", or ".fourier" lines; no simulations run
