@@ -2,6 +2,9 @@
 import os
 import sys
 import time
+from timeit import default_timer as timer
+import numpy as np
+from matplotlib import pyplot as plt
 
 
 def rm(filename):
@@ -36,11 +39,11 @@ class C:
 class circuit:
     def __init__(self, filename):
         self.name = filename
-        self.startac, self.stopac, self.alter_c, self.alter_r = self.init()
         self.seed = int(time.time())
         self.mc_run = 1000
         self.tolc = 0.05
         self.tolr = 0.01
+
 
     def read(self):
         fileo, files = [], []
@@ -116,7 +119,7 @@ class circuit:
                 sys.exit(''.join(error_r))
 
         with open('out') as file_object:
-            startac, stopac = 0, 0
+            self.startac, self.stopac = 0, 0
             fileo, files = [], []
             for lines in file_object:
                 fileo.append(lines)
@@ -124,17 +127,17 @@ class circuit:
                 if 'fmax' in files[-1] and 'cut' in files[-1]:
                     fileo.append(file_object.readline())
                     files.append(fileo[-1].split())
-                    startac = files[-1][files[-2].index('fmax')]
-                    stopac = files[-1][files[-2].index('cut')]
+                    self.startac = files[-1][files[-2].index('fmax')]
+                    self.stopac = files[-1][files[-2].index('cut')]
                     break
-            if startac == 0 and stopac == 0:
+            if self.startac == 0 and self.stopac == 0:
                 sys.exit('Error! No cutoff frequecny!')
             else:
                 print('Check successfully! Running simulation.\n')
 
         with open('list') as file_object:
-            alter_r = []
-            alter_c = []
+            self.alter_r = []
+            self.alter_c = []
             fileo, files = [], []
             for lines in file_object:
                 row = lines.split()
@@ -148,30 +151,29 @@ class circuit:
                     for j in range(1, len(files[i])):
                         if '.' not in files[i][j]:
                             if files[i+2][0] == 'resistance':
-                                alter_r.append(R(files[i][j], files[i+2][j]))
+                                self.alter_r.append(R(files[i][j], files[i+2][j]))
                             elif files[i+2][0] == 'capacitance':
-                                alter_c.append(C(files[i][j], files[i+2][j]))
+                                self.alter_c.append(C(files[i][j], files[i+2][j]))
 
             # for i in range(len(alter_r)):
             #     print(alter_r[i].name,alter_r[i].r,'\n')
             # for i in range(len(alter_c)):
             #     print(alter_c[i].name,alter_c[i].c,'\n')
 
-            return startac, stopac, alter_c, alter_r
 
     def create_sp(self):
 
         control = [
-            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave out\n\tlet mc_runs = {mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave out\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
         loop = '\tdowhile run < mc_runs\n\t\t'
 
         for i in range(len(self.alter_c)):
             loop = loop+'alter ' + \
-                self.alter_c[i].name+'=gauss('+self.alter_c[i].c+f',{tolc},3)\n\t\t'
+                self.alter_c[i].name+'=gauss('+self.alter_c[i].c+f',{self.tolc},3)\n\t\t'
         for i in range(len(self.alter_r)):
             loop = loop+'alter ' + \
                 self.alter_r[i].name + \
-                '=gauss('+self.alter_r[i].r+f',{tolr},3)\n\t\t'
+                '=gauss('+self.alter_r[i].r+f',{self.tolr},3)\n\t\t'
 
         control.append(
             f'ac dec 40 {float(self.startac)/10} {float(self.stopac)*10}\n\n\t\tmeas ac ymax MAX v(out)\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v(out)=v3db fall=last\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc cutoff\n.endc\n')
@@ -181,3 +183,53 @@ class circuit:
             file_object.write(loop)
             file_object.write(control[1])
             file_object.write('\n.end')
+
+
+    def ngspice():
+        rm('fc')
+        start=timer()
+        os.system('ngspice -b run_control.sp -o run_log')
+        print('Time elapsed:', timer()-start,'s')
+
+
+    def resultdata(self):
+        with open('fc', "r") as fileobject:
+            lines=fileobject.readlines()
+        file1=[]
+        row=[]
+        for line in lines:
+            row=line.split()
+            file1.append(row)
+
+        # col1=[]
+        col2=[]
+        for row0 in file1:
+            # col1.append(row0[0])
+            col2.append(row0[1])
+
+        # del col1[0]
+        del col2[0]
+
+        length=len(col2)
+        # cout=np.zeros(length)
+        self.cutoff=np.zeros(length)
+
+        for i in range(length):
+            # cout[i]=float(col1[i])
+            self.cutoff[i]=float(col2[i])
+
+        # index=cutoff.argsort()
+        cutoff=list(set(self.cutoff))
+        length=len(self.cutoff)
+        self.cutoff.sort()
+
+        xaxis=np.linspace(self.cutoff[0],self.cutoff[-1],length)
+        self.p=np.arange(1,1+length)/length
+
+    def plotcdf(self):
+        plt.title("Cdf of Cutoff Frequency")
+        plt.xlabel("Cutoff Frequency/Hz")
+        plt.ylabel("Cdf")
+        plt.grid()
+        plt.plot(self.cutoff,self.p)
+        plt.show()
