@@ -310,7 +310,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 if flag:
                     ret=QtWidgets.QMessageBox.critical(self,'Error',message,QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
                     if ret==QtWidgets.QMessageBox.Open:
-                        fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file','', "Spice Netlists (*.cir)")
+                        fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file','', "Model Files (*)")
                         if fname:
                             print(fname)
                     return

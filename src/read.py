@@ -112,7 +112,7 @@ class circuit:
                         return "Error! No 'out' port!",flag
                     elif fileo[i] == 'Error: measure  cut  (WHEN) : out of interval\n':
                         return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.",flag
-                    elif 'unknown subckt' in fileo[i]:
+                    elif ('unknown subckt' in fileo[i]) or ('Could not find include file' in fileo[i]):
                         subckt=fileo[i].split()[-1].upper()
                         fileo[i]=fileo[i]+f'Please provide the simulation model file for {subckt}'
                         flag=True
