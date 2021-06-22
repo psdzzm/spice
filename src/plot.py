@@ -297,11 +297,13 @@ class plotGUI(QtWidgets.QMainWindow):
         fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file','../CirFile', "Spice Netlists (*.cir)")
         if fname:
             name=fname.split('/')[-1]
-            print(os.getcwd())
             shutil.copyfile(fname,os.getcwd()+f'/{name}')
+
+            os.chdir(os.path.dirname(fname))
             self.Cir=read.circuit(name)
 
             message=self.Cir.read()
+
             if message:
                 QtWidgets.QMessageBox.critical(self,'Error',message)
                 return

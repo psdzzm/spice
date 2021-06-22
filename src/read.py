@@ -1,5 +1,6 @@
 # Read Circuit File
 import os
+import shutil
 import sys
 import time
 import numpy as np
@@ -48,6 +49,8 @@ class circuit:
         self.tolr = 0.01
         self.adjust = False
 
+        self.workpath='/home/zyc/Desktop/projects/circuit/Workspace/lib/'
+
 
     def read(self):
         fileo, files = [], []
@@ -59,6 +62,12 @@ class circuit:
                 row = lines.split()
                 if row != [] and row[0].lower() not in matches and '.' in row[0].lower():
                     continue
+                elif row!=[] and row[0].lower()=='.include':
+                    path2check=self.workpath+row[1].split('/')[-1]
+                    if (not os.path.isfile(path2check)) and os.path.isfile(row[1]):
+                        shutil.copyfile(row[1],path2check)
+                    lines='.include lib/'+row[1].split('/')[-1]
+
                 fileo.append(lines)
                 files.append(row)
 
@@ -75,6 +84,8 @@ class circuit:
 
         if not stop2:
             return "No 'end' line!"
+
+        os.chdir('/home/zyc/Desktop/projects/circuit/Workspace/')
 
         control = '\n.control\n\tSAVE out\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut\n.endc\n'
         with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b:
