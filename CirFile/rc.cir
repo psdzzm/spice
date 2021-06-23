@@ -1,0 +1,8 @@
+* D:\74133\OneDrive - University of Edinburgh\Career\Internship\Spice\Spice\rc3.asc
+V1 N001 0 SINE(0 1 50) AC 1
+R1 out N001 1 $ tol=5
+C1 out 0 1
+.tran 0.1
+.step param X 10 20 1
+.backanno
+.end

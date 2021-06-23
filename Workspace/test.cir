@@ -1,0 +1,26 @@
+TIA
+I1 0 N002 SINE(0 1e-6 3e6) AC 1
+C1 N002 0 2p
+XU1 0 N002 V+ V- out LM6171A/NS
+V1 V+ 0 15
+V2 V- 0 -15
+R1 N002 out 39K
+C2 out N002 0.7p
+.include lib/usr/LM6171A
+
+
+.control
+	SAVE out
+	options appendwrite wr_singlescale
+	show r : resistance , c : capacitance > list
+	OP
+	wrdata out out
+	ac dec 40 1 1G
+	meas ac ymax MAX v(out)
+	meas ac fmax MAX_AT v(out)
+	let v3db = ymax/sqrt(2)
+	meas ac cut when v(out)=v3db fall=last
+	wrdata out fmax cut
+.endc
+
+.end
