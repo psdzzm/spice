@@ -169,7 +169,6 @@ class plotGUI(QtWidgets.QMainWindow):
         else:
             result = self.fit(fc)
 
-        print(result)
         self.presult.setText(f'Result:{np.round(result,4)}')
 
     def postinit(self):
@@ -187,7 +186,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
         try:
             for i in reversed(range(self.scroll.count())):
-                print(i)
                 self.scroll.itemAt(i).widget().deleteLater()
         except:
             self.scroll = QtWidgets.QVBoxLayout(self.rightwidget)
@@ -309,16 +307,25 @@ class plotGUI(QtWidgets.QMainWindow):
                 return
             else:
                 message,flag=self.Cir.init()
-                if flag:
-                    ret=QtWidgets.QMessageBox.critical(self,'Error',message,QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
-                    if ret==QtWidgets.QMessageBox.Open:
-                        fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file','', "Model Files (*)")
-                        if fname:
-                            print(fname)
-                    return
-                elif message:
-                    QtWidgets.QMessageBox.critical(self,'Error',message)
-                    return
+                while True:
+                    if flag:
+                            ret=QtWidgets.QMessageBox.critical(self,'Error',message,QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
+
+                            if ret==QtWidgets.QMessageBox.Open:
+                                includefile,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Select file for '+self.Cir.subckt,'', "Model Files (*)")
+                                if includefile:
+                                    shutil.copyfile(includefile,os.getcwd()+'/lib/'+includefile.split('/')[-1].split('.')[0])
+                                    print('Copy '+includefile+' to '+os.getcwd()+'/lib/')
+                                    message,flag=self.Cir.fixinclude(includefile.split('/')[-1].split('.')[0])
+                            else:
+                                return
+
+                    elif message:
+                        QtWidgets.QMessageBox.critical(self,'Error',message)
+                        return
+
+                    else:
+                        break
 
             self.Cir.mc_runs,ok=QtWidgets.QInputDialog().getInt(self,'Run Time','Run Time',100,1)
             if not ok:
@@ -335,16 +342,15 @@ class plotGUI(QtWidgets.QMainWindow):
     def start_process(self,finishmode,runmode=0):
         if self.p is None:  # No process running.
             # self.message("Executing process")
-            print(os.getcwd())
             self.p = QProcess()
             # self.p.readyReadStandardOutput.connect(self.handle_stdout)
             self.p.finished.connect(lambda: self.finishrun(finishmode))
 
-            self.process=self.newGui()
+            self.process=self.processGui()
 
             self.p.start("python3.9",['../src/runspice.py',f'-{runmode}'])
 
-    def newGui(self):
+    def processGui(self):
         self.dialog = processing()
         self.dialog.rejected.connect(self.kill)
         self.dialog.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -414,8 +420,6 @@ class plotGUI(QtWidgets.QMainWindow):
         self.x, self.y, self.Cir._col2 = [], [], []
         self.calctext.setPlaceholderText('0')
         self.presult.setText('Result: 1')
-
-
 
 
 

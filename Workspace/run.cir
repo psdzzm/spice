@@ -6,6 +6,8 @@ V1 V+ 0 15
 V2 V- 0 -15
 R1 N002 out 39K
 C2 out N002 0.7p
-.include lib/LM6171A.txt
+.include lib/aLM6171A
+.include lib/escape
+
 
 .end
