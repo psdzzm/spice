@@ -8,10 +8,10 @@
 	set curplot=new          $ create a new plot
 	set scratch=$curplot     $ store its name to 'scratch'
 	let cutoff=unitvec(mc_runs)
-	setseed 1624483532
+	setseed 1624491257
 
 	dowhile run < mc_runs
-		alter c1=gauss(2e-12,0.05,3)
+		alter c1=gauss(2e-12,0.95,3)
 		alter c2=gauss(7e-13,0.05,3)
 		alter r1=gauss(39000,0.01,3)
 		ac dec 40 2371374.0 387687500.0

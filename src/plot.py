@@ -360,6 +360,10 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def configCreate(self):
         self.Cir.mc_runs=self.configGUI.totaltime.text()
+        for i in range(self.Cir.lengthc):
+            self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
+        for i in range(self.Cir.lengthr):
+            self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
         self.Cir.create_sp()
         self.Cir.create_wst()
         self.start_process('Open', 2)
@@ -489,7 +493,7 @@ class config(QtWidgets.QDialog):
                 f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
             self.Ctol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetc)
             self.Ctol[i].setValue(self.Cir.alter_c[i].tol)
-            # self.Ctol[i].valueChanged.connect(self.tolcolor)
+            self.Ctol[i].valueChanged.connect(self.tolcolor)
             self.Ctol[i].setSingleStep(0.01)
             self.Ctol[i].setMaximum(0.9999)
             self.Ctol[i].setDecimals(4)
@@ -520,7 +524,7 @@ class config(QtWidgets.QDialog):
                 f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
             self.Rtol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetr)
             self.Rtol[i].setValue(self.Cir.alter_r[i].tol)
-            # self.Rtol[i].valueChanged.connect(self.tolcolor)
+            self.Rtol[i].valueChanged.connect(self.tolcolor)
             self.Rtol[i].setSingleStep(0.01)
             self.Rtol[i].setMaximum(0.9999)
             self.Rtol[i].setDecimals(4)
@@ -539,3 +543,16 @@ class config(QtWidgets.QDialog):
         self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
         self.tab2.setLayout(self.scroll)
+
+    def tolcolor(self):
+        self.Cir.adjust = True
+        for i in range(self.Cir.lengthc):
+            if self.Ctol[i].value() != self.Cir.alter_c[i].tol:
+                self.Ctol[i].setStyleSheet("color: red")
+            else:
+                self.Ctol[i].setStyleSheet("color: black")
+        for i in range(self.Cir.lengthr):
+            if self.Rtol[i].value() != self.Cir.alter_r[i].tol:
+                self.Rtol[i].setStyleSheet("color: red")
+            else:
+                self.Rtol[i].setStyleSheet("color: black")
