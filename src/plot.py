@@ -79,7 +79,7 @@ class plotGUI(QtWidgets.QMainWindow):
         os.chdir('../Workspace')
         self.setWindowTitle("Tolerance Analysis Tool")
 
-        self . addToolBar(NavigationToolbar(self . MplWidget . canvas,  self))
+        self.addToolBar(NavigationToolbar(self.MplWidget.canvas,self))
 
         self.onlyInt = QIntValidator()
         self.addtimetext.setValidator(self.onlyInt)
@@ -214,7 +214,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.scroll.addWidget(self.scrollc)
 
         self.scrollr = QtWidgets.QScrollArea(self.rightwidget)
-        self.scrollr.setMaximumSize(QtCore.QSize(16777215, 150))
+        self.scrollr.setMaximumSize(QtCore.QSize(180, 150))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
 
         # self.Cir.lengthr = 10
@@ -337,22 +337,36 @@ class plotGUI(QtWidgets.QMainWindow):
                     else:
                         break
 
-            self.Cir.mc_runs, ok = QtWidgets.QInputDialog().getInt(
-                self, 'Run Time', 'Run Time', 100, 1)  # TODO:New GUI for input config
-            if not ok:
-                return
+            # self.Cir.mc_runs, ok = QtWidgets.QInputDialog().getInt(self, 'Run Time', 'Run Time', 100, 1)  # TODO:New GUI for input config
 
-            self.Cir.create_sp()
-            self.Cir.create_wst()
+            self.configGUI=config(self.Cir)
 
-            self.start_process('Open', 2)
+            self.configGUI.totaltime.setValidator(self.onlyInt)
+
+            self.configGUI.MplWidget.figure.clear()
+
+            self.configGUI.ax = self.configGUI.MplWidget.figure.add_subplot(111)
+            self.configGUI.ax.set_xscale('log')
+            self.configGUI.line1 = self.configGUI.ax.plot(self.Cir.initx, self.Cir.inity)
+            self.configGUI.ax.set_title(f"Default AC Analysis of {self.Cir.name}")
+            self.configGUI.ax.grid()
+            self.configGUI.ax.set_xlabel('Cutoff Frequency/Hz')
+            self.configGUI.ax.set_ylabel('vdb')
+
+            self.configGUI.accepted.connect(self.configCreate)
 
         else:
             return
 
+    def configCreate(self):
+        self.Cir.mc_runs=self.configGUI.totaltime.text()
+        self.Cir.create_sp()
+        self.Cir.create_wst()
+        self.start_process('Open', 2)
+
+
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.
-            # self.message("Executing process")
             self.p = QProcess()
             # self.p.readyReadStandardOutput.connect(self.handle_stdout)
             self.p.finished.connect(lambda: self.finishrun(finishmode))
@@ -364,8 +378,6 @@ class plotGUI(QtWidgets.QMainWindow):
     def processGui(self):
         self.dialog = processing()
         self.dialog.rejected.connect(self.kill)
-        self.dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.dialog.show()
 
     def kill(self):
         if self.p:
@@ -442,11 +454,88 @@ class processing(QtWidgets.QDialog):
         super().__init__()
         uic.loadUi('../src/processing.ui', self)
         self.setWindowTitle('Processing')
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.show()
 
 
 class config(QtWidgets.QDialog):
 
-    def __init__(self):
+    def __init__(self,Cir):
         super().__init__()
+
+        self.Cir=Cir
         uic.loadUi('../src/config.ui', self)
+        self.tab2UI()
+        self.bar=NavigationToolbar(self.MplWidget.canvas,self.widget)
         self.setWindowTitle('Configuration')
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.show()
+
+
+    def tab2UI(self):
+        self.scroll = QtWidgets.QVBoxLayout()
+
+        self.scrollc = QtWidgets.QScrollArea()
+        self.scrollc.setMaximumSize(QtCore.QSize(250, 250))
+        self.layoutWidgetc = QtWidgets.QWidget(self.scrollc)
+
+        self.C = ['']*self.Cir.lengthc
+        self.Ctol = ['']*self.Cir.lengthc
+        self.formLayoutc = QtWidgets.QFormLayout(self.layoutWidgetc)
+        for i in range(self.Cir.lengthc):
+            self.C[i] = QtWidgets.QLabel(
+                f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
+            self.Ctol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetc)
+            self.Ctol[i].setValue(self.Cir.alter_c[i].tol)
+            # self.Ctol[i].valueChanged.connect(self.tolcolor)
+            self.Ctol[i].setSingleStep(0.01)
+            self.Ctol[i].setMaximum(0.9999)
+            self.Ctol[i].setDecimals(4)
+            self.Ctol[i].setMaximumWidth(85)
+            self.formLayoutc.setWidget(
+                i+1, QtWidgets.QFormLayout.LabelRole, self.C[i])
+            self.formLayoutc.setWidget(
+                i+1, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
+
+        self.titleC = QtWidgets.QLabel('Capacitor', self.layoutWidgetc)
+        self.titleC.setAlignment(QtCore.Qt.AlignCenter)
+        self.formLayoutc.setWidget(
+            0, QtWidgets.QFormLayout.SpanningRole, self.titleC)
+        self.scrollc.setWidget(self.layoutWidgetc)
+        self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
+        self.scroll.addWidget(self.scrollc)
+
+        self.scrollr = QtWidgets.QScrollArea()
+        self.scrollr.setMaximumSize(QtCore.QSize(250, 250))
+        self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
+
+        # self.Cir.lengthr = 10
+        self.R = ['']*self.Cir.lengthr
+        self.Rtol = ['']*self.Cir.lengthr
+        self.formLayoutr = QtWidgets.QFormLayout(self.layoutWidgetr)
+        for i in range(self.Cir.lengthr):
+            self.R[i] = QtWidgets.QLabel(
+                f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
+            self.Rtol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetr)
+            self.Rtol[i].setValue(self.Cir.alter_r[i].tol)
+            # self.Rtol[i].valueChanged.connect(self.tolcolor)
+            self.Rtol[i].setSingleStep(0.01)
+            self.Rtol[i].setMaximum(0.9999)
+            self.Rtol[i].setDecimals(4)
+            self.Rtol[i].setMaximumWidth(85)
+            self.formLayoutr.setWidget(
+                i+1, QtWidgets.QFormLayout.LabelRole, self.R[i])
+            self.formLayoutr.setWidget(
+                i+1, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
+        self.titleR = QtWidgets.QLabel('Resistor', self.layoutWidgetr)
+        self.titleR.setAlignment(QtCore.Qt.AlignCenter)
+        self.formLayoutr.setWidget(
+            0, QtWidgets.QFormLayout.SpanningRole, self.titleR)
+        self.scrollr.setWidget(self.layoutWidgetr)
+        self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
+        self.scroll.addWidget(self.scrollr)
+        self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+
+        self.tab2.setLayout(self.scroll)

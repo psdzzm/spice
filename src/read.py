@@ -94,7 +94,7 @@ class circuit:
         if not stop2:
             return "No 'end' line!"
 
-        control = '\n.control\n\tSAVE out\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut\n.endc\n'
+        control = '\n.control\n\tSAVE out\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut vdb(out)\n.endc\n'
         with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b:
             if start and stop1:
                 file_object.write(''.join(fileo[0:start]))
@@ -188,7 +188,7 @@ class circuit:
 
         with open('out') as file_object:
             self.startac, self.stopac = 0, 0
-            fileo, files = [], []
+            fileo, files,self.initx,self.inity = [], [],[],[]
             for lines in file_object:
                 fileo.append(lines)
                 files.append(lines.split())
@@ -197,6 +197,12 @@ class circuit:
                     files.append(fileo[-1].split())
                     self.startac = files[-1][files[-2].index('fmax')]
                     self.stopac = files[-1][files[-2].index('cut')]
+                    self.initx.append(float(files[-1][0]))
+                    self.inity.append(float(files[-1][-1]))
+                    for lines in file_object:
+                        temp=lines.split()
+                        self.initx.append(float(temp[0]))
+                        self.inity.append(float(temp[-1]))
                     break
             if self.startac == 0 and self.stopac == 0:
                 return 'Error! No cutoff frequecny!', flag
