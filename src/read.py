@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import time
+import re
 import numpy as np
 from matplotlib import pyplot as plt
 import operator
@@ -66,14 +67,14 @@ class circuit:
                     path2check = self.workpath+'usr/'+filename  # Only file name without extension
                     # Directory lib has include file
                     if os.path.isfile(self.workpath+filename):
-                        lines = '.include lib/'+filename+'\n'
+                        lines = '.include ../lib/'+filename+'\n'
                     # Source Directory has
                     elif os.path.isfile(row[1]):
-                        lines = '.include lib/usr/'+filename+'\n'
+                        lines = '.include ../lib/usr/'+filename+'\n'
                         shutil.copyfile(row[1], path2check)
                         print('Copy '+row[1]+' to '+path2check)
-                    else:           # Directory lib/usr has include file or will be later copied to
-                        lines = '.include lib/usr/'+filename+'\n'
+                    else:           # Directory ../lib/usr has include file or will be later copied to
+                        lines = '.include ../lib/usr/'+filename+'\n'
 
                 fileo.append(lines)
                 files.append(row)
@@ -89,12 +90,11 @@ class circuit:
                     stop2 = i
                     break
 
-        os.chdir('/home/zyc/Desktop/projects/circuit/Workspace/')
 
         if not stop2:
             return "No 'end' line!"
 
-        control = '\n.control\n\tSAVE out\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut vdb(out)\n.endc\n'
+        control = '\n.control\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\tdisplay all > netlist\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut vdb(out)\n.endc\n'
         with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b:
             if start and stop1:
                 file_object.write(''.join(fileo[0:start]))
@@ -117,14 +117,14 @@ class circuit:
             test = file_object.read()
             run = b.read()
             if mode == 1:     # Include error
-                test = test.replace('.include lib/usr/'+self.subckt,
-                                    '.include lib/usr/'+repl)
-                run = run.replace('.include lib/usr/'+self.subckt,
-                                  '.include lib/usr/'+repl)
+                test = test.replace('.include ../lib/usr/'+self.subckt,
+                                    '.include ../lib/usr/'+repl)
+                run = run.replace('.include ../lib/usr/'+self.subckt,
+                                  '.include ../lib/usr/'+repl)
             elif mode == 2:   # Subcircuit error
                 test = test.replace(
-                    '.control\n', '.include lib/usr/'+repl+'\n.control\n')
-                run = run[:-4]+'.include lib/usr/'+repl+'\n.end'
+                    '.control\n', '.include ../lib/usr/'+repl+'\n.control\n')
+                run = run[:-4]+'.include ../lib/usr/'+repl+'\n.end'
 
             file_object.seek(0)
             file_object.write(test)
@@ -138,9 +138,9 @@ class circuit:
         rm('out')
         rm('run.log')
         print('\nChecking if the input circuit is valid.\n')
-        if not os.path.isfile('.spiceinit'):
-            with open('.spiceinit', 'w') as f:
-                f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
+        # if not os.path.isfile('.spiceinit'):
+        #     with open('.spiceinit', 'w') as f:
+        #         f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         # os.system("ngspice -b test.cir -o test.log")
         proc = subprocess.Popen(
             'ngspice -b test.cir -o test.log', shell=True, stderr=subprocess.PIPE)
@@ -161,14 +161,14 @@ class circuit:
                         return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
                     elif 'Could not find include file' in fileo[i]:
                         self.subckt = fileo[i].split(
-                        )[-1].replace('lib/usr/', '').rstrip()
-                        fileo[i] = fileo[i].replace('lib/usr/', '') + \
+                        )[-1].replace('../lib/usr/', '').rstrip()
+                        fileo[i] = fileo[i].replace('../lib/usr/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 1    # Include Error
                     elif 'unknown subckt' in fileo[i]:
                         self.subckt = fileo[i].split(
-                        )[-1].replace('lib/usr/', '').rstrip().upper()
-                        fileo[i] = fileo[i].replace('lib/usr/', '') + \
+                        )[-1].replace('../lib/usr/', '').rstrip().upper()
+                        fileo[i] = fileo[i].replace('../lib/usr/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 2    # Subcircuit Error
                     elif 'fatal error' in fileo[i]:
@@ -223,7 +223,7 @@ class circuit:
             for i in range(length):
                 if files[i][0] == 'device':
                     for j in range(1, len(files[i])):
-                        if '.' not in files[i][j]:
+                        if 'r.x' not in files[i][j] and 'c.x' not in files[i][j]:
                             if files[i+2][0] == 'resistance':
                                 self.alter_r.append(
                                     R(files[i][j], files[i+2][j]))
@@ -238,11 +238,28 @@ class circuit:
 
         return flag, flag
 
+    def readnet(self):
+        with open('netlist') as file_object:
+            file=file_object.readlines()
+            self.net=[]
+            for line in file:
+                if 'voltage,' in line:
+                    start=line.split()[0]
+                    if not re.match(r'x[\d\w]+\.',start):
+                        m=re.match(r'V\((\d+)\)',start)
+                        if m:
+                            self.net.append(m.group(1))
+                        else:
+                            self.net.append(start)
+        self.net.remove('out')
+        self.net.sort()
+
+
     def create_sp(self):
         self.seed = int(time.time())
 
-        control = [
-            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave out\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+        self.control = [
+            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
         loop = '\tdowhile run < mc_runs\n\t\t'
 
         if self.adjust:
@@ -266,23 +283,36 @@ class circuit:
                     self.alter_r[i].name + \
                     '=gauss('+self.alter_r[i].r+f',{self.tolr},3)\n\t\t'
 
-        control.append(
-            f'ac dec 40 {float(self.startac)/10} {float(self.stopac)*10}\n\n\t\tmeas ac ymax MAX v(out)\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v(out)=v3db fall=last\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc cutoff\n.endc\n')
+
+        if self.measmode=='Cutoff Frequency':
+            if self.risefall:
+                rfmode='fall='
+            else:
+                rfmode='rise='
+            if self.rfnum==0:
+                rfmode=rfmode+'last'
+            else:
+                rfmode=rfmode+str(self.rfnum)
+
+            self.control.append(f'ac dec 40 {float(self.startac)/10} {float(self.stopac)*10}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+        else:
+            self.control.append(f'ac dec 40 {float(self.startac)/10} {float(self.stopac)*10}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+        self.control.append('wrdata fc cutoff\n.endc\n\n.end')
 
         with open('run_control.sp', 'w') as file_object:
-            file_object.write(control[0])
+            file_object.write(self.control[0])
             file_object.write(loop)
-            file_object.write(control[1])
-            file_object.write('\n.end')
+            file_object.write(self.control[1])
+            file_object.write(self.control[2])
 
-    def ngspice(self, mode=0):
-        runspice(mode)
 
     def create_wst(self):
         self.wst_run = 2**(self.lengthc+self.lengthr)
 
         control = [
-            f"*ng_script\n\n.control\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave out\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
+            f"*ng_script\n\n.control\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
         loop = '\tdowhile run <= numruns\n\t\t'
 
         if self.adjust:
@@ -306,18 +336,19 @@ class circuit:
                     '=wc('+self.alter_r[i].r + \
                     f',{self.tolr},{i+self.lengthc},run,numruns)\n\t\t'
 
-        control.append(
-            f'ac dec 40 {float(self.startac)/10} {float(self.stopac)*10}\n\n\t\tmeas ac ymax MAX v(out)\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v(out)=v3db fall=last\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc_wst cutoff\n.endc\n')
-
         with open('run_control_wst.sp', 'w') as file_object:
             file_object.write(control[0])
             file_object.write(loop)
-            file_object.write(control[1])
-            file_object.write('\n.end')
+            file_object.write(self.control[1])
+            file_object.write('wrdata fc_wst cutoff\n.endc\n\n.end')
+
+
+    def ngspice(self, mode=0):
+        runspice(mode)
+
 
     _col2 = []
     wst_cutoff = []
-
     def resultdata(self, appnd=False, worst=True):
         with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
             fileobject.readline()

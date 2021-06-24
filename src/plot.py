@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import QThread, pyqtSignal, QProcess
 from src import read
 import shutil
+from datetime import datetime
 
 
 def plotcdf():
@@ -81,11 +82,12 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas,self))
 
+        self.dialog = processing()
+
         self.onlyInt = QIntValidator()
         self.addtimetext.setValidator(self.onlyInt)
 
-        self.totaltime.setText(
-            f'Total simulation time: 0')
+        self.totaltime.setText('Total simulation time: 0')
 
         reg_ex = QtCore.QRegExp("[0-9]+\.*[0-9]*")
         self.calctext.setValidator(
@@ -165,6 +167,11 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.presult.setText(f'Result:{np.round(result,4)}')
 
+    def analy(self):
+        self.configGUI=config(self.Cir)
+        self.configGUI.accepted.connect(self.configCreate)
+
+
     def postinit(self):
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
@@ -172,7 +179,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.total = self.Cir.mc_runs
         self.totaltime.setText(f'Total simulation time: {self.total}')
 
-        self.analButton.clicked.connect(self.plot)
+        self.analButton.clicked.connect(self.analy)
         self.ResetButton.clicked.connect(self.reset)
         self.addtimetext.returnPressed.connect(self.AddTime)
         self.wstcase.toggled.connect(self.plotwst)
@@ -190,64 +197,52 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.C = ['']*self.Cir.lengthc
         self.Ctol = ['']*self.Cir.lengthc
-        self.formLayoutc = QtWidgets.QFormLayout(self.layoutWidgetc)
+        self.gridLayoutc = QtWidgets.QGridLayout(self.layoutWidgetc)
         for i in range(self.Cir.lengthc):
-            self.C[i] = QtWidgets.QLabel(
-                f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
-            self.Ctol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetc)
-            self.Ctol[i].setValue(self.Cir.alter_c[i].tol)
-            self.Ctol[i].valueChanged.connect(self.tolcolor)
-            self.Ctol[i].setSingleStep(0.01)
-            self.Ctol[i].setMaximum(0.9999)
-            self.Ctol[i].setDecimals(4)
-            self.Ctol[i].setMaximumWidth(85)
-            self.formLayoutc.setWidget(
-                i+1, QtWidgets.QFormLayout.LabelRole, self.C[i])
-            self.formLayoutc.setWidget(
-                i+1, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
+            self.C[i] = QtWidgets.QLabel(self.Cir.alter_c[i].name, self.layoutWidgetc)
+            self.Ctol[i] = QtWidgets.QLabel(f'{self.Cir.alter_c[i].tol:.4f}',self.layoutWidgetc)
+            self.C[i].setAlignment(QtCore.Qt.AlignCenter)
+            self.Ctol[i].setAlignment(QtCore.Qt.AlignCenter)
+            self.gridLayoutc.addWidget(self.C[i],i+1,0)
+            self.gridLayoutc.addWidget(self.Ctol[i],i+1,1)
 
         self.titleC = QtWidgets.QLabel('Capacitor', self.layoutWidgetc)
-        self.titleC.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayoutc.setWidget(
-            0, QtWidgets.QFormLayout.SpanningRole, self.titleC)
+        self.titleCt = QtWidgets.QLabel('Tolerance', self.layoutWidgetc)
+        self.gridLayoutc.addWidget(self.titleC,0,0)
+        self.gridLayoutc.addWidget(self.titleCt,0,1)
         self.scrollc.setWidget(self.layoutWidgetc)
+        self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollc)
 
         self.scrollr = QtWidgets.QScrollArea(self.rightwidget)
         self.scrollr.setMaximumSize(QtCore.QSize(180, 150))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
 
-        # self.Cir.lengthr = 10
         self.R = ['']*self.Cir.lengthr
         self.Rtol = ['']*self.Cir.lengthr
-        self.formLayoutr = QtWidgets.QFormLayout(self.layoutWidgetr)
+        self.gridLayoutr = QtWidgets.QGridLayout(self.layoutWidgetr)
         for i in range(self.Cir.lengthr):
-            self.R[i] = QtWidgets.QLabel(
-                f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
-            self.Rtol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetr)
-            self.Rtol[i].setValue(self.Cir.alter_r[i].tol)
-            self.Rtol[i].valueChanged.connect(self.tolcolor)
-            self.Rtol[i].setSingleStep(0.01)
-            self.Rtol[i].setMaximum(0.9999)
-            self.Rtol[i].setDecimals(4)
-            self.Rtol[i].setMaximumWidth(85)
-            self.formLayoutr.setWidget(
-                i+1, QtWidgets.QFormLayout.LabelRole, self.R[i])
-            self.formLayoutr.setWidget(
-                i+1, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
+            self.R[i] = QtWidgets.QLabel(self.Cir.alter_r[i].name, self.layoutWidgetr)
+            self.Rtol[i] = QtWidgets.QLabel(f'{self.Cir.alter_r[i].tol:.4f}',self.layoutWidgetr)
+            self.R[i].setAlignment(QtCore.Qt.AlignCenter)
+            self.Rtol[i].setAlignment(QtCore.Qt.AlignCenter)
+            self.gridLayoutr.addWidget(self.R[i],i+1,0)
+            self.gridLayoutr.addWidget(self.Rtol[i],i+1,1)
+
         self.titleR = QtWidgets.QLabel('Resistor', self.layoutWidgetr)
+        self.titleRt = QtWidgets.QLabel('Tolerance', self.layoutWidgetr)
         self.titleR.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayoutr.setWidget(
-            0, QtWidgets.QFormLayout.SpanningRole, self.titleR)
+        self.gridLayoutr.addWidget(self.titleR,0,0)
+        self.gridLayoutr.addWidget(self.titleRt,0,1)
         self.scrollr.setWidget(self.layoutWidgetr)
+        self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
 
-        self.pushSet = QtWidgets.QPushButton('Set', self.rightwidget)
-        self.scroll.addWidget(self.pushSet)
+        # self.pushSet = QtWidgets.QPushButton('Set', self.rightwidget)
+        # self.scroll.addWidget(self.pushSet)
+        # self.pushSet.clicked.connect(self.adjusttol)
+
         self.scroll.setAlignment(QtCore.Qt.AlignTop)
-
-        self.pushSet.clicked.connect(self.adjusttol)
-
         self.plot()
 
     def plot(self):
@@ -290,18 +285,21 @@ class plotGUI(QtWidgets.QMainWindow):
             self, 'Open file', '../CirFile', "Spice Netlists (*.cir)")
         if fname:
             name = fname.split('/')[-1]
+            dir=name.split('.')[0]+' '+datetime.now().strftime("%d%m%Y_%H%M%S")
+            os.mkdir(dir)
+            os.chdir(dir)
             shutil.copyfile(fname, os.getcwd()+f'/{name}')
 
-            os.chdir(os.path.dirname(fname))
-            self.Cir = read.circuit(name)
+            self.Cir2 = read.circuit(name)
+            self.Cir2.dir=os.getcwd()
 
-            message = self.Cir.read()
+            message = self.Cir2.read()
 
             if message:
                 QtWidgets.QMessageBox.critical(self, 'Error', message)
                 return
             else:
-                message, flag = self.Cir.init()
+                message, flag = self.Cir2.init()
 
                 i = -1
                 includefile = []
@@ -313,7 +311,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
                         if ret == QtWidgets.QMessageBox.Open:
                             temp, _ = QtWidgets.QFileDialog.getOpenFileName(
-                                self, 'Select file for '+self.Cir.subckt, '', "Model Files (*)")
+                                self, 'Select file for '+self.Cir2.subckt, '', "Model Files (*)")
                             includefile.append(
                                 temp.split('/')[-1].split('.')[0])
                             if temp:
@@ -321,45 +319,48 @@ class plotGUI(QtWidgets.QMainWindow):
                                     temp, os.getcwd()+'/lib/usr/'+includefile[i])
                                 print('Copy '+temp+' to ' +
                                       os.getcwd()+'/lib/usr/')
-                                message, flag = self.Cir.fixinclude(
+                                message, flag = self.Cir2.fixinclude(
                                     includefile[i], flag)
                         else:
                             for file in includefile:
-                                read.rm('lib/usr/'+file)
+                                read.rm('../lib/usr/'+file)
                             return
 
                     elif message:
                         QtWidgets.QMessageBox.critical(self, 'Error', message)
                         for file in includefile:
-                            read.rm('lib/usr/'+file)
+                            read.rm('../lib/usr/'+file)
                         return
 
                     else:
                         break
 
-            # self.Cir.mc_runs, ok = QtWidgets.QInputDialog().getInt(self, 'Run Time', 'Run Time', 100, 1)  # TODO:New GUI for input config
 
-            self.configGUI=config(self.Cir)
+            self.Cir2.readnet()
 
-            self.configGUI.totaltime.setValidator(self.onlyInt)
-
-            self.configGUI.MplWidget.figure.clear()
-
-            self.configGUI.ax = self.configGUI.MplWidget.figure.add_subplot(111)
-            self.configGUI.ax.set_xscale('log')
-            self.configGUI.line1 = self.configGUI.ax.plot(self.Cir.initx, self.Cir.inity)
-            self.configGUI.ax.set_title(f"Default AC Analysis of {self.Cir.name}")
-            self.configGUI.ax.grid()
-            self.configGUI.ax.set_xlabel('Cutoff Frequency/Hz')
-            self.configGUI.ax.set_ylabel('vdb')
-
-            self.configGUI.accepted.connect(self.configCreate)
+            self.configGUI=config(self.Cir2)
+            self.configGUI.accepted.connect(lambda: self.configCreate(True))
+            self.configGUI.rejected.connect(self.configreject)
 
         else:
             return
 
-    def configCreate(self):
-        self.Cir.mc_runs=self.configGUI.totaltime.text()
+    def configreject(self):
+        print('Rejected')
+        if hasattr(self,'Cir'):
+            os.chdir(self.Cir.dir)
+
+    def configCreate(self,i=False):
+        if i:
+            self.Cir=self.Cir2
+        print('Config Entered')
+
+        self.Cir.mc_runs=self.configGUI.totaltime.value()
+        self.Cir.netselect=self.configGUI.measnode.currentText()
+        self.Cir.measmode=self.configGUI.measmode.currentText()
+        self.Cir.rfnum=self.configGUI.rfnum.value()
+        self.Cir.risefall=self.configGUI.risefall.currentIndex()
+        # print(self.Cir.rfnum,type(self.Cir.rfnum))
         for i in range(self.Cir.lengthc):
             self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
         for i in range(self.Cir.lengthr):
@@ -377,10 +378,10 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.process = self.processGui()
 
-            self.p.start("python3.9", ['../src/runspice.py', f'-{runmode}'])
+            self.p.start("python3.9", ['../../src/runspice.py', f'-{runmode}'])
 
     def processGui(self):
-        self.dialog = processing()
+        self.dialog.show()
         self.dialog.rejected.connect(self.kill)
 
     def kill(self):
@@ -396,6 +397,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.p = None
         self.dialog.close()
+
         if mode == 'Add':
             self.Cir.resultdata(True)
             self.total = self.total+self.Cir.mc_runs
@@ -431,18 +433,17 @@ class plotGUI(QtWidgets.QMainWindow):
         except IndexError:
             pass
 
-        for i in range(self.Cir.lengthc):
-            self.Ctol[i].setValue(self.Cir.tolc)
-            self.Ctol[i].setStyleSheet("color: black")
-        for i in range(self.Cir.lengthr):
-            self.Rtol[i].setValue(self.Cir.tolr)
-            self.Rtol[i].setStyleSheet("color: black")
+        # for i in range(self.Cir.lengthc):
+        #     self.Ctol[i].setValue(self.Cir.tolc)
+        #     self.Ctol[i].setStyleSheet("color: black")
+        # for i in range(self.Cir.lengthr):
+        #     self.Rtol[i].setValue(self.Cir.tolr)
+        #     self.Rtol[i].setStyleSheet("color: black")
 
         self . MplWidget . canvas . draw()
         self.addtimetext.clear()
-        self.calctext.setPlaceholderText('0')
         self.total = 0
-        self.totaltime.setText(f'Total simulation time: 0')
+        self.totaltime.setText('Total simulation time: 0')
         self.x, self.y, self.Cir._col2 = [], [], []
         self.calctext.setPlaceholderText('0')
         self.presult.setText('Result: 1')
@@ -459,8 +460,8 @@ class processing(QtWidgets.QDialog):
         uic.loadUi('../src/processing.ui', self)
         self.setWindowTitle('Processing')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.show()
+        # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # self.show()
 
 
 class config(QtWidgets.QDialog):
@@ -469,13 +470,43 @@ class config(QtWidgets.QDialog):
         super().__init__()
 
         self.Cir=Cir
-        uic.loadUi('../src/config.ui', self)
+        uic.loadUi('/home/zyc/Desktop/projects/circuit/src/config.ui', self)
         self.tab2UI()
         self.bar=NavigationToolbar(self.MplWidget.canvas,self.widget)
         self.setWindowTitle('Configuration')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        self.totaltime.setValue(100)
+        self.measnode.addItems(Cir.net)
+        self.rfnum.setSpecialValueText('LAST')
+
+        # self.buttonBox.setDefault(False)
+        # self.buttonBox.setAutoDefault(False)
+
+        self.measmode.currentTextChanged.connect(self.showhide)
+
+        self.MplWidget.figure.clear()
+
+        self.ax = self.MplWidget.figure.add_subplot(111)
+        self.ax.set_xscale('log')
+        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity)
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.name}")
+        self.ax.grid()
+        self.ax.set_xlabel('Cutoff Frequency/Hz')
+        self.ax.set_ylabel('vdb')
+
         self.show()
+
+    def showhide(self):
+        if self.measmode.currentText()=='Cutoff Frequency':
+            self.label_5.setHidden(False)
+            self.rfnum.setHidden(False)
+            self.risefall.setHidden(False)
+        else:
+            self.label_5.setHidden(True)
+            self.rfnum.setHidden(True)
+            self.risefall.setHidden(True)
 
 
     def tab2UI(self):

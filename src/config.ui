@@ -83,10 +83,13 @@
          <x>10</x>
          <y>10</y>
          <width>268</width>
-         <height>141</height>
+         <height>161</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
         <item row="0" column="2" colspan="2">
          <widget class="QComboBox" name="measnode">
           <item>
@@ -94,19 +97,6 @@
             <string>out</string>
            </property>
           </item>
-         </widget>
-        </item>
-        <item row="1" column="2" colspan="2">
-         <widget class="QLineEdit" name="totaltime">
-          <property name="inputMethodHints">
-           <set>Qt::ImhNone</set>
-          </property>
-          <property name="text">
-           <string>100</string>
-          </property>
-          <property name="placeholderText">
-           <string>100</string>
-          </property>
          </widget>
         </item>
         <item row="2" column="2" colspan="2">
@@ -132,39 +122,26 @@
           </item>
           <item>
            <property name="text">
-            <string>Max</string>
+            <string>MAX</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>Min</string>
+            <string>MIN</string>
            </property>
           </item>
          </widget>
         </item>
         <item row="4" column="0">
          <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>On</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1" colspan="2">
-         <widget class="QLineEdit" name="meas">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>5</horstretch>
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="inputMethodHints">
-           <set>Qt::ImhNone</set>
-          </property>
           <property name="text">
-           <string/>
-          </property>
-          <property name="placeholderText">
-           <string>Interger or 'Last'</string>
+           <string>On</string>
           </property>
          </widget>
         </item>
@@ -231,6 +208,44 @@
           </property>
           <property name="text">
            <string>Measure Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2" colspan="2">
+         <widget class="QSpinBox" name="totaltime">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>100000</number>
+          </property>
+          <property name="singleStep">
+           <number>100</number>
+          </property>
+          <property name="stepType">
+           <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1" colspan="2">
+         <widget class="QSpinBox" name="rfnum">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>1</number>
+          </property>
+          <property name="stepType">
+           <enum>QAbstractSpinBox::DefaultStepType</enum>
           </property>
          </widget>
         </item>
