@@ -254,7 +254,7 @@ class circuit:
         self.net.remove('out')
         self.net.sort()
 
-    from .write import create_sp, create_wst
+    from ._write import create_sp, create_wst
 
     def ngspice(self, mode=0):
         runspice(mode)

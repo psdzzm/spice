@@ -1,4 +1,10 @@
-from src import plot
-import os
+from src import plotGUI
+from PyQt5 import QtWidgets
+import os,sys
 
-plot.pyqt5plot()
+
+app = QtWidgets.QApplication(sys.argv)
+main = plotGUI()
+main.show()
+app.exec_()
+print(os.getcwd())
