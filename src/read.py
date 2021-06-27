@@ -1,4 +1,15 @@
-# Read Circuit File
+# !usr/bin/env python
+# -*- coding:utf-8 -*-
+'''
+ Description: Read Circuit File
+ Author: Yichen Zhang
+ Date: 26-06-2021 14:43:04
+ LastEditors: Yichen Zhang
+ LastEditTime: 27-06-2021 16:13:09
+ FilePath: /circuit/src/read.py
+'''
+
+
 import os
 import shutil
 import subprocess
@@ -50,7 +61,8 @@ class circuit:
         self.tolr = 0.01
         self.adjust = False
 
-        self.workpath = '/home/zyc/Desktop/projects/circuit/Workspace/lib/'
+        self.libpath = os.getcwd()+'/../lib/'
+        print(os.getcwd())
 
     def read(self):
         fileo, files = [], []
@@ -63,18 +75,18 @@ class circuit:
                 if row != [] and row[0].lower() not in matches and '.' in row[0].lower():
                     continue
                 elif row != [] and row[0].lower() == '.include':
-                    filename = row[1].split('/')[-1].split('.')[0].upper()
-                    path2check = self.workpath+'usr/'+filename  # Only file name without extension
+                    inclname = row[1].split('/')[-1].split('.')[0].upper()
+                    path2check = self.libpath+'user/'+inclname  # Only file name without extension
                     # Directory lib has include file
-                    if os.path.isfile(self.workpath+filename):
-                        lines = '.include ../lib/'+filename+'\n'
+                    if os.path.isfile(self.libpath+inclname):
+                        lines = '.include ../lib/'+inclname+'\n'
                     # Source Directory has
-                    elif os.path.isfile(row[1]):
-                        lines = '.include ../lib/usr/'+filename+'\n'
-                        shutil.copyfile(row[1], path2check)
+                    elif os.path.isfile(os.path.dirname(self.name)+'/'+row[1]):
+                        lines = '.include ../lib/user/'+inclname+'\n'
+                        shutil.copyfile(os.path.dirname(self.name)+'/'+row[1], path2check)
                         print('Copy '+row[1]+' to '+path2check)
-                    else:           # Directory ../lib/usr has include file or will be later copied to
-                        lines = '.include ../lib/usr/'+filename+'\n'
+                    else:           # Directory ../lib/user has include file or will be later copied to
+                        lines = '.include ../lib/user/'+inclname+'\n'
 
                 fileo.append(lines)
                 files.append(row)
@@ -117,14 +129,14 @@ class circuit:
             test = file_object.read()
             run = b.read()
             if mode == 1:     # Include error
-                test = test.replace('.include ../lib/usr/'+self.subckt,
-                                    '.include ../lib/usr/'+repl)
-                run = run.replace('.include ../lib/usr/'+self.subckt,
-                                  '.include ../lib/usr/'+repl)
+                test = test.replace('.include ../lib/user/'+self.subckt,
+                                    '.include ../lib/user/'+repl)
+                run = run.replace('.include ../lib/user/'+self.subckt,
+                                  '.include ../lib/user/'+repl)
             elif mode == 2:   # Subcircuit error
                 test = test.replace(
-                    '.control\n', '.include ../lib/usr/'+repl+'\n.control\n')
-                run = run[:-4]+'.include ../lib/usr/'+repl+'\n.end'
+                    '.control\n', '.include ../lib/user/'+repl+'\n.control\n')
+                run = run[:-4]+'.include ../lib/user/'+repl+'\n.end'
 
             file_object.seek(0)
             file_object.write(test)
@@ -138,9 +150,10 @@ class circuit:
         rm('out')
         rm('run.log')
         print('\nChecking if the input circuit is valid.\n')
-        # if not os.path.isfile('.spiceinit'):
-        #     with open('.spiceinit', 'w') as f:
-        #         f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
+        home=os.path.expanduser('~')
+        if not os.path.isfile(home+'/.spiceinit'):
+            with open(home+'/.spiceinit', 'w') as f:
+                f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         # os.system("ngspice -b test.cir -o test.log")
         proc = subprocess.Popen(
             'ngspice -b test.cir -o test.log', shell=True, stderr=subprocess.PIPE)
@@ -161,14 +174,14 @@ class circuit:
                         return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
                     elif 'Could not find include file' in fileo[i]:
                         self.subckt = fileo[i].split(
-                        )[-1].replace('../lib/usr/', '').rstrip()
-                        fileo[i] = fileo[i].replace('../lib/usr/', '') + \
+                        )[-1].replace('../lib/user/', '').rstrip()
+                        fileo[i] = fileo[i].replace('../lib/user/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 1    # Include Error
                     elif 'unknown subckt' in fileo[i]:
                         self.subckt = fileo[i].split(
-                        )[-1].replace('../lib/usr/', '').rstrip().upper()
-                        fileo[i] = fileo[i].replace('../lib/usr/', '') + \
+                        )[-1].replace('../lib/user/', '').rstrip().upper()
+                        fileo[i] = fileo[i].replace('../lib/user/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 2    # Subcircuit Error
                     elif 'fatal error' in fileo[i]:

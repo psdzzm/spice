@@ -19,11 +19,11 @@ class processing(QtWidgets.QDialog):
 
 class config(QtWidgets.QDialog):
 
-    def __init__(self,Cir):
+    def __init__(self,Cir,root):
         super().__init__()
 
         self.Cir=Cir
-        uic.loadUi('/home/zyc/Desktop/projects/circuit/src/config.ui', self)
+        uic.loadUi(root+'/src/config.ui', self)
         self.tab2UI()
         self.bar=NavigationToolbar(self.MplWidget.canvas,self.widget)
         self.setWindowTitle('Configuration')

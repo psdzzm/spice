@@ -3,15 +3,20 @@ import shutil
 import subprocess
 from datetime import datetime
 
+# path=os.getcwd()+'/Workspace/bin'
+# os.environ['PATH']+=':'+path
+# print(os.environ['PATH'])
+# os.system('ngspice')
+home=os.path.expanduser('~')
 
-# x=os.chdir('./CirFile')
-os.chdir('Workspace/')
+x=os.chdir(home)
+# os.chdir('Workspace/')
 print(os.getcwd())
-os.chdir('..')
-print(os.getcwd())
-dir='Workspace/'+datetime.now().strftime("%d%m%Y_%H%M%S")+'/'
-os.mkdir(dir)
-shutil.copyfile('main.py',dir+'main')
+# os.chdir('..')
+# print(os.getcwd())
+# dir='Workspace/'+datetime.now().strftime("%d%m%Y_%H%M%S")+'/'
+# os.mkdir(dir)
+# shutil.copyfile('main.py',dir+'main')
 # print(os.path.isfile('test/main'))
 '''
 with open('test.cir','r+') as a:

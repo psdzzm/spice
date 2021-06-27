@@ -1,6 +1,20 @@
 *ng_script
 
 .control
+    options appendwrite wr_singlescale
+	show r : resistance , c : capacitance > list
+    op
+	wrdata test all
+.endc
+
+.control
+    options wr_singlescale
+    ac dec 40 1 1G
+    wrdata ac
+.endc
+
+
+.control
     source LPF.cir
     save out
     let mc_runs = 10

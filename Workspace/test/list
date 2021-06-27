@@ -1,0 +1,20 @@
+ Resistor: Simple linear resistor
+     device                   r10            r.xop.rout             r.xop.rp1
+      model                     R                     R                     R
+ resistance                 15900                    10                  1000
+ Resistor: Simple linear resistor
+     device             r.xop.rin                    rb                    ra
+      model                     R                     R                     R
+ resistance                 1e+07                     1                 1e+08
+ Resistor: Simple linear resistor
+     device                    r2                    r1
+      model                     R                     R
+ resistance                 11200                 11200
+ Capacitor: Fixed capacitor
+     device                   c10             c.xop.cp1                    c2
+      model                     C                     C                     C
+capacitance                 1e-09            1.5915e-06                 1e-09
+ Capacitor: Fixed capacitor
+     device                    c1
+      model                     C
+capacitance                 2e-09

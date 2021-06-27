@@ -21,10 +21,11 @@ def pyqt5plot():
 
 
 class plotGUI(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self,root):
         super().__init__()
         # self.Cir = Cir
 
+        self.root=root
         os.chdir('./src')
         uic.loadUi('main.ui', self)
         os.chdir('../Workspace')
@@ -49,7 +50,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def openfile(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Open file', '../CirFile', "Spice Netlists (*.cir)")
+            self, 'Open file', '..', "Spice Netlists (*.cir)")
         if fname:
             name = fname.split('/')[-1]
             dir=name.split('.')[0]+' '+datetime.now().strftime("%d%m%Y_%H%M%S")
@@ -57,7 +58,8 @@ class plotGUI(QtWidgets.QMainWindow):
             os.chdir(dir)
             shutil.copyfile(fname, os.getcwd()+f'/{name}')
 
-            self.Cir2 = read.circuit(name)
+            self.Cir2 = read.circuit(fname)
+            self.Cir2.shortname=name
             self.Cir2.dir=os.getcwd()
 
             message = self.Cir2.read()
@@ -83,20 +85,20 @@ class plotGUI(QtWidgets.QMainWindow):
                                 temp.split('/')[-1].split('.')[0])
                             if temp:
                                 shutil.copyfile(
-                                    temp, os.getcwd()+'/lib/usr/'+includefile[i])
+                                    temp, os.getcwd()+'/lib/user/'+includefile[i])
                                 print('Copy '+temp+' to ' +
-                                      os.getcwd()+'/lib/usr/')
+                                      os.getcwd()+'/lib/user/')
                                 message, flag = self.Cir2.fixinclude(
                                     includefile[i], flag)
                         else:
                             for file in includefile:
-                                read.rm('../lib/usr/'+file)
+                                read.rm('../lib/user/'+file)
                             return
 
                     elif message:
                         QtWidgets.QMessageBox.critical(self, 'Error', message)
                         for file in includefile:
-                            read.rm('../lib/usr/'+file)
+                            read.rm('../lib/user/'+file)
                         return
 
                     else:
@@ -105,7 +107,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.Cir2.readnet()
 
-            self.configGUI=config(self.Cir2)
+            self.configGUI=config(self.Cir2,self.root)
             self.configGUI.accepted.connect(lambda: self.configCreate(True))
             self.configGUI.rejected.connect(self.configreject)
 
@@ -144,7 +146,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.process = self.processGui()
 
-            self.p.start("python3.9", ['../../src/runspice.py', f'-{runmode}'])
+            self.p.start("python3", ['../../src/runspice.py', f'-{runmode}'])
 
     def processGui(self):
         self.dialog.show()
@@ -265,7 +267,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.ax.set_ylim(-0.05, 1.05)
         self.line1 = self.ax . plot(self.x, self.y)
         # self .MplWidget . canvas . axes . legend (( 'cosinus' ,  'sinus' ), loc = 'upper right' )
-        self.ax. set_title(f"Tolerance Analysis of {self.Cir.name}")
+        self.ax. set_title(f"Tolerance Analysis of {self.Cir.shortname}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('CDF')
@@ -365,7 +367,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
 
     def analy(self):
-        self.configGUI=config(self.Cir)
+        self.configGUI=config(self.Cir,self.root)
         self.configGUI.accepted.connect(self.configCreate)
 
 
