@@ -1,0 +1,6 @@
+.control
+    options wr_singlescale
+	show r : resistance , c : capacitance > list
+    op
+	wrdata test all
+.endc

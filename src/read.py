@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 27-06-2021 16:13:09
+ LastEditTime: 27-06-2021 18:54:18
  FilePath: /circuit/src/read.py
 '''
 
@@ -106,11 +106,11 @@ class circuit:
         if not stop2:
             return "No 'end' line!"
 
-        control = '\n.control\n\toptions appendwrite wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\tOP\n\tdisplay all > netlist\n\twrdata out out\n\tac dec 40 1 1G\n\tmeas ac ymax MAX v(out)\n\tmeas ac fmax MAX_AT v(out)\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v(out)=v3db fall=last\n\twrdata out fmax cut vdb(out)\n.endc\n'
-        with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b:
+        control = '*ng_script\n\n.control\n\tsource test.cir\n\toptions wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end'
+
+        with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b, open('test_control.sp','w') as tsc:
             if start and stop1:
                 file_object.write(''.join(fileo[0:start]))
-                file_object.write(control)
                 file_object.write(''.join(fileo[stop1+1:stop2+1]))
 
                 b.write(''.join(fileo[0:start]))
@@ -118,11 +118,13 @@ class circuit:
 
             else:
                 file_object.write(''.join(fileo[0:stop2]))
-                file_object.write(control)
-                file_object.write('.end')
+                file_object.write('\n.end')
 
                 b.write(''.join(fileo[0:stop2]))
                 b.write('.end')
+
+            tsc.write(control)
+
 
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:
@@ -146,6 +148,7 @@ class circuit:
 
         return self.init()
 
+
     def init(self):
         rm('out')
         rm('run.log')
@@ -156,7 +159,7 @@ class circuit:
                 f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         # os.system("ngspice -b test.cir -o test.log")
         proc = subprocess.Popen(
-            'ngspice -b test.cir -o test.log', shell=True, stderr=subprocess.PIPE)
+            'ngspice -b test_control.sp -o test.log', shell=True, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
         if stderr:
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
@@ -170,8 +173,8 @@ class circuit:
                 if fileo[i].lower().startswith('error'):
                     if fileo[i] == 'Error: no data saved for D.C. Operating point analysis; analysis not run\n':
                         return "Error! No 'out' port!", flag
-                    elif fileo[i] == 'Error: measure  cut  (WHEN) : out of interval\n':
-                        return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
+                    # elif fileo[i] == 'Error: measure  cut  (WHEN) : out of interval\n':
+                    #     return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
                     elif 'Could not find include file' in fileo[i]:
                         self.subckt = fileo[i].split(
                         )[-1].replace('../lib/user/', '').rstrip()
@@ -199,28 +202,55 @@ class circuit:
             if error_r:
                 return ''.join(error_r), flag
 
-        with open('out') as file_object:
-            self.startac, self.stopac = 0, 0
-            fileo, files,self.initx,self.inity = [], [],[],[]
-            for lines in file_object:
-                fileo.append(lines)
-                files.append(lines.split())
-                if 'fmax' in files[-1] and 'cut' in files[-1]:
-                    fileo.append(file_object.readline())
-                    files.append(fileo[-1].split())
-                    self.startac = files[-1][files[-2].index('fmax')]
-                    self.stopac = files[-1][files[-2].index('cut')]
-                    self.initx.append(float(files[-1][0]))
-                    self.inity.append(float(files[-1][-1]))
-                    for lines in file_object:
-                        temp=lines.split()
-                        self.initx.append(float(temp[0]))
-                        self.inity.append(float(temp[-1]))
-                    break
-            if self.startac == 0 and self.stopac == 0:
-                return 'Error! No cutoff frequecny!', flag
-            else:
-                print('Check successfully! Running simulation.\n')
+        self.readnet()
+
+
+        control='*ng_script\n\n.control\n\tsource test.cir\n\toptions wr_singlescale\n\tac dec 40 1 1G\n\twrdata ac vdb(out) '
+        with open('test_control2.sp','w') as file_object:
+            file_object.write(control)
+            for item in self.net:
+                file_object.write(f'vdb({item}) ')
+
+            file_object.write('\n.endc\n\n.end')
+
+        os.system('ngspice test_control2.sp -b -o test2.log')
+
+        with open('ac') as file_object:
+            file_object.readline()
+            data=file_object.readlines()
+            self.initx=np.zeros(len(data))
+            length=len(self.net)+1
+            self.inity=np.zeros([length,len(data)])
+            i=0
+            for line in data:
+                line=line.split()
+                self.initx[i]=float(line[0])
+                for j in range(length):
+                    self.inity[j,i]=float(line[2*j+1])
+                i+=1
+
+        # with open('ac') as file_object:
+        #     self.startac, self.stopac = 0, 0
+        #     fileo, files,self.initx,self.inity = [], [],[],[]
+        #     for lines in file_object:
+        #         fileo.append(lines)
+        #         files.append(lines.split())
+        #         if 'fmax' in files[-1] and 'cut' in files[-1]:
+        #             fileo.append(file_object.readline())
+        #             files.append(fileo[-1].split())
+        #             self.startac = files[-1][files[-2].index('fmax')]
+        #             self.stopac = files[-1][files[-2].index('cut')]
+        #             self.initx.append(float(files[-1][0]))
+        #             self.inity.append(float(files[-1][-1]))
+        #             for lines in file_object:
+        #                 temp=lines.split()
+        #                 self.initx.append(float(temp[0]))
+        #                 self.inity.append(float(temp[-1]))
+        #             break
+        #     if self.startac == 0 and self.stopac == 0:
+        #         return 'Error! No cutoff frequecny!', flag
+        #     else:
+        #         print('Check successfully! Running simulation.\n')
 
         with open('list') as file_object:
             self.alter_r = []
@@ -252,22 +282,27 @@ class circuit:
         return flag, flag
 
     def readnet(self):
-        with open('netlist') as file_object:
-            file=file_object.readlines()
+        with open('op') as file_object:
+            nets=list(set(file_object.readline().split()))
             self.net=[]
-            for line in file:
-                if 'voltage,' in line:
-                    start=line.split()[0]
-                    if not re.match(r'x[\d\w]+\.',start):
-                        m=re.match(r'V\((\d+)\)',start)
+            for item in nets:
+                if '#branch' in item:
+                    continue
+                else:
+                    temp=re.match(r'x[\d\w]+\.',item)
+                    if not temp:
+                        m=re.match(r'V\((\d+)\)',item)
                         if m:
                             self.net.append(m.group(1))
                         else:
-                            self.net.append(start)
+                            self.net.append(item)
+
         self.net.remove('out')
         self.net.sort()
 
+
     from ._write import create_sp, create_wst
+
 
     def ngspice(self, mode=0):
         runspice(mode)

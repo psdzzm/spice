@@ -40,6 +40,7 @@ ROUT    out       6       10
 	options wr_singlescale
 	op
 	wrdata op all
+.endc
 
 
 .END

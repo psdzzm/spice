@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 27-06-2021 16:51:17
+ LastEditTime: 27-06-2021 18:28:15
  FilePath: /circuit/Workspace/test/netlist.py
 '''
 import re
@@ -13,7 +13,7 @@ import os
 
 os.chdir(os.path.dirname(__file__))
 with open('op') as file_object:
-    nets=file_object.readline().split()
+    nets=list(set(file_object.readline().split()))
     print(len(nets))
     net=[]
     port=[]

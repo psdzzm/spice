@@ -1,7 +1,7 @@
 *ng_script
 
 .control
-    options appendwrite wr_singlescale
+    options wr_singlescale
 	show r : resistance , c : capacitance > list
     op
 	wrdata test all
@@ -10,7 +10,7 @@
 .control
     options wr_singlescale
     ac dec 40 1 1G
-    wrdata ac
+    wrdata ac vdb(1) vdb(2) vdb(3) vdb(4) vdb(10) vdb(out)
 .endc
 
 

@@ -37,19 +37,29 @@ class config(QtWidgets.QDialog):
         # self.buttonBox.setDefault(False)
         # self.buttonBox.setAutoDefault(False)
 
+        self.measnode.currentTextChanged.connect(self.netchange)
+
         self.measmode.currentTextChanged.connect(self.showhide)
 
         self.MplWidget.figure.clear()
 
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
-        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity)
+        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[0,:])
         self.ax.set_title(f"Default AC Analysis of {self.Cir.name}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
 
         self.show()
+
+    def netchange(self):
+        node=self.measnode.currentIndex()
+        line = self.line1.pop(0)
+        line.remove()
+        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node,:])
+        print(self.Cir.inity[node,10])
+        self.MplWidget.canvas.draw()
 
     def showhide(self):
         if self.measmode.currentText()=='Cutoff Frequency':
