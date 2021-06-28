@@ -51,7 +51,7 @@ class plotGUI(QtWidgets.QMainWindow):
     def openfile(self):
         os.chdir(self.root+'/Workspace')
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Open file', '..', "Spice Netlists (*.cir)")
+            self, 'Open file', '../CirFile', "Spice Netlists (*.cir)")
         if fname:
             name = fname.split('/')[-1]
             dir=name.split('.')[0]+' '+datetime.now().strftime("%d%m%Y_%H%M%S")
@@ -86,9 +86,9 @@ class plotGUI(QtWidgets.QMainWindow):
                                 temp.split('/')[-1].split('.')[0])
                             if temp:
                                 shutil.copyfile(
-                                    temp, os.getcwd()+'/lib/user/'+includefile[i])
+                                    temp, self.root+'/Workspace/lib/user/'+includefile[i])
                                 print('Copy '+temp+' to ' +
-                                      os.getcwd()+'/lib/user/')
+                                      self.root+'/Workspace/lib/user/')
                                 message, flag = self.Cir2.fixinclude(
                                     includefile[i], flag)
                         else:
@@ -182,11 +182,6 @@ class plotGUI(QtWidgets.QMainWindow):
         if mode == 'Add':
             self.Cir.resultdata(True)
             self.total = self.total+self.Cir.mc_runs
-
-        elif mode == 'Adjust':
-            self.Cir.resultdata()
-            self.total = self.Cir.mc_runs
-            self.tolcolor()
 
         elif mode == 'Open':
             self.Cir.resultdata(worst=True)

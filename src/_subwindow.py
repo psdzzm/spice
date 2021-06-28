@@ -34,7 +34,7 @@ class config(QtWidgets.QDialog):
         self.measnode.addItems(Cir.net)
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
-        self.tolcolor()
+        # self.tolcolor()
 
         # self.buttonBox.setDefault(False)
         # self.buttonBox.setAutoDefault(False)
@@ -95,29 +95,35 @@ class config(QtWidgets.QDialog):
         self.C = ['']*self.Cir.lengthc
         self.Ctol = ['']*self.Cir.lengthc
         self.formLayoutc = QtWidgets.QFormLayout(self.layoutWidgetc)
+        self.Mapper=QtCore.QSignalMapper(self)
         for i in range(self.Cir.lengthc):
             self.C[i] = QtWidgets.QLabel(
                 f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
             self.Ctol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetc)
             self.Ctol[i].setValue(self.Cir.alter_c[i].tol)
-            self.Ctol[i].valueChanged.connect(self.tolcolor)
+            # self.Ctol[i].valueChanged.connect(self.tolcolor)
+            self.Ctol[i].valueChanged.connect(self.Mapper.map)
+            self.Mapper.setMapping(self.Ctol[i],f'C{i}')
             self.Ctol[i].setSingleStep(0.01)
             self.Ctol[i].setMaximum(0.9999)
             self.Ctol[i].setDecimals(4)
             self.Ctol[i].setMaximumWidth(85)
             self.formLayoutc.setWidget(
-                i+1, QtWidgets.QFormLayout.LabelRole, self.C[i])
+                i+2, QtWidgets.QFormLayout.LabelRole, self.C[i])
             self.formLayoutc.setWidget(
-                i+1, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
+                i+2, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
 
         self.titleC = QtWidgets.QLabel('Capacitor', self.layoutWidgetc)
         self.titleC.setAlignment(QtCore.Qt.AlignCenter)
         self.formLayoutc.setWidget(
             0, QtWidgets.QFormLayout.SpanningRole, self.titleC)
+        self.checkC=QtWidgets.QCheckBox('Same Tolerance',self.layoutWidgetc)
+        self.checkC.toggled.connect(self.sametol)
+        self.formLayoutc.setWidget(
+            1, QtWidgets.QFormLayout.SpanningRole, self.checkC)
         self.scrollc.setWidget(self.layoutWidgetc)
         self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollc)
-
         self.scrollr = QtWidgets.QScrollArea()
         self.scrollr.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
@@ -131,19 +137,27 @@ class config(QtWidgets.QDialog):
                 f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
             self.Rtol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetr)
             self.Rtol[i].setValue(self.Cir.alter_r[i].tol)
-            self.Rtol[i].valueChanged.connect(self.tolcolor)
+            # self.Rtol[i].valueChanged.connect(self.tolcolor)
+            self.Rtol[i].valueChanged.connect(self.Mapper.map)
+            self.Mapper.setMapping(self.Rtol[i],f'R{i}')
             self.Rtol[i].setSingleStep(0.01)
             self.Rtol[i].setMaximum(0.9999)
             self.Rtol[i].setDecimals(4)
             self.Rtol[i].setMaximumWidth(85)
             self.formLayoutr.setWidget(
-                i+1, QtWidgets.QFormLayout.LabelRole, self.R[i])
+                i+2, QtWidgets.QFormLayout.LabelRole, self.R[i])
             self.formLayoutr.setWidget(
-                i+1, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
+                i+2, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
+
+        self.Mapper.mappedString.connect(self.sametol)
         self.titleR = QtWidgets.QLabel('Resistor', self.layoutWidgetr)
         self.titleR.setAlignment(QtCore.Qt.AlignCenter)
         self.formLayoutr.setWidget(
             0, QtWidgets.QFormLayout.SpanningRole, self.titleR)
+        self.checkR=QtWidgets.QCheckBox('Same Tolerance',self.layoutWidgetr)
+        self.checkR.toggled.connect(self.sametol)
+        self.formLayoutr.setWidget(
+            1, QtWidgets.QFormLayout.SpanningRole, self.checkR)
         self.scrollr.setWidget(self.layoutWidgetr)
         self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
@@ -152,7 +166,6 @@ class config(QtWidgets.QDialog):
         self.tab2.setLayout(self.scroll)
 
     def tolcolor(self):
-        self.Cir.adjust = True
         for i in range(self.Cir.lengthc):
             if self.Ctol[i].value() != self.Cir.alter_c[i].tol:
                 self.Ctol[i].setStyleSheet("color: red")
@@ -163,3 +176,32 @@ class config(QtWidgets.QDialog):
                 self.Rtol[i].setStyleSheet("color: red")
             else:
                 self.Rtol[i].setStyleSheet("color: black")
+
+    def sametol(self,i):
+        print(i)
+        if self.sender() is self.checkC:
+            for i in range(1,self.Cir.lengthc):
+                self.Ctol[i].setValue(self.Ctol[0].value())
+        elif self.sender() is self.checkR:
+            for i in range(1,self.Cir.lengthr):
+                self.Rtol[i].setValue(self.Rtol[0].value())
+        elif i[0]=='C':
+            i=int(i[1:])
+            if self.checkC.isChecked():
+                k=list(range(self.Cir.lengthc))
+                k.remove(i)
+                print(k)
+                for j in k:
+                    self.Ctol[j].blockSignals(True)
+                    self.Ctol[j].setValue(self.Ctol[i].value())
+                    self.Ctol[j].blockSignals(False)
+        elif i[0]=='R':
+            i=int(i[1:])
+            if self.checkR.isChecked():
+                k=list(range(self.Cir.lengthr))
+                k.remove(i)
+                print(k)
+                for j in k:
+                    self.Rtol[j].blockSignals(True)
+                    self.Rtol[j].setValue(self.Rtol[i].value())
+                    self.Rtol[j].blockSignals(False)

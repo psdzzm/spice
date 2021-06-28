@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 27-06-2021 16:08:05
+ LastEditTime: 28-06-2021 20:02:32
  FilePath: /circuit/main.py
 '''
 
@@ -14,6 +14,7 @@ from src.plot import plotGUI
 from PyQt5 import QtWidgets
 import os,sys
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root=os.getcwd()
 path=root+'/Workspace/bin'
 if path not in os.environ['PATH']:

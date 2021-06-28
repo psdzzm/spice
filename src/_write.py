@@ -18,26 +18,16 @@ def create_sp(self):
         f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
     loop = '\tdowhile run < mc_runs\n\t\t'
 
-    if self.adjust:
-        for i in range(self.lengthc):
-            loop = loop+'alter ' + \
-                self.alter_c[i].name + \
-                '=gauss('+self.alter_c[i].c + \
-                        f',{self.alter_c[i].tol},3)\n\t\t'
-        for i in range(self.lengthr):
-            loop = loop+'alter ' + \
-                self.alter_r[i].name + \
-                '=gauss('+self.alter_r[i].r + \
-                        f',{self.alter_r[i].tol},3)\n\t\t'
-    else:
-        for i in range(self.lengthc):
-            loop = loop+'alter ' + \
-                self.alter_c[i].name + \
-                '=gauss('+self.alter_c[i].c+f',{self.tolc},3)\n\t\t'
-        for i in range(self.lengthr):
-            loop = loop+'alter ' + \
-                self.alter_r[i].name + \
-                '=gauss('+self.alter_r[i].r+f',{self.tolr},3)\n\t\t'
+    for i in range(self.lengthc):
+        loop = loop+'alter ' + \
+            self.alter_c[i].name + \
+            '=gauss('+self.alter_c[i].c + \
+                    f',{self.alter_c[i].tol},3)\n\t\t'
+    for i in range(self.lengthr):
+        loop = loop+'alter ' + \
+            self.alter_r[i].name + \
+            '=gauss('+self.alter_r[i].r + \
+                    f',{self.alter_r[i].tol},3)\n\t\t'
 
 
     if self.measmode=='Cutoff Frequency':
@@ -71,26 +61,15 @@ def create_wst(self):
         f"*ng_script\n\n.control\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
     loop = '\tdowhile run <= numruns\n\t\t'
 
-    if self.adjust:
-        for i in range(self.lengthc):
-            loop = loop+'alter ' + \
-                self.alter_c[i].name+'=wc('+self.alter_c[i].c + \
-                f',{self.alter_c[i].tol},{i},run,numruns)\n\t\t'
-        for i in range(self.lengthr):
-            loop = loop+'alter ' + \
-                self.alter_r[i].name + \
-                '=wc('+self.alter_r[i].r + \
-                f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
-    else:
-        for i in range(self.lengthc):
-            loop = loop+'alter ' + \
-                self.alter_c[i].name+'=wc('+self.alter_c[i].c + \
-                f',{self.tolc},{i},run,numruns)\n\t\t'
-        for i in range(self.lengthr):
-            loop = loop+'alter ' + \
-                self.alter_r[i].name + \
-                '=wc('+self.alter_r[i].r + \
-                f',{self.tolr},{i+self.lengthc},run,numruns)\n\t\t'
+    for i in range(self.lengthc):
+        loop = loop+'alter ' + \
+            self.alter_c[i].name+'=wc('+self.alter_c[i].c + \
+            f',{self.alter_c[i].tol},{i},run,numruns)\n\t\t'
+    for i in range(self.lengthr):
+        loop = loop+'alter ' + \
+            self.alter_r[i].name + \
+            '=wc('+self.alter_r[i].r + \
+            f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
 
     with open('run_control_wst.sp', 'w') as file_object:
         file_object.write(control[0])
