@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 27-06-2021 18:54:18
+ LastEditTime: 28-06-2021 01:29:05
  FilePath: /circuit/src/read.py
 '''
 
@@ -106,7 +106,7 @@ class circuit:
         if not stop2:
             return "No 'end' line!"
 
-        control = '*ng_script\n\n.control\n\tsource test.cir\n\toptions wr_singlescale\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end'
+        control = '*ng_script\n\n.control\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end'
 
         with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b, open('test_control.sp','w') as tsc:
             if start and stop1:
@@ -156,7 +156,7 @@ class circuit:
         home=os.path.expanduser('~')
         if not os.path.isfile(home+'/.spiceinit'):
             with open(home+'/.spiceinit', 'w') as f:
-                f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\t*set wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
+                f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         # os.system("ngspice -b test.cir -o test.log")
         proc = subprocess.Popen(
             'ngspice -b test_control.sp -o test.log', shell=True, stderr=subprocess.PIPE)
@@ -164,18 +164,24 @@ class circuit:
         if stderr:
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
 
+
+        flag = 0
+        self.readnet()
+        try:
+            self.net.remove('out')
+        except ValueError:
+            return "Error! No 'out' port!", flag
+        self.net.sort()
+
         with open('test.log') as file_object:
             fileo = file_object.readlines()
             error_r = []
             i = 0
-            flag = 0
             while i < len(fileo):
                 if fileo[i].lower().startswith('error'):
-                    if fileo[i] == 'Error: no data saved for D.C. Operating point analysis; analysis not run\n':
-                        return "Error! No 'out' port!", flag
                     # elif fileo[i] == 'Error: measure  cut  (WHEN) : out of interval\n':
                     #     return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
-                    elif 'Could not find include file' in fileo[i]:
+                    if 'Could not find include file' in fileo[i]:
                         self.subckt = fileo[i].split(
                         )[-1].replace('../lib/user/', '').rstrip()
                         fileo[i] = fileo[i].replace('../lib/user/', '') + \
@@ -202,10 +208,8 @@ class circuit:
             if error_r:
                 return ''.join(error_r), flag
 
-        self.readnet()
 
-
-        control='*ng_script\n\n.control\n\tsource test.cir\n\toptions wr_singlescale\n\tac dec 40 1 1G\n\twrdata ac vdb(out) '
+        control=f"*ng_script\n\n.control\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac vdb(out) "
         with open('test_control2.sp','w') as file_object:
             file_object.write(control)
             for item in self.net:
@@ -226,7 +230,7 @@ class circuit:
                 line=line.split()
                 self.initx[i]=float(line[0])
                 for j in range(length):
-                    self.inity[j,i]=float(line[2*j+1])
+                    self.inity[j,i]=float(line[j+1])
                 i+=1
 
         # with open('ac') as file_object:
@@ -296,9 +300,6 @@ class circuit:
                             self.net.append(m.group(1))
                         else:
                             self.net.append(item)
-
-        self.net.remove('out')
-        self.net.sort()
 
 
     from ._write import create_sp, create_wst

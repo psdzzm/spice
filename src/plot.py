@@ -104,9 +104,6 @@ class plotGUI(QtWidgets.QMainWindow):
                     else:
                         break
 
-
-            self.Cir2.readnet()
-
             self.configGUI=config(self.Cir2,self.root)
             self.configGUI.accepted.connect(lambda: self.configCreate(True))
             self.configGUI.rejected.connect(self.configreject)
@@ -121,10 +118,15 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.Cir.mc_runs=self.configGUI.totaltime.value()
         self.Cir.netselect=self.configGUI.measnode.currentText()
+        self.Cir.analmode=self.configGUI.analmode.currentIndex()
         self.Cir.measmode=self.configGUI.measmode.currentText()
         self.Cir.rfnum=self.configGUI.rfnum.value()
         self.Cir.risefall=self.configGUI.risefall.currentIndex()
-        # print(self.Cir.rfnum,type(self.Cir.rfnum))
+
+        if self.Cir.analmode==0:
+            self.Cir.startac=self.configGUI.startac.value()
+            self.Cir.stopac=self.configGUI.stopac.value()
+
         for i in range(self.Cir.lengthc):
             self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
         for i in range(self.Cir.lengthr):

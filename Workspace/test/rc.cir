@@ -4,8 +4,8 @@ R1 out N001 1
 C1 out 0 1
 
 .control
-	option wr_singlescale
  	op
+ 	*ac dec 1 1 2
  	wrdata op all
 .endc
  

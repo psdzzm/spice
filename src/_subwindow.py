@@ -39,6 +39,8 @@ class config(QtWidgets.QDialog):
 
         self.measnode.currentTextChanged.connect(self.netchange)
 
+        self.analmode.currentTextChanged.connect(self.analchange)
+
         self.measmode.currentTextChanged.connect(self.showhide)
 
         self.MplWidget.figure.clear()
@@ -46,7 +48,7 @@ class config(QtWidgets.QDialog):
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[0,:])
-        self.ax.set_title(f"Default AC Analysis of {self.Cir.name}")
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.shortname}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
@@ -61,15 +63,19 @@ class config(QtWidgets.QDialog):
         print(self.Cir.inity[node,10])
         self.MplWidget.canvas.draw()
 
-    def showhide(self):
-        if self.measmode.currentText()=='Cutoff Frequency':
-            self.label_5.setHidden(False)
-            self.rfnum.setHidden(False)
-            self.risefall.setHidden(False)
+    def analchange(self):
+        mode=self.analmode.currentIndex()
+        if mode==0:
+            self.widget_3.setHidden(False)
         else:
-            self.label_5.setHidden(True)
-            self.rfnum.setHidden(True)
-            self.risefall.setHidden(True)
+            self.widget_3.setHidden(True)
+
+    def showhide(self):
+        mode=self.measmode.currentIndex()
+        if mode==0:
+            self.widget_5.setHidden(False)
+        else:
+            self.widget_5.setHidden(True)
 
 
     def tab2UI(self):

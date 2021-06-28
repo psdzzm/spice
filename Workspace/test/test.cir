@@ -38,16 +38,9 @@ ROUT    out       6       10
 * VIEW RESULTS
 
 .control
-	options appendwrite wr_singlescale
-	show r : resistance , c : capacitance > list
-	OP
-	display all > netlist
-	wrdata out out
+	save out 1 10 2 3 4
+	options wr_singlescale
 	ac dec 40 1 1G
-	meas ac ymax MAX v(out)
-	meas ac fmax MAX_AT v(out)
-	let v3db = ymax/sqrt(2)
-	meas ac cut when v(out)=v3db fall=last
-	wrdata out fmax cut vdb(out)
+	wrdata ac vdb(out) vdb(1) vdb(10) vdb(2) vdb(3) vdb(4) 
 .endc
 .end
