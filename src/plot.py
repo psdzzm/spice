@@ -49,6 +49,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.p = None
 
     def openfile(self):
+        os.chdir(self.root+'/Workspace')
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Open file', '..', "Spice Netlists (*.cir)")
         if fname:
@@ -156,7 +157,8 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def kill(self):
         if self.p:
-            self.p.terminate()
+            self.p.kill()
+            self.p.waitForFinished(-1)
             print('killed')
             self.p = None
 
@@ -164,6 +166,8 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.p == None:
             print('Cancelled')
             return
+        else:
+            print('finish')
 
         self.p = None
         self.dialog.close()
@@ -286,20 +290,20 @@ class plotGUI(QtWidgets.QMainWindow):
         print('wst')
         if self.x == []:
             return
+
+        self.ax.legend()
+        try:
+            line = self.line2.pop(0)
+            line.remove()
+        except:
+            pass
+
         if self.wstcase.isChecked():
             self.line2 = self.ax.plot(
                 self.x[self.Cir.wst_index], self.y[self.Cir.wst_index], 'xr')
             self.ax.legend([self.line2[0]], ['Worst Case'])
-        else:
-            self.ax.legend()
-            try:
-                line = self.line2.pop(0)
-                line.remove()
-            except IndexError:
-                pass
 
         self.MplWidget.canvas.draw()
-
 
 
 
@@ -312,30 +316,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.start_process('Add')
 
-    def adjusttol(self):
-        for i in range(self.Cir.lengthc):
-            self.Cir.alter_c[i].tol = self.Ctol[i].value()
-        for i in range(self.Cir.lengthr):
-            self.Cir.alter_r[i].tol = self.Rtol[i].value()
-
-        self.Cir.adjust = True
-        self.Cir.create_sp()
-        self.Cir.create_wst()
-
-        self.start_process('Adjust', 2)
-
-    def tolcolor(self):
-        for i in range(self.Cir.lengthc):
-            if self.Ctol[i].value() != self.Cir.alter_c[i].tol:
-                self.Ctol[i].setStyleSheet("color: red")
-            else:
-                self.Ctol[i].setStyleSheet("color: black")
-        for i in range(self.Cir.lengthr):
-            if self.Rtol[i].value() != self.Cir.alter_r[i].tol:
-                self.Rtol[i].setStyleSheet("color: red")
-            else:
-                self.Rtol[i].setStyleSheet("color: black")
-
     def calcp(self):
         try:
             fc = float(self.calctext.text())
@@ -346,12 +326,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
         if self.x == []:
             return
-        # elif unit == 'kHz':
-        #     fc = fc*1000
-        # elif unit == 'MHz':
-        #     fc = fc*1000000
-        # elif unit == 'GHz':
-        #     fc = fc*1000000000
         else:
             fc=fc*10**(unit*3)
 
@@ -381,6 +355,9 @@ class plotGUI(QtWidgets.QMainWindow):
         self.configGUI=config(self.Cir,self.root)
         self.configGUI.startac.setValue(self.Cir.startac)
         self.configGUI.stopac.setValue(self.Cir.stopac)
+        self.configGUI.rfnum.setValue(self.Cir.rfnum)
+        self.configGUI.risefall.setCurrentIndex(self.Cir.risefall)
+        self.configGUI.measnode.setCurrentText(self.Cir.netselect)
         self.configGUI.accepted.connect(self.configCreate)
 
 
@@ -397,13 +374,6 @@ class plotGUI(QtWidgets.QMainWindow):
             line.remove()
         except IndexError:
             pass
-
-        # for i in range(self.Cir.lengthc):
-        #     self.Ctol[i].setValue(self.Cir.tolc)
-        #     self.Ctol[i].setStyleSheet("color: black")
-        # for i in range(self.Cir.lengthr):
-        #     self.Rtol[i].setValue(self.Cir.tolr)
-        #     self.Rtol[i].setStyleSheet("color: black")
 
         self . MplWidget . canvas . draw()
         self.addtimetext.clear()

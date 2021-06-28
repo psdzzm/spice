@@ -33,6 +33,8 @@ class config(QtWidgets.QDialog):
         self.totaltime.setValue(100)
         self.measnode.addItems(Cir.net)
         self.rfnum.setSpecialValueText('LAST')
+        self.risefall.setCurrentIndex(1)
+        self.tolcolor()
 
         # self.buttonBox.setDefault(False)
         # self.buttonBox.setAutoDefault(False)
@@ -57,9 +59,15 @@ class config(QtWidgets.QDialog):
 
     def netchange(self):
         node=self.measnode.currentIndex()
-        line = self.line1.pop(0)
-        line.remove()
+        # line = self.line1.pop(0)
+        # line.remove()
+        self.ax.clear()
+        self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node,:])
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.shortname}")
+        self.ax.grid()
+        self.ax.set_xlabel('Cutoff Frequency/Hz')
+        self.ax.set_ylabel('vdb')
         self.MplWidget.canvas.draw()
 
     def analchange(self):
@@ -114,7 +122,7 @@ class config(QtWidgets.QDialog):
         self.scrollr.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
 
-        # self.Cir.lengthr = 10
+
         self.R = ['']*self.Cir.lengthr
         self.Rtol = ['']*self.Cir.lengthr
         self.formLayoutr = QtWidgets.QFormLayout(self.layoutWidgetr)

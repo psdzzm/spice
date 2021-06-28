@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-06-2021 11:33:45
+ LastEditTime: 28-06-2021 17:15:02
  FilePath: /circuit/src/read.py
 '''
 
@@ -166,9 +166,11 @@ class circuit:
         self.readnet()
         try:
             self.net.remove('out')
+            self.netc.remove('out')
         except ValueError:
             return "Error! No 'out' port!", flag
         self.net.sort()
+        self.netc.sort()
 
         with open('test.log') as file_object:
             fileo = file_object.readlines()
@@ -312,9 +314,6 @@ class circuit:
                         else:
                             self.netc.append(item)
                             self.net.append(item)
-
-            self.netc.remove('out')
-            self.netc.sort()
 
     from ._write import create_sp, create_wst
 
