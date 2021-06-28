@@ -60,7 +60,6 @@ class config(QtWidgets.QDialog):
         line = self.line1.pop(0)
         line.remove()
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node,:])
-        print(self.Cir.inity[node,10])
         self.MplWidget.canvas.draw()
 
     def analchange(self):

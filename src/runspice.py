@@ -18,7 +18,7 @@ def runspice(mode=0):
         rm('fc')
         os.system('ngspice -b run_control.sp -o run_log')
     print(f'Time elapsed: {timer()-start}s')
-    with open('run.log','a') as a, open('run_log') as b:
+    with open('run.log','w') as a, open('run_log') as b:
         data=b.read()
         a.write('Creation Date: '+datetime.now().strftime("%d/%m/%Y %H:%M:%S\n"))
         a.write(data)

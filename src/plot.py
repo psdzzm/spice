@@ -124,8 +124,8 @@ class plotGUI(QtWidgets.QMainWindow):
         self.Cir.risefall=self.configGUI.risefall.currentIndex()
 
         if self.Cir.analmode==0:
-            self.Cir.startac=self.configGUI.startac.value()
-            self.Cir.stopac=self.configGUI.stopac.value()
+            self.Cir.startac=self.configGUI.startac.value()*10**(self.configGUI.startunit.currentIndex()*3)
+            self.Cir.stopac=self.configGUI.stopac.value()*10**(self.configGUI.stopunit.currentIndex()*3)
 
         for i in range(self.Cir.lengthc):
             self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
@@ -167,6 +167,13 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.p = None
         self.dialog.close()
+
+        with open('run.log') as file_object:
+            file=file_object.read()
+            if 'out of interval' in file:
+                QtWidgets.QMessageBox.critical(self, 'Error!','Cutoff frequency out of interval')
+                self.analButton.clicked.connect(self.analy)
+                return
 
         if mode == 'Add':
             self.Cir.resultdata(True)
@@ -335,16 +342,18 @@ class plotGUI(QtWidgets.QMainWindow):
         except:
             return
         larsmll = self.psign.currentText()
-        unit = self.fcunit.currentText()
+        unit = self.fcunit.currentIndex()
 
         if self.x == []:
             return
-        elif unit == 'kHz':
-            fc = fc*1000
-        elif unit == 'MHz':
-            fc = fc*1000000
-        elif unit == 'GHz':
-            fc = fc*1000000000
+        # elif unit == 'kHz':
+        #     fc = fc*1000
+        # elif unit == 'MHz':
+        #     fc = fc*1000000
+        # elif unit == 'GHz':
+        #     fc = fc*1000000000
+        else:
+            fc=fc*10**(unit*3)
 
         if fc < self.x[0]:
             if larsmll == '<':
@@ -370,6 +379,8 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def analy(self):
         self.configGUI=config(self.Cir,self.root)
+        self.configGUI.startac.setValue(self.Cir.startac)
+        self.configGUI.stopac.setValue(self.Cir.stopac)
         self.configGUI.accepted.connect(self.configCreate)
 
 

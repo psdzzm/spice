@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-06-2021 01:29:05
+ LastEditTime: 28-06-2021 11:33:45
  FilePath: /circuit/src/read.py
 '''
 
@@ -83,7 +83,8 @@ class circuit:
                     # Source Directory has
                     elif os.path.isfile(os.path.dirname(self.name)+'/'+row[1]):
                         lines = '.include ../lib/user/'+inclname+'\n'
-                        shutil.copyfile(os.path.dirname(self.name)+'/'+row[1], path2check)
+                        shutil.copyfile(os.path.dirname(
+                            self.name)+'/'+row[1], path2check)
                         print('Copy '+row[1]+' to '+path2check)
                     else:           # Directory ../lib/user has include file or will be later copied to
                         lines = '.include ../lib/user/'+inclname+'\n'
@@ -102,13 +103,12 @@ class circuit:
                     stop2 = i
                     break
 
-
         if not stop2:
             return "No 'end' line!"
 
         control = '*ng_script\n\n.control\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end'
 
-        with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b, open('test_control.sp','w') as tsc:
+        with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b, open('test_control.sp', 'w') as tsc:
             if start and stop1:
                 file_object.write(''.join(fileo[0:start]))
                 file_object.write(''.join(fileo[stop1+1:stop2+1]))
@@ -124,7 +124,6 @@ class circuit:
                 b.write('.end')
 
             tsc.write(control)
-
 
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:
@@ -148,12 +147,11 @@ class circuit:
 
         return self.init()
 
-
     def init(self):
         rm('out')
         rm('run.log')
         print('\nChecking if the input circuit is valid.\n')
-        home=os.path.expanduser('~')
+        home = os.path.expanduser('~')
         if not os.path.isfile(home+'/.spiceinit'):
             with open(home+'/.spiceinit', 'w') as f:
                 f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
@@ -163,7 +161,6 @@ class circuit:
         _, stderr = proc.communicate()
         if stderr:
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
-
 
         flag = 0
         self.readnet()
@@ -208,30 +205,42 @@ class circuit:
             if error_r:
                 return ''.join(error_r), flag
 
-
-        control=f"*ng_script\n\n.control\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac vdb(out) "
-        with open('test_control2.sp','w') as file_object:
+        control = f"*ng_script\n\n.control\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac all\n.endc\n\n.end "
+        with open('test_control2.sp', 'w') as file_object:
             file_object.write(control)
-            for item in self.net:
-                file_object.write(f'vdb({item}) ')
-
-            file_object.write('\n.endc\n\n.end')
 
         os.system('ngspice test_control2.sp -b -o test2.log')
 
         with open('ac') as file_object:
-            file_object.readline()
-            data=file_object.readlines()
-            self.initx=np.zeros(len(data))
-            length=len(self.net)+1
-            self.inity=np.zeros([length,len(data)])
+            title = file_object.readline().split()
+            data = file_object.readlines()
+            self.initx = np.zeros(len(data))
+            length = len(self.net)+1
+            self.inity = np.zeros([length, len(data)], dtype=np.complex_)
+
+            index=[i for i, x in enumerate(title) if x == "out"]
             i=0
-            for line in data:
-                line=line.split()
-                self.initx[i]=float(line[0])
-                for j in range(length):
-                    self.inity[j,i]=float(line[j+1])
-                i+=1
+            if len(index)==1:
+                for item in self.netc:
+                    index.append(title.index(item))
+                for line in data:
+                    line = line.split()
+                    self.initx[i] = float(line[0])
+                    for j in range(length):
+                        self.inity[j, i] = float(line[index[j]])
+                    i += 1
+            else:
+                index=[index]
+                for item in self.netc:
+                    index.append([i for i, x in enumerate(title) if x == item])
+                for line in data:
+                    line = line.split()
+                    self.initx[i] = float(line[0])
+                    for j in range(length):
+                        self.inity[j, i] = float(line[index[j][0]])+float(line[index[j][1]])*1j
+                    i += 1
+
+            self.inity=20*np.log10(np.abs(self.inity))
 
         # with open('ac') as file_object:
         #     self.startac, self.stopac = 0, 0
@@ -287,30 +296,34 @@ class circuit:
 
     def readnet(self):
         with open('op') as file_object:
-            nets=list(set(file_object.readline().split()))
-            self.net=[]
+            nets = list(set(file_object.readline().split()))
+            self.net = []
+            self.netc=[]
             for item in nets:
                 if '#branch' in item:
                     continue
                 else:
-                    temp=re.match(r'x[\d\w]+\.',item)
+                    temp = re.match(r'x[\d\w]+\.', item)
                     if not temp:
-                        m=re.match(r'V\((\d+)\)',item)
+                        m = re.match(r'V\((\d+)\)', item)
                         if m:
+                            self.netc.append(m.group())
                             self.net.append(m.group(1))
                         else:
+                            self.netc.append(item)
                             self.net.append(item)
 
+            self.netc.remove('out')
+            self.netc.sort()
 
     from ._write import create_sp, create_wst
-
 
     def ngspice(self, mode=0):
         runspice(mode)
 
-
     _col2 = []
     wst_cutoff = []
+
     def resultdata(self, appnd=False, worst=True):
         with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
             fileobject.readline()
