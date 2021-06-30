@@ -5,11 +5,10 @@
  Author: Yichen Zhang
  Date: 30-06-2021 13:20:17
  LastEditors: Yichen Zhang
- LastEditTime: 30-06-2021 21:44:40
+ LastEditTime: 30-06-2021 22:20:43
  FilePath: /circuit/src/is2.py
 '''
 
-from numpy.ma.core import sqrt
 from scipy import stats
 from scipy.special import erf
 from scipy.integrate import quad

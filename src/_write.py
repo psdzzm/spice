@@ -5,13 +5,13 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-06-2021 13:10:13
+ LastEditTime: 30-06-2021 23:51:52
  FilePath: /circuit/src/_write.py
 '''
 import time
 
 
-def create_sp(self):
+def create_sp2(self):
     self.seed = int(time.time())
 
     self.control = [
@@ -40,10 +40,59 @@ def create_sp(self):
         else:
             rfmode=rfmode+str(self.rfnum)
 
-        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy ac{{$&run}}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
 
     else:
-        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tdestroy ac{{$&run}}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+    self.control.append('wrdata fc cutoff\n.endc\n\n.end')
+
+    with open('run_control.sp', 'w') as file_object:
+        file_object.write(self.control[0])
+        file_object.write(loop)
+        file_object.write(self.control[1])
+        file_object.write(self.control[2])
+
+def create_sp(self):
+    self.seed = int(time.time())
+
+    self.control = [
+        f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+    loop = '\tdowhile run < mc_runs\n\t\t'
+
+    for i in range(self.lengthc):
+        loop = loop+'alter ' + \
+            self.alter_c[i].name + \
+            '=unif('+self.alter_c[i].c + \
+                    f',{self.alter_c[i].tol})\n\t\t'
+    for i in range(self.lengthr):
+        loop = loop+'alter ' + \
+            self.alter_r[i].name + \
+            '=unif('+self.alter_r[i].r + \
+                    f',{self.alter_r[i].tol})\n\t\t'
+
+    loop=loop+'print '
+    for i in range(self.lengthc):
+        loop=loop+f'@{self.alter_c[i].name}[capacitance] '
+    for i in range(self.lengthr):
+        loop=loop+f'@{self.alter_r[i].name}[resistance] '
+    loop=loop+'>> paramlist\n\t\t'
+
+
+    if self.measmode=='Cutoff Frequency':
+        if self.risefall:
+            rfmode='fall='
+        else:
+            rfmode='rise='
+        if self.rfnum==0:
+            rfmode=rfmode+'last'
+        else:
+            rfmode=rfmode+str(self.rfnum)
+
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+    else:
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
 
     self.control.append('wrdata fc cutoff\n.endc\n\n.end')
 

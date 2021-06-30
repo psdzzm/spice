@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-06-2021 20:14:57
+ LastEditTime: 01-07-2021 00:02:50
  FilePath: /circuit/src/read.py
 '''
 
@@ -13,6 +13,7 @@
 import os
 import shutil
 import subprocess
+import hashlib
 import time
 import re
 import numpy as np
@@ -43,6 +44,7 @@ class R:
         self.name = name
         self.r = r
         self.tol = tol
+        self.resistance=[]
 
 
 class C:
@@ -50,6 +52,7 @@ class C:
         self.name = name
         self.c = c
         self.tol = tol
+        self.capacitance=[]
 
 
 class circuit:
@@ -149,7 +152,7 @@ class circuit:
         rm('run.log')
         print('\nChecking if the input circuit is valid.\n')
         home = os.path.expanduser('~')
-        if not os.path.isfile(home+'/.spiceinit'):
+        if (not os.path.isfile(home+'/.spiceinit')) or (hashlib.md5(open(home+'/.spiceinit', 'rb').read()).hexdigest() != '57cc72ae38d0f359a525a1d32e638140'):
             with open(home+'/.spiceinit', 'w') as f:
                 f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\tset wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         proc = subprocess.Popen(
@@ -296,7 +299,9 @@ class circuit:
     _col2 = []
     wst_cutoff = []
 
-    def resultdata(self, appnd=False, worst=True):
+    from ._resultaly import resultdata
+
+    def resultdata2(self, appnd=False, worst=True):
         with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
             fileobject.readline()
             lines = fileobject.readlines()

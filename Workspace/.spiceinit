@@ -1,0 +1,18 @@
+* User defined ngspice init file
+
+    set filetype=ascii
+	set color0=white
+	set wr_vecnames		$ wrdata: scale and data vector names are printed on the first row
+	set wr_singlescale	$ the scale vector will be printed only once
+
+* unif: uniform distribution, deviation relativ to nominal value
+* aunif: uniform distribution, deviation absolut
+* gauss: Gaussian distribution, deviation relativ to nominal value
+* agauss: Gaussian distribution, deviation absolut
+* limit: if unif. distributed value >=0 then add +avar to nom, else -avar
+
+	define unif(nom, rvar) (nom + (nom*rvar) * sunif(0))
+	define aunif(nom, avar) (nom + avar * sunif(0))
+	define gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))
+	define agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))
+	define limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))

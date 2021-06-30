@@ -272,7 +272,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self . MplWidget .figure. clear()
 
         self.ax = self.MplWidget.figure.add_subplot(111)
-        self.ax.set_ylim(-0.05, 1.05)
+        # self.ax.set_ylim(-0.05, 1.05)
         self.line1 = self.ax . plot(self.x, self.y)
         # self .MplWidget . canvas . axes . legend (( 'cosinus' ,  'sinus' ), loc = 'upper right' )
         self.ax. set_title(f"Tolerance Analysis of {self.Cir.shortname}")
@@ -283,20 +283,20 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def plotwst(self):
         print('wst')
-        if self.x == []:
-            return
+        # if self.x == []:
+        #     return
 
-        self.ax.legend()
-        try:
-            line = self.line2.pop(0)
-            line.remove()
-        except:
-            pass
+        # self.ax.legend()
+        # try:
+        #     line = self.line2.pop(0)
+        #     line.remove()
+        # except:
+        #     pass
 
-        if self.wstcase.isChecked():
-            self.line2 = self.ax.plot(
-                self.x[self.Cir.wst_index], self.y[self.Cir.wst_index], 'xr')
-            self.ax.legend([self.line2[0]], ['Worst Case'])
+        # if self.wstcase.isChecked():
+        #     self.line2 = self.ax.plot(
+        #         self.x[self.Cir.wst_index], self.y[self.Cir.wst_index], 'xr')
+        #     self.ax.legend([self.line2[0]], ['Worst Case'])
 
         self.MplWidget.canvas.draw()
 
