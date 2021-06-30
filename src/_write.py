@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-06-2021 11:54:27
+ LastEditTime: 30-06-2021 13:10:13
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -40,10 +40,10 @@ def create_sp(self):
         else:
             rfmode=rfmode+str(self.rfnum)
 
-        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy ac{{$&run}}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
 
     else:
-        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac y{self.measmode} {self.measmode} v({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = y{self.measmode}\n\t\tdestroy ac{{$&run}}\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
 
     self.control.append('wrdata fc cutoff\n.endc\n\n.end')
 

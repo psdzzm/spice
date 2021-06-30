@@ -3,7 +3,7 @@
 .control
 	source run.cir
 	save out
-	let mc_runs = 100
+	let mc_runs = 10000
 	let run = 0
 	set curplot=new          $ create a new plot
 	set scratch=$curplot     $ store its name to 'scratch'
@@ -25,9 +25,11 @@
 		let v3db = ymax/sqrt(2)
 		meas ac cut when v(out)=v3db fall=last
 		let {$scratch}.cutoff[run] = cut
+		print cut >> fc2
+		destroy ac{$&run}
 		let run = run + 1
 	end
-
+	
 	setplot $scratch
 	wrdata fc cutoff
 .endc

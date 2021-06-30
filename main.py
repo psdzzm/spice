@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-06-2021 20:02:32
+ LastEditTime: 30-06-2021 10:58:20
  FilePath: /circuit/main.py
 '''
 
