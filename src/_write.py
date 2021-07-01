@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-06-2021 23:51:52
+ LastEditTime: 01-07-2021 18:17:27
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -53,11 +53,13 @@ def create_sp2(self):
         file_object.write(self.control[1])
         file_object.write(self.control[2])
 
-def create_sp(self):
+def create_sp(self, add=False):
     self.seed = int(time.time())
 
-    self.control = [
-        f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+    if add:
+        self.control = [f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+    else:
+        self.control = [f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
     loop = '\tdowhile run < mc_runs\n\t\t'
 
     for i in range(self.lengthc):
@@ -107,7 +109,7 @@ def create_wst(self):
     self.wst_run = 2**(self.lengthc+self.lengthr)
 
     control = [
-        f"*ng_script\n\n.control\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
+        f"*ng_script\n\n.control\n\tdestroy all\n\tset wr_vecnames\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
     loop = '\tdowhile run <= numruns\n\t\t'
 
     for i in range(self.lengthc):

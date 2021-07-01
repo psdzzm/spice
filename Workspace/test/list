@@ -1,20 +1,64 @@
  Resistor: Simple linear resistor
-     device                   r10            r.xop.rout             r.xop.rp1
-      model                     R                     R                     R
- resistance                 15900                    10                  1000
+     device            r.xu1.risc             r.xu1.rib             r.xu1.rax
+      model             xu1:mrisc              xu1:mrib              xu1:mrax
+ resistance                  1000                  1000                  1006
  Resistor: Simple linear resistor
-     device             r.xop.rin                    rb                    ra
+     device                    r1             r.xu1.roo              r.xu1.r2
       model                     R                     R                     R
- resistance                 1e+07                     1                 1e+08
+ resistance                 39000                    13                11.254
  Resistor: Simple linear resistor
-     device                    r2                    r1
-      model                     R                     R
- resistance                 11200                 11200
+     device             r.xu1.rdm           r.xu1.rpsr1            r.xu1.rcm1
+      model                     R                     R                     R
+ resistance               23.5073                   100                    10
+ Resistor: Simple linear resistor
+     device          r.xu1.rslope             r.xu1.rcm             r.xu1.rd2
+      model                     R                     R                     R
+ resistance               33333.3            3.8775e+07              2.45e+06
+ Resistor: Simple linear resistor
+     device             r.xu1.rd1             r.xu1.rpt             r.xu1.rnt
+      model                     R                     R                     R
+ resistance              2.45e+06                 1e+06                 1e+08
+ Resistor: Simple linear resistor
+     device             r.xu1.rpo             r.xu1.rno             r.xu1.rdp
+      model                     R                     R                     R
+ resistance                     1                     1                   100
+ Resistor: Simple linear resistor
+     device            r.xu1.rdn2             r.xu1.ro3             r.xu1.ro2
+      model                     R                     R                     R
+ resistance                   100                     1                  1000
+ Resistor: Simple linear resistor
+     device            r.xu1.rcx2            r.xu1.rcx1           r.xu1.rpsr2
+      model                     R                     R                     R
+ resistance                   100                   100                 1e+06
+ Resistor: Simple linear resistor
+     device            r.xu1.rcm2            r.xu1.r001            r.xu1.rset
+      model                     R                     R                     R
+ resistance                 1e+06                  1000                  1000
+ Resistor: Simple linear resistor
+     device            r.xu1.rbal             r.xu1.rbb             r.xu1.raa
+      model                     R                     R                     R
+ resistance                  1000                 1e+08                 1e+08
+ Resistor: Simple linear resistor
+     device            r.xu1.rina            r.xu1.rinb            r.xu1.rvos
+      model                     R                     R                     R
+ resistance                  1000                  1000                  1000
+ Resistor: Simple linear resistor
+     device             r.xu1.rbx             r.xu1.rdx             r.xu1.rcx
+      model                     R                     R                     R
+ resistance                  1000                  1000                  1000
  Capacitor: Fixed capacitor
-     device                   c10             c.xop.cp1                    c2
+     device                    c2              c.xu1.c2            c.xu1.cpsr
       model                     C                     C                     C
-capacitance                 1e-09            1.5915e-06                 1e-09
+capacitance                 7e-13           4.78743e-11           1.59155e-10
+ Capacitor: Fixed capacitor
+     device             c.xu1.ccm            c.xu1.cin2            c.xu1.cin1
+      model                     C                     C                     C
+capacitance           2.65258e-11                 1e-12                 1e-12
+ Capacitor: Fixed capacitor
+     device              c.xu1.c1            c.xu1.cdc1            c.xu1.cset
+      model                     C                     C                     C
+capacitance                 1e-10                 1e-05                 1e-10
  Capacitor: Fixed capacitor
      device                    c1
       model                     C
-capacitance                 2e-09
+capacitance                 2e-12

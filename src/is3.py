@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 18:56:02
  LastEditors: Yichen Zhang
- LastEditTime: 30-06-2021 23:09:05
+ LastEditTime: 01-07-2021 16:53:44
  FilePath: /circuit/src/is3.py
 '''
 
@@ -13,9 +13,9 @@ import numpy as np
 import hashlib
 import os
 
-# home = os.path.expanduser('~')
-# md=hashlib.md5(open(home+'/.spiceinit','rb').read()).hexdigest()
-# print(md)
+home = os.path.expanduser('~')
+md=hashlib.md5(open(home+'/.spiceinit','rb').read()).hexdigest()
+print(md)
 
 # x=np.random.rand(10)
 # print(x)

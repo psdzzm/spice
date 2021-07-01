@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 01-07-2021 00:26:33
+ LastEditTime: 01-07-2021 17:23:07
  FilePath: /circuit/src/_resultaly.py
 '''
 from timeit import default_timer as timer
@@ -14,7 +14,7 @@ from scipy import stats
 from scipy.special import erf
 
 
-def resultdata(self, appnd=False, worst=True):
+def resultdata(self, worst=False):
     start=timer()
     with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst, open('paramlist','r') as paramlist:
         fileobject.readline()
@@ -31,9 +31,7 @@ def resultdata(self, appnd=False, worst=True):
                 row = line.split()
                 self.wst_cutoff[i] = float(line.split()[1])
                 i+=1
-
-    if not appnd:
-        self._col2 = []
+            self.wst_cutoff.sort()
 
     self.cutoff = np.zeros(len(lines))
     i=0
@@ -41,14 +39,10 @@ def resultdata(self, appnd=False, worst=True):
         self.cutoff[i] = float(line.split()[1])
         i+=1
 
-    # if worst:
-    #     self.cutoff = np.append(self.cutoff, self.wst_cutoff)
-
     index=self.cutoff.argsort()
     self.cutoff.sort()
     self.cutoff0=np.copy(self.cutoff)
     self.cutoff0 = np.unique(self.cutoff)
-    # self.wst_index = np.where(np.isin(self.cutoff, self.wst_cutoff))
     length = len(self.cutoff)
 
     for i in range(self.lengthc):
@@ -79,7 +73,7 @@ def resultdata(self, appnd=False, worst=True):
     for i in range(length):
         seq+=product[index[i]]
         self.p[i]=1/length*seq
-    print('Time elapsed:',timer()-start,'s')
+    print('Analyse Data Time:',timer()-start,'s')
 
 
 

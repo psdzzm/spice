@@ -10,6 +10,7 @@ from PyQt5.QtCore import QProcess
 from src import read
 import shutil
 from datetime import datetime
+from timeit import default_timer as timer
 from ._subwindow import processing, config
 
 
@@ -49,14 +50,13 @@ class plotGUI(QtWidgets.QMainWindow):
         self.p = None
 
     def openfile(self):
-        os.chdir(self.root+'/Workspace')
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Open file', '../CirFile', "Spice Netlists (*.cir)")
+            self, 'Open file', self.root+'/CirFile', "Spice Netlists (*.cir)")
         if fname:
             name = fname.split('/')[-1]
             dir=name.split('.')[0]+' '+datetime.now().strftime("%d%m%Y_%H%M%S")
-            os.mkdir(dir)
-            os.chdir(dir)
+            os.mkdir(self.root+'/Workspace/'+dir)
+            os.chdir(self.root+'/Workspace/'+dir)
             shutil.copyfile(fname, os.getcwd()+f'/{name}')
 
             self.Cir2 = read.circuit(fname)
@@ -134,12 +134,13 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
         self.Cir.create_sp()
         self.Cir.create_wst()
-        self.start_process('Open', 2)
+        self.start_process('Open', 1)
 
     def configreject(self):
         print('Rejected')
         if hasattr(self,'Cir'):
             os.chdir(self.Cir.dir)
+        print(os.getcwd())
 
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.
@@ -149,7 +150,13 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.process = self.processGui()
 
-            self.p.start("python3", ['../../src/runspice.py', f'-{runmode}'])
+            self._start=timer()
+            if runmode==0:
+                self.p.start("/bin/bash", ['-c','ngspice -b run_control.sp -o run_log'])
+            elif runmode==1:
+                read.rm('fc')
+                read.rm('fc_wst')
+                self.p.start("/bin/bash", ['-c','ngspice -b run_control.sp run_control_wst.sp -o run_log'])
 
     def processGui(self):
         self.dialog.show()
@@ -158,13 +165,12 @@ class plotGUI(QtWidgets.QMainWindow):
     def kill(self):
         if self.p:
             self.p.kill()
-            self.p.waitForFinished(-1)
-            print('killed')
             self.p = None
 
     def finishrun(self, mode):
+        print('Spice time:',timer()-self._start,'s')
         if self.p == None:
-            print('Cancelled')
+            print('killed')
             return
         else:
             print('finish')
@@ -172,21 +178,21 @@ class plotGUI(QtWidgets.QMainWindow):
         self.p = None
         self.dialog.close()
 
-        with open('run.log') as file_object:
-            file=file_object.read()
+        with open('run.log','a') as file_object, open('run_log') as b:
+            file=b.read()
+            file_object.write(file)
+            read.rm('run_log')
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(self, 'Error!','Cutoff frequency out of interval')
                 self.analButton.clicked.connect(self.analy)
                 return
-
-        if mode == 'Add':
-            self.Cir.resultdata(True)
-            self.total = self.total+self.Cir.mc_runs
-
-        elif mode == 'Open':
-            self.Cir.resultdata(worst=True)
-            self.postinit()
-            return
+            elif mode=='Add':
+                self.Cir.resultdata()
+                self.total = self.total+self.Cir.mc_runs
+            elif mode=='Open':
+                self.Cir.resultdata(worst=True)
+                self.postinit()
+                return
 
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
@@ -283,20 +289,19 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def plotwst(self):
         print('wst')
-        # if self.x == []:
-        #     return
+        if self.x == []:
+            return
 
-        # self.ax.legend()
-        # try:
-        #     line = self.line2.pop(0)
-        #     line.remove()
-        # except:
-        #     pass
+        self.ax.legend()
+        try:
+            line = self.line2.pop(0)
+            line.remove()
+        except:
+            pass
 
-        # if self.wstcase.isChecked():
-        #     self.line2 = self.ax.plot(
-        #         self.x[self.Cir.wst_index], self.y[self.Cir.wst_index], 'xr')
-        #     self.ax.legend([self.line2[0]], ['Worst Case'])
+        if self.wstcase.isChecked():
+            self.line2 = self.ax.plot([self.Cir.wst_cutoff[0],self.Cir.wst_cutoff[-1]], [0,1], 'xr')
+            self.ax.legend([self.line2[0]], ['Worst Case'])
 
         self.MplWidget.canvas.draw()
 
@@ -307,7 +312,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.Cir.mc_runs = int(self.addtimetext.text())
         print(f'Added:{self.Cir.mc_runs}\n')
-        self.Cir.create_sp()
+        self.Cir.create_sp(add=True)
 
         self.start_process('Add')
 
@@ -348,6 +353,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def analy(self):
         self.configGUI=config(self.Cir,self.root)
+        self.configGUI.totaltime.setValue(self.total)
         self.configGUI.startac.setValue(self.Cir.startac)
         self.configGUI.stopac.setValue(self.Cir.stopac)
         self.configGUI.rfnum.setValue(self.Cir.rfnum)
