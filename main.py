@@ -5,10 +5,9 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-06-2021 10:58:20
+ LastEditTime: 01-07-2021 18:23:01
  FilePath: /circuit/main.py
 '''
-
 
 from src.plot import plotGUI
 from PyQt5 import QtWidgets
