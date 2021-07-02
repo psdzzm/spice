@@ -5,14 +5,16 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-07-2021 18:23:01
+ LastEditTime: 02-07-2021 00:59:52
  FilePath: /circuit/main.py
 '''
 
 from src.plot import plotGUI
 from PyQt5 import QtWidgets
 import os,sys
+import logging
 
+logger = logging.getLogger(__name__)
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root=os.getcwd()
 path=root+'/Workspace/bin'

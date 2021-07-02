@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-07-2021 17:02:23
+ LastEditTime: 02-07-2021 00:39:15
  FilePath: /circuit/src/read.py
 '''
 
@@ -44,7 +44,7 @@ class R:
         self.name = name
         self.r = r
         self.tol = tol
-        self.resistance=[]
+        self.resistance = []
 
 
 class C:
@@ -52,7 +52,7 @@ class C:
         self.name = name
         self.c = c
         self.tol = tol
-        self.capacitance=[]
+        self.capacitance = []
 
 
 class circuit:
@@ -152,9 +152,9 @@ class circuit:
         rm('run.log')
         print('\nChecking if the input circuit is valid.\n')
         home = os.path.expanduser('~')
-        if (not os.path.isfile(home+'/.spiceinit')) or (hashlib.md5(open(home+'/.spiceinit', 'rb').read()).hexdigest() != 'fe6df00cb79638f31e41f9db609e9d82'):
+        if (not os.path.isfile(home+'/.spiceinit')) or (hashlib.md5(open(home+'/.spiceinit', 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
             with open(home+'/.spiceinit', 'w') as f:
-                f.write('* User defined ngspice init file\n\n    set filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
+                f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         proc = subprocess.Popen(
             'ngspice -b test_control.sp -o test.log', shell=True, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
@@ -291,7 +291,7 @@ class circuit:
                             self.netc.append(item)
                             self.net.append(item)
 
-    from ._write import create_sp, create_wst
+    from ._write import create_prerun, create_sp, create_wst
 
     def ngspice(self, mode=0):
         runspice(mode)

@@ -25,7 +25,8 @@
 		destroy $curplot
 		let run = run + 1
 	end
-
+	
+	rusage time
 	setplot $scratch
 	wrdata fc cutoff
 .endc

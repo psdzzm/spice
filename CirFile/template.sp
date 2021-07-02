@@ -1,14 +1,29 @@
 *ng_script
 
 .control
-    options wr_singlescale
+	source run.cir
+	save out
+	ac dec 40 1 1 1G
+	meas ac ymax MAX v(out)
+	let v3db = ymax/sqrt(2)
+	meas ac cut when v(out)=v3db fall=last
+	print cut > cutoff
+.endc
+
+.end
+
+
+*ng_script
+
+.control
+    set wr_singlescale
 	show r : resistance , c : capacitance > list
     op
 	wrdata test all
 .endc
 
 .control
-    options wr_singlescale
+    set wr_singlescale
     ac dec 40 1 1G
     wrdata ac vdb(1) vdb(2) vdb(3) vdb(4) vdb(10) vdb(out)
 .endc

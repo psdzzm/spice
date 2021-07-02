@@ -22,17 +22,17 @@ def pyqt5plot():
 
 
 class plotGUI(QtWidgets.QMainWindow):
-    def __init__(self,root):
+    def __init__(self, root):
         super().__init__()
         # self.Cir = Cir
 
-        self.root=root
+        self.root = root
         os.chdir('./src')
         uic.loadUi('main.ui', self)
         os.chdir('../Workspace')
         self.setWindowTitle("Tolerance Analysis Tool")
 
-        self.addToolBar(NavigationToolbar(self.MplWidget.canvas,self))
+        self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
 
         self.dialog = processing()
 
@@ -54,14 +54,15 @@ class plotGUI(QtWidgets.QMainWindow):
             self, 'Open file', self.root+'/CirFile', "Spice Netlists (*.cir)")
         if fname:
             name = fname.split('/')[-1]
-            dir=name.split('.')[0]+' '+datetime.now().strftime("%d%m%Y_%H%M%S")
+            dir = name.split('.')[0]+' ' + \
+                datetime.now().strftime("%d%m%Y_%H%M%S")
             os.mkdir(self.root+'/Workspace/'+dir)
             os.chdir(self.root+'/Workspace/'+dir)
             shutil.copyfile(fname, os.getcwd()+f'/{name}')
 
             self.Cir2 = read.circuit(fname)
-            self.Cir2.shortname=name
-            self.Cir2.dir=os.getcwd()
+            self.Cir2.shortname = name
+            self.Cir2.dir = os.getcwd()
 
             message = self.Cir2.read()
 
@@ -105,40 +106,64 @@ class plotGUI(QtWidgets.QMainWindow):
                     else:
                         break
 
-            self.configGUI=config(self.Cir2,self.root)
+            self.configGUI = config(self.Cir2, self.root)
             self.configGUI.accepted.connect(lambda: self.configCreate(True))
             self.configGUI.rejected.connect(self.configreject)
 
         else:
             return
 
-    def configCreate(self,i=False):
+    def configCreate(self, i=False):
         if i:
-            self.Cir=self.Cir2
+            self.Cir = self.Cir2
         print('Config Entered')
 
-        self.Cir.mc_runs=self.configGUI.totaltime.value()
-        self.Cir.netselect=self.configGUI.measnode.currentText()
-        self.Cir.analmode=self.configGUI.analmode.currentIndex()
-        self.Cir.measmode=self.configGUI.measmode.currentText()
-        self.Cir.rfnum=self.configGUI.rfnum.value()
-        self.Cir.risefall=self.configGUI.risefall.currentIndex()
+        self.Cir.mc_runs = self.configGUI.totaltime.value()
+        print(self.Cir.mc_runs)
+        self.Cir.netselect = self.configGUI.measnode.currentText()
+        self.Cir.analmode = self.configGUI.analmode.currentIndex()
+        self.Cir.measmode = self.configGUI.measmode.currentText()
+        self.Cir.rfnum = self.configGUI.rfnum.value()
+        self.Cir.risefall = self.configGUI.risefall.currentIndex()
 
-        if self.Cir.analmode==0:
-            self.Cir.startac=self.configGUI.startac.value()*10**(self.configGUI.startunit.currentIndex()*3)
-            self.Cir.stopac=self.configGUI.stopac.value()*10**(self.configGUI.stopunit.currentIndex()*3)
+        if self.Cir.analmode == 0:    # TODO: noise analysis configuration
+            self.Cir.startac = self.configGUI.startac.value(
+            )*10**(self.configGUI.startunit.currentIndex()*3)
+            self.Cir.stopac = self.configGUI.stopac.value(
+            )*10**(self.configGUI.stopunit.currentIndex()*3)
+            if self.Cir.startac >= self.Cir.stopac:
+                QtWidgets.QMessageBox.critical(
+                    self, 'Error!', 'Start point is larger than stop point')
+                self.analButton.clicked.connect(self.analy)
+                self.total = 0
+                return
 
         for i in range(self.Cir.lengthc):
             self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
         for i in range(self.Cir.lengthr):
             self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
+
+        self.Cir.create_prerun()
+        os.system('ngspice -b run_control_pre.sp -o run_log')
+
+        with open('run.log', 'a') as file_object, open('run_log') as b:
+            file = b.read()
+            file_object.write(file)
+            read.rm('run_log')
+            if 'out of interval' in file:
+                QtWidgets.QMessageBox.critical(
+                    self, 'Error!', 'Cutoff frequency out of interval')
+                self.total = 0
+                self.analButton.clicked.connect(self.analy)
+                return
+
         self.Cir.create_sp()
         self.Cir.create_wst()
         self.start_process('Open', 1)
 
     def configreject(self):
         print('Rejected')
-        if hasattr(self,'Cir'):
+        if hasattr(self, 'Cir'):
             os.chdir(self.Cir.dir)
         print(os.getcwd())
 
@@ -150,13 +175,15 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.process = self.processGui()
 
-            self._start=timer()
-            if runmode==0:
-                self.p.start("/bin/bash", ['-c','ngspice -b run_control.sp -o run_log'])
-            elif runmode==1:
+            self._start = timer()
+            if runmode == 0:
+                self.p.start(
+                    "/bin/bash", ['-c', 'ngspice -b run_control.sp -o run_log'])
+            elif runmode == 1:
                 read.rm('fc')
                 read.rm('fc_wst')
-                self.p.start("/bin/bash", ['-c','ngspice -b run_control.sp run_control_wst.sp -o run_log'])
+                self.p.start(
+                    "/bin/bash", ['-c', 'ngspice -b run_control.sp run_control_wst.sp -o run_log'])
 
     def processGui(self):
         self.dialog.show()
@@ -168,7 +195,7 @@ class plotGUI(QtWidgets.QMainWindow):
             self.p = None
 
     def finishrun(self, mode):
-        print('Spice time:',timer()-self._start,'s')
+        print('Spice time:', timer()-self._start, 's')
         if self.p == None:
             print('killed')
             return
@@ -178,18 +205,20 @@ class plotGUI(QtWidgets.QMainWindow):
         self.p = None
         self.dialog.close()
 
-        with open('run.log','a') as file_object, open('run_log') as b:
-            file=b.read()
+        with open('run.log', 'a') as file_object, open('run_log') as b:
+            file = b.read()
             file_object.write(file)
             read.rm('run_log')
             if 'out of interval' in file:
-                QtWidgets.QMessageBox.critical(self, 'Error!','Cutoff frequency out of interval')
+                QtWidgets.QMessageBox.critical(
+                    self, 'Error!', 'Cutoff frequency out of interval')
+                self.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
-            elif mode=='Add':
+            elif mode == 'Add':
                 self.Cir.resultdata()
                 self.total = self.total+self.Cir.mc_runs
-            elif mode=='Open':
+            elif mode == 'Open':
                 self.Cir.resultdata(worst=True)
                 self.postinit()
                 return
@@ -228,17 +257,19 @@ class plotGUI(QtWidgets.QMainWindow):
         self.Ctol = ['']*self.Cir.lengthc
         self.gridLayoutc = QtWidgets.QGridLayout(self.layoutWidgetc)
         for i in range(self.Cir.lengthc):
-            self.C[i] = QtWidgets.QLabel(self.Cir.alter_c[i].name, self.layoutWidgetc)
-            self.Ctol[i] = QtWidgets.QLabel(f'{self.Cir.alter_c[i].tol:.4f}',self.layoutWidgetc)
+            self.C[i] = QtWidgets.QLabel(
+                self.Cir.alter_c[i].name, self.layoutWidgetc)
+            self.Ctol[i] = QtWidgets.QLabel(
+                f'{self.Cir.alter_c[i].tol:.4f}', self.layoutWidgetc)
             self.C[i].setAlignment(QtCore.Qt.AlignCenter)
             self.Ctol[i].setAlignment(QtCore.Qt.AlignCenter)
-            self.gridLayoutc.addWidget(self.C[i],i+1,0)
-            self.gridLayoutc.addWidget(self.Ctol[i],i+1,1)
+            self.gridLayoutc.addWidget(self.C[i], i+1, 0)
+            self.gridLayoutc.addWidget(self.Ctol[i], i+1, 1)
 
         self.titleC = QtWidgets.QLabel('Capacitor', self.layoutWidgetc)
         self.titleCt = QtWidgets.QLabel('Tolerance', self.layoutWidgetc)
-        self.gridLayoutc.addWidget(self.titleC,0,0)
-        self.gridLayoutc.addWidget(self.titleCt,0,1)
+        self.gridLayoutc.addWidget(self.titleC, 0, 0)
+        self.gridLayoutc.addWidget(self.titleCt, 0, 1)
         self.scrollc.setWidget(self.layoutWidgetc)
         self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollc)
@@ -251,18 +282,20 @@ class plotGUI(QtWidgets.QMainWindow):
         self.Rtol = ['']*self.Cir.lengthr
         self.gridLayoutr = QtWidgets.QGridLayout(self.layoutWidgetr)
         for i in range(self.Cir.lengthr):
-            self.R[i] = QtWidgets.QLabel(self.Cir.alter_r[i].name, self.layoutWidgetr)
-            self.Rtol[i] = QtWidgets.QLabel(f'{self.Cir.alter_r[i].tol:.4f}',self.layoutWidgetr)
+            self.R[i] = QtWidgets.QLabel(
+                self.Cir.alter_r[i].name, self.layoutWidgetr)
+            self.Rtol[i] = QtWidgets.QLabel(
+                f'{self.Cir.alter_r[i].tol:.4f}', self.layoutWidgetr)
             self.R[i].setAlignment(QtCore.Qt.AlignCenter)
             self.Rtol[i].setAlignment(QtCore.Qt.AlignCenter)
-            self.gridLayoutr.addWidget(self.R[i],i+1,0)
-            self.gridLayoutr.addWidget(self.Rtol[i],i+1,1)
+            self.gridLayoutr.addWidget(self.R[i], i+1, 0)
+            self.gridLayoutr.addWidget(self.Rtol[i], i+1, 1)
 
         self.titleR = QtWidgets.QLabel('Resistor', self.layoutWidgetr)
         self.titleRt = QtWidgets.QLabel('Tolerance', self.layoutWidgetr)
         self.titleR.setAlignment(QtCore.Qt.AlignCenter)
-        self.gridLayoutr.addWidget(self.titleR,0,0)
-        self.gridLayoutr.addWidget(self.titleRt,0,1)
+        self.gridLayoutr.addWidget(self.titleR, 0, 0)
+        self.gridLayoutr.addWidget(self.titleRt, 0, 1)
         self.scrollr.setWidget(self.layoutWidgetr)
         self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
@@ -300,13 +333,11 @@ class plotGUI(QtWidgets.QMainWindow):
             pass
 
         if self.wstcase.isChecked():
-            self.line2 = self.ax.plot([self.Cir.wst_cutoff[0],self.Cir.wst_cutoff[-1]], [0,1], 'xr')
+            self.line2 = self.ax.plot(
+                [self.Cir.wst_cutoff[0], self.Cir.wst_cutoff[-1]], [0, 1], 'xr')
             self.ax.legend([self.line2[0]], ['Worst Case'])
 
         self.MplWidget.canvas.draw()
-
-
-
 
     def AddTime(self):
 
@@ -327,7 +358,7 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.x == []:
             return
         else:
-            fc=fc*10**(unit*3)
+            fc = fc*10**(unit*3)
 
         if fc < self.x[0]:
             if larsmll == '<':
@@ -350,9 +381,8 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.presult.setText(f'Result:{np.round(result,4)}')
 
-
     def analy(self):
-        self.configGUI=config(self.Cir,self.root)
+        self.configGUI = config(self.Cir, self.root)
         self.configGUI.totaltime.setValue(self.total)
         self.configGUI.startac.setValue(self.Cir.startac)
         self.configGUI.stopac.setValue(self.Cir.stopac)
@@ -360,7 +390,6 @@ class plotGUI(QtWidgets.QMainWindow):
         self.configGUI.risefall.setCurrentIndex(self.Cir.risefall)
         self.configGUI.measnode.setCurrentText(self.Cir.netselect)
         self.configGUI.accepted.connect(self.configCreate)
-
 
     def reset(self):
         print('Reset')
