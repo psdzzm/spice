@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 02-07-2021 00:45:03
+ LastEditTime: 02-07-2021 20:16:25
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -28,11 +28,15 @@ def create_prerun(self):
         file_object.write(control)
 
 
-def create_sp2(self):
+def create_sp2(self,add=False):
     self.seed = int(time.time())
 
-    self.control = [
-        f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+    if add:
+        self.control = [
+            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
+    else:
+        self.control = [
+            f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
     loop = '\tdowhile run < mc_runs\n\t\t'
 
     for i in range(self.lengthc):

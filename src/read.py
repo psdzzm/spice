@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 02-07-2021 00:39:15
+ LastEditTime: 02-07-2021 20:13:56
  FilePath: /circuit/src/read.py
 '''
 
@@ -301,7 +301,7 @@ class circuit:
 
     from ._resultaly import resultdata
 
-    def resultdata2(self, appnd=False, worst=True):
+    def resultdata2(self, worst=False):
         with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
             fileobject.readline()
             lines = fileobject.readlines()
@@ -310,36 +310,23 @@ class circuit:
                 wst.readline()
                 lines_wst = wst.readlines()
 
-                wstdata = []
+                self.wst_cutoff = np.zeros(len(lines_wst))
+                i = 0
                 for line in lines_wst:
                     row = line.split()
-                    wstdata.append(row[1])
+                    self.wst_cutoff[i] = float(line.split()[1])
+                    i += 1
+                self.wst_cutoff.sort()
 
-                self.wst_cutoff = np.zeros(len(wstdata))
-                for i in range(len(wstdata)):
-                    self.wst_cutoff[i] = float(wstdata[i])
-
-        if not appnd:
-            self._col2 = []
-
+        self.cutoff = np.zeros(len(lines))
+        i = 0
         for line in lines:
-            row = line.split()
-            self._col2.append(row[1])
+            self.cutoff[i] = float(line.split()[1])
+            i += 1
 
-        length = len(self._col2)
-        self.cutoff = np.zeros(length)
-
-        for i in range(length):
-            self.cutoff[i] = float(self._col2[i])
-
-        if worst:
-            self.cutoff = np.append(self.cutoff, self.wst_cutoff)
-
-        self.cutoff = np.sort(np.array(list(set(self.cutoff))))
-        self.wst_index = np.where(np.isin(self.cutoff, self.wst_cutoff))
+        self.cutoff.sort()
         length = len(self.cutoff)
 
-        xaxis = np.linspace(self.cutoff[0], self.cutoff[-1], length)
         self.p = np.arange(1, 1+length)/length
 
     def plotcdf(self):
