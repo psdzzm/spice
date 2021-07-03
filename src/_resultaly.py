@@ -5,9 +5,10 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 02-07-2021 00:39:47
+ LastEditTime: 03-07-2021 00:46:44
  FilePath: /circuit/src/_resultaly.py
 '''
+import logging
 from timeit import default_timer as timer
 import numpy as np
 from scipy import stats
@@ -44,7 +45,7 @@ def resultdata(self, worst=False):
     self.cutoff0 = np.copy(self.cutoff)
     self.cutoff0 = np.unique(self.cutoff)
     length = len(self.cutoff)
-    print(length, len(self.cutoff0))
+    logging.info(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
 
     for i in range(self.lengthc):
         self.alter_c[i].capacitance = np.append(
@@ -78,7 +79,9 @@ def resultdata(self, worst=False):
     for i in range(length):
         seq += product[index[i]]
         self.p[i] = 1/length*seq
-    print('Analyse Data Time:', timer()-start, 's')
+    logging.info(f'Analyse Data Time: {timer()-start}s')
+
+    # self.p=(self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
 
 
 def f(x, miu=2000, sigma=1, tol=0.01):
@@ -87,3 +90,32 @@ def f(x, miu=2000, sigma=1, tol=0.01):
 
 def unif(miu=2000, tol=0.01):
     return stats.uniform(miu*(1-tol), 2*miu*tol)
+
+
+def resultdata2(self, worst=False):
+    with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
+        fileobject.readline()
+        lines = fileobject.readlines()
+
+        if worst:
+            wst.readline()
+            lines_wst = wst.readlines()
+
+            self.wst_cutoff = np.zeros(len(lines_wst))
+            i = 0
+            for line in lines_wst:
+                row = line.split()
+                self.wst_cutoff[i] = float(line.split()[1])
+                i += 1
+            self.wst_cutoff.sort()
+
+    self.cutoff = np.zeros(len(lines))
+    i = 0
+    for line in lines:
+        self.cutoff[i] = float(line.split()[1])
+        i += 1
+
+    self.cutoff.sort()
+    length = len(self.cutoff)
+
+    self.p = np.arange(1, 1+length)/length

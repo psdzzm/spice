@@ -4,7 +4,7 @@
 	source run.cir
 	save out
 	set wr_vecnames appendwrite
-	let mc_runs = 5000
+	let mc_runs = 100
 	let run = 0
 	set curplot=new          $ create a new plot
 	set scratch=$curplot     $ store its name to 'scratch'
@@ -16,7 +16,7 @@
 		alter c2=unif(7e-13,0.05)
 		alter r1=unif(39000,0.01)
 		print @c1[capacitance] @c2[capacitance] @r1[resistance] >> paramlist
-		ac dec 40 1000000.0 100000000.0
+		ac dec 40 1000000.0 1000001.0
 
 		meas ac ymax MAX v(out)
 		let v3db = ymax/sqrt(2)

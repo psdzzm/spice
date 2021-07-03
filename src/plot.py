@@ -1,3 +1,5 @@
+import logging
+import subprocess
 from PyQt5.QtGui import QIntValidator
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -24,7 +26,6 @@ def pyqt5plot():
 class plotGUI(QtWidgets.QMainWindow):
     def __init__(self, root):
         super().__init__()
-        # self.Cir = Cir
 
         self.root = root
         os.chdir('./src')
@@ -88,7 +89,7 @@ class plotGUI(QtWidgets.QMainWindow):
                             if temp:
                                 shutil.copyfile(
                                     temp, self.root+'/Workspace/lib/user/'+includefile[i])
-                                print('Copy '+temp+' to ' +
+                                logging.info('Copy '+temp+' to ' +
                                       self.root+'/Workspace/lib/user/')
                                 message, flag = self.Cir2.fixinclude(
                                     includefile[i], flag)
@@ -116,10 +117,9 @@ class plotGUI(QtWidgets.QMainWindow):
     def configCreate(self, i=False):
         if i:
             self.Cir = self.Cir2
-        print('Config Entered')
+        logging.info('Config Entered')
 
         self.Cir.mc_runs = self.configGUI.totaltime.value()
-        print(self.Cir.mc_runs)
         self.Cir.netselect = self.configGUI.measnode.currentText()
         self.Cir.analmode = self.configGUI.analmode.currentIndex()
         self.Cir.measmode = self.configGUI.measmode.currentText()
@@ -144,7 +144,7 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
 
         self.Cir.create_prerun()
-        os.system('ngspice -b run_control_pre.sp -o run_log')
+        subprocess.run('ngspice -b run_control_pre.sp -o run_log',shell=True,stdout=subprocess.DEVNULL)
 
         with open('run.log', 'a') as file_object, open('run_log') as b:
             file = b.read()
@@ -162,10 +162,10 @@ class plotGUI(QtWidgets.QMainWindow):
         self.start_process('Open', 1)
 
     def configreject(self):
-        print('Rejected')
+        logging.warning('Configuration Rejected')
         if hasattr(self, 'Cir'):
             os.chdir(self.Cir.dir)
-        print(os.getcwd())
+        logging.warning(os.getcwd())
 
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.
@@ -176,6 +176,7 @@ class plotGUI(QtWidgets.QMainWindow):
             self.process = self.processGui()
 
             self._start = timer()
+            logging.info('Spice Started')
             if runmode == 0:
                 self.p.start(
                     "/bin/bash", ['-c', 'ngspice -b run_control.sp -o run_log'])
@@ -195,12 +196,12 @@ class plotGUI(QtWidgets.QMainWindow):
             self.p = None
 
     def finishrun(self, mode):
-        print('Spice time:', timer()-self._start, 's')
+        logging.info(f'Spice time: {timer()-self._start}s')
         if self.p == None:
-            print('killed')
+            logging.warning('Spice Killed')
             return
         else:
-            print('finish')
+            logging.info('Spice Finish')
 
         self.p = None
         self.dialog.close()
@@ -304,7 +305,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.plot()
 
     def plot(self):
-        print('Plot')
+        logging.info('Plot')
         if self.x == []:
             return
 
@@ -321,7 +322,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.plotwst()
 
     def plotwst(self):
-        print('wst')
+        logging.info('wst')
         if self.x == []:
             return
 
@@ -342,7 +343,7 @@ class plotGUI(QtWidgets.QMainWindow):
     def AddTime(self):
 
         self.Cir.mc_runs = int(self.addtimetext.text())
-        print(f'Added:{self.Cir.mc_runs}\n')
+        logging.info(f'Added:{self.Cir.mc_runs}\n')
         self.Cir.create_sp(add=True)
 
         self.start_process('Add')
@@ -392,7 +393,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.configGUI.accepted.connect(self.configCreate)
 
     def reset(self):
-        print('Reset')
+        logging.info('Reset')
         self.ax.legend()
         try:
             line = self.line1.pop(0)

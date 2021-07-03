@@ -5,11 +5,12 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 02-07-2021 20:13:56
+ LastEditTime: 03-07-2021 00:27:13
  FilePath: /circuit/src/read.py
 '''
 
 
+import logging
 import os
 import shutil
 import subprocess
@@ -64,7 +65,7 @@ class circuit:
         self.tolr = 0.01
 
         self.libpath = os.getcwd()+'/../lib/'
-        print(os.getcwd())
+        logging.info(os.getcwd())
 
     def read(self):
         fileo, files = [], []
@@ -87,7 +88,7 @@ class circuit:
                         lines = '.include ../lib/user/'+inclname+'\n'
                         shutil.copyfile(os.path.dirname(
                             self.name)+'/'+row[1], path2check)
-                        print('Copy '+row[1]+' to '+path2check)
+                        logging.info('Copy '+row[1]+' to '+path2check)
                     else:           # Directory ../lib/user has include file or will be later copied to
                         lines = '.include ../lib/user/'+inclname+'\n'
 
@@ -150,13 +151,13 @@ class circuit:
 
     def init(self):
         rm('run.log')
-        print('\nChecking if the input circuit is valid.\n')
-        home = os.path.expanduser('~')
-        if (not os.path.isfile(home+'/.spiceinit')) or (hashlib.md5(open(home+'/.spiceinit', 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
-            with open(home+'/.spiceinit', 'w') as f:
+        logging.info('Checking if the input circuit is valid.')
+        home = os.path.expanduser('~')+'/.spiceinit'
+        if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
+            with open(home, 'w') as f:
                 f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         proc = subprocess.Popen(
-            'ngspice -b test_control.sp -o test.log', shell=True, stderr=subprocess.PIPE)
+            'ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
         if stderr:
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
@@ -211,7 +212,8 @@ class circuit:
             file_object.write(
                 f"*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac all\n.endc\n\n.end ")
 
-        os.system('ngspice test_control2.sp -b -o test2.log')
+        subprocess.run('ngspice test_control2.sp -b -o test2.log',
+                       shell=True, stdout=subprocess.DEVNULL)
 
         with open('ac') as file_object:
             title = file_object.readline().split()
@@ -268,7 +270,7 @@ class circuit:
         self.lengthr = len(self.alter_r)
         self.alter_c.sort(key=operator.attrgetter('name'))
         self.alter_r.sort(key=operator.attrgetter('name'))
-        print('Check successfully! Running simulation.\n')
+        logging.info('Check successfully! Running simulation.\n')
 
         return flag, flag
 
@@ -291,43 +293,10 @@ class circuit:
                             self.netc.append(item)
                             self.net.append(item)
 
-    from ._write import create_prerun, create_sp, create_wst
+    from ._write import create_prerun, create_sp, create_wst, create_sp2
 
-    def ngspice(self, mode=0):
-        runspice(mode)
+    from ._resultaly import resultdata,resultdata2
 
-    _col2 = []
-    wst_cutoff = []
-
-    from ._resultaly import resultdata
-
-    def resultdata2(self, worst=False):
-        with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst:
-            fileobject.readline()
-            lines = fileobject.readlines()
-
-            if worst:
-                wst.readline()
-                lines_wst = wst.readlines()
-
-                self.wst_cutoff = np.zeros(len(lines_wst))
-                i = 0
-                for line in lines_wst:
-                    row = line.split()
-                    self.wst_cutoff[i] = float(line.split()[1])
-                    i += 1
-                self.wst_cutoff.sort()
-
-        self.cutoff = np.zeros(len(lines))
-        i = 0
-        for line in lines:
-            self.cutoff[i] = float(line.split()[1])
-            i += 1
-
-        self.cutoff.sort()
-        length = len(self.cutoff)
-
-        self.p = np.arange(1, 1+length)/length
 
     def plotcdf(self):
         plt.title("Cdf of Cutoff Frequency")

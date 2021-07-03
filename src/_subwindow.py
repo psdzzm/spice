@@ -25,7 +25,9 @@ class config(QtWidgets.QDialog):
         self.Cir = Cir
         uic.loadUi(root+'/src/config.ui', self)
         self.tab2UI()
-        self.bar = NavigationToolbar(self.MplWidget.canvas, self.widget)
+        self.barlayout=QtWidgets.QHBoxLayout(self.widget)
+        self.bar = NavigationToolbar(self.MplWidget.canvas, self)
+        self.barlayout.addWidget(self.bar)
         self.setWindowTitle('Configuration')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -176,7 +178,6 @@ class config(QtWidgets.QDialog):
                 self.Rtol[i].setStyleSheet("color: black")
 
     def sametol(self, i):
-        print(i)
         if self.sender() is self.checkC:
             for i in range(1, self.Cir.lengthc):
                 self.Ctol[i].setValue(self.Ctol[0].value())
@@ -188,7 +189,6 @@ class config(QtWidgets.QDialog):
             if self.checkC.isChecked():
                 k = list(range(self.Cir.lengthc))
                 k.remove(i)
-                print(k)
                 for j in k:
                     self.Ctol[j].blockSignals(True)
                     self.Ctol[j].setValue(self.Ctol[i].value())
@@ -198,7 +198,6 @@ class config(QtWidgets.QDialog):
             if self.checkR.isChecked():
                 k = list(range(self.Cir.lengthr))
                 k.remove(i)
-                print(k)
                 for j in k:
                     self.Rtol[j].blockSignals(True)
                     self.Rtol[j].setValue(self.Rtol[i].value())
