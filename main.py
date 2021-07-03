@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 00:21:08
+ LastEditTime: 03-07-2021 13:06:02
  FilePath: /circuit/main.py
 '''
 
@@ -15,6 +15,7 @@ import os,sys
 import logging.config
 import logging
 import yaml
+import coloredlogs
 
 def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
@@ -30,19 +31,19 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
             try:
                 config = yaml.safe_load(f.read())
                 logging.config.dictConfig(config)
-                # coloredlogs.install()
+                coloredlogs.install(level=default_level,milliseconds=True,fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
             except Exception as e:
                 print(e)
                 print('Error in Logging Configuration. Using default configs')
                 logging.basicConfig(level=default_level)
-                # coloredlogs.install(level=default_level)
+                coloredlogs.install(level=default_level)
     else:
         logging.basicConfig(level=default_level)
-        # coloredlogs.install(level=default_level)
+        coloredlogs.install(level=default_level)
         print('Failed to load configuration file. Using default configs')
 
 
-setup_logging('src/logging.yaml')
+setup_logging('src/logging.yaml',logging.DEBUG)
 logging.info('Main Function started')
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

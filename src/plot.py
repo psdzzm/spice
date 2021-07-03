@@ -6,12 +6,11 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import numpy as np
 import os
 import sys
-from scipy import interpolate
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import QProcess
 from src import read
 import shutil
-from datetime import datetime
+from datetime import datetime, time
 from timeit import default_timer as timer
 from ._subwindow import processing, config
 
@@ -26,7 +25,7 @@ def pyqt5plot():
 class plotGUI(QtWidgets.QMainWindow):
     def __init__(self, root):
         super().__init__()
-
+        logging.error('Error')
         self.root = root
         os.chdir('./src')
         uic.loadUi('main.ui', self)
@@ -42,9 +41,9 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.totaltime.setText('Total simulation time: 0')
 
-        reg_ex = QtCore.QRegExp("[0-9]+\.*[0-9]*")
-        self.calctext.setValidator(
-            QtGui.QRegExpValidator(reg_ex, self.calctext))
+        doubleval = QtGui.QDoubleValidator()
+        doubleval.setBottom(0)
+        self.calctext.setValidator(doubleval)
 
         self.actionOpen_File.triggered.connect(self.openfile)
 
@@ -90,7 +89,7 @@ class plotGUI(QtWidgets.QMainWindow):
                                 shutil.copyfile(
                                     temp, self.root+'/Workspace/lib/user/'+includefile[i])
                                 logging.info('Copy '+temp+' to ' +
-                                      self.root+'/Workspace/lib/user/')
+                                             self.root+'/Workspace/lib/user/')
                                 message, flag = self.Cir2.fixinclude(
                                     includefile[i], flag)
                         else:
@@ -144,7 +143,8 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
 
         self.Cir.create_prerun()
-        subprocess.run('ngspice -b run_control_pre.sp -o run_log',shell=True,stdout=subprocess.DEVNULL)
+        subprocess.run('ngspice -b run_control_pre.sp -o run_log',
+                       shell=True, stdout=subprocess.DEVNULL)
 
         with open('run.log', 'a') as file_object, open('run_log') as b:
             file = b.read()
@@ -201,7 +201,7 @@ class plotGUI(QtWidgets.QMainWindow):
             logging.warning('Spice Killed')
             return
         else:
-            logging.info('Spice Finish')
+            logging.info('Spice Finished')
 
         self.p = None
         self.dialog.close()
@@ -228,13 +228,11 @@ class plotGUI(QtWidgets.QMainWindow):
         self.y = self.Cir.p
         self.plot()
         self.totaltime.setText(f'Total simulation time: {self.total}')
-        self.fit = interpolate.interp1d(self.x, self.y, kind='linear')
         self.calcp()
 
     def postinit(self):
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
-        self.fit = interpolate.interp1d(self.x, self.y, kind='linear')
         self.total = self.Cir.mc_runs
         self.totaltime.setText(f'Total simulation time: {self.total}')
 
@@ -312,9 +310,12 @@ class plotGUI(QtWidgets.QMainWindow):
         self . MplWidget .figure. clear()
 
         self.ax = self.MplWidget.figure.add_subplot(111)
-        # self.ax.set_ylim(-0.05, 1.05)
+        self.ax.set_ylim(-0.05, 1.05)
+        t = int(self.Cir.cutoff[-1]-self.Cir.cutoff[0])
+        x = np.linspace(self.Cir.cutoff[0], self.Cir.cutoff[-1],
+                        10**4 if t < 10**3 else 10**6 if t > 10**5 else 10*t)
         self.line1 = self.ax . plot(self.x, self.y)
-        # self .MplWidget . canvas . axes . legend (( 'cosinus' ,  'sinus' ), loc = 'upper right' )
+        # self.ax.plot(x,self.Cir.fit(x))
         self.ax. set_title(f"Tolerance Analysis of {self.Cir.shortname}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
@@ -343,7 +344,7 @@ class plotGUI(QtWidgets.QMainWindow):
     def AddTime(self):
 
         self.Cir.mc_runs = int(self.addtimetext.text())
-        logging.info(f'Added:{self.Cir.mc_runs}\n')
+        logging.info(f'Added:{self.Cir.mc_runs}')
         self.Cir.create_sp(add=True)
 
         self.start_process('Add')
@@ -376,9 +377,9 @@ class plotGUI(QtWidgets.QMainWindow):
                 self.presult.setText('Result:0')
                 return
         elif larsmll == '>':
-            result = 1-self.fit(fc)
+            result = 1-self.Cir.fit(fc)
         else:
-            result = self.fit(fc)
+            result = self.Cir.fit(fc)
 
         self.presult.setText(f'Result:{np.round(result,4)}')
 

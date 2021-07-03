@@ -270,7 +270,7 @@ class circuit:
         self.lengthr = len(self.alter_r)
         self.alter_c.sort(key=operator.attrgetter('name'))
         self.alter_r.sort(key=operator.attrgetter('name'))
-        logging.info('Check successfully! Running simulation.\n')
+        logging.info('Check successfully! Running simulation.')
 
         return flag, flag
 

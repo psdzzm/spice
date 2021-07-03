@@ -7,7 +7,7 @@ formatters:
     standard:
         format: "%(asctime)s - %(filename)s - %(levelname)s - %(message)s"
     error:
-        format: "%(levelname)s - %(filename)s.%(funcName)s(): %(message)s"
+        format: "%(asctime)s - %(levelname)s - %(filename)s.%(funcName)s(): %(message)s"
 
 handlers:
     console:
@@ -45,7 +45,7 @@ handlers:
 
 root:
     level: NOTSET
-    handlers: [console,info_file_handler,error_file_handler]
+    handlers: [info_file_handler,error_file_handler]
     propogate: yes
 
 loggers:

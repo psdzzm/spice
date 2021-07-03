@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 00:46:44
+ LastEditTime: 03-07-2021 11:16:43
  FilePath: /circuit/src/_resultaly.py
 '''
 import logging
@@ -13,6 +13,7 @@ from timeit import default_timer as timer
 import numpy as np
 from scipy import stats
 from scipy.special import erf
+from scipy import interpolate
 
 
 def resultdata(self, worst=False):
@@ -42,10 +43,9 @@ def resultdata(self, worst=False):
 
     index = self.cutoff.argsort()
     self.cutoff = self.cutoff[index]
-    self.cutoff0 = np.copy(self.cutoff)
-    self.cutoff0 = np.unique(self.cutoff)
+    cutoff0, index0 = np.unique(self.cutoff, return_index=True)
     length = len(self.cutoff)
-    logging.info(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
+    logging.info(f'Initial length={length}, Truncated length={len(cutoff0)}')
 
     for i in range(self.lengthc):
         self.alter_c[i].capacitance = np.append(
@@ -79,9 +79,16 @@ def resultdata(self, worst=False):
     for i in range(length):
         seq += product[index[i]]
         self.p[i] = 1/length*seq
-    logging.info(f'Analyse Data Time: {timer()-start}s')
 
-    # self.p=(self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
+    self.p = (self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
+    for i in range(len(index0)-1):
+        if index0[i+1]-index0[i] != 1:
+            index0[i] = index0[i+1]-1
+    if length-1-i != 1:
+        index0[i+1] = length-1
+    p0 = self.p[index0]
+    self.fit = interpolate.PchipInterpolator(cutoff0, p0)
+    logging.info(f'Analyse Data Time: {timer()-start}s')
 
 
 def f(x, miu=2000, sigma=1, tol=0.01):
