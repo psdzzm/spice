@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 00:27:13
+ LastEditTime: 03-07-2021 18:51:17
  FilePath: /circuit/src/read.py
 '''
 

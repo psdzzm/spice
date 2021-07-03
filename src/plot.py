@@ -8,9 +8,9 @@ import os
 import sys
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import QProcess
-from src import read
+from . import read
 import shutil
-from datetime import datetime, time
+from datetime import datetime
 from timeit import default_timer as timer
 from ._subwindow import processing, config
 
@@ -25,7 +25,7 @@ def pyqt5plot():
 class plotGUI(QtWidgets.QMainWindow):
     def __init__(self, root):
         super().__init__()
-        logging.error('Error')
+
         self.root = root
         os.chdir('./src')
         uic.loadUi('main.ui', self)
