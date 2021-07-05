@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 19:09:54
+ LastEditTime: 05-07-2021 10:31:21
  FilePath: /circuit/src/Logging.py
 '''
 import logging.config
@@ -36,7 +36,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         logging.basicConfig(level=default_level)
         print('Failed to load configuration file. Using default configs')
 
-    check=check_module('coloedlogs')
+    check=check_module('coloredlogs')
     if check:
         coloredlogs=import_module_from_spec(check)
         coloredlogs.install(level=default_level,milliseconds=True,fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
