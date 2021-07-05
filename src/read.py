@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 05-07-2021 22:07:26
+ LastEditTime: 06-07-2021 00:20:30
  FilePath: /circuit/src/read.py
 '''
 
@@ -63,11 +63,11 @@ class circuit:
         self.tolc = 0.05
         self.tolr = 0.01
 
-        self.libpath = os.getcwd()+'/../lib/'
+        self.libpath = os.path.abspath(os.getcwd()+'/../lib')+'/'
 
     def read(self):
         fileo, files = [], []
-        start, stop1, stop2,self.includetime = 0, 0, 0,0
+        start, stop1, stop2, self.includetime = 0, 0, 0, 0
         matches = ['.model', '.subckt', '.global', '.include', '.lib',
                    '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
         with open(self.name) as file_object:
@@ -76,7 +76,7 @@ class circuit:
                 if row != [] and row[0].lower() not in matches and '.' in row[0].lower():
                     continue
                 elif row != [] and row[0].lower() == '.include':
-                    self.includetime+=1
+                    self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()
                     path2check = self.libpath+'user/'+inclname  # Only file name without extension
                     # Directory lib has include file
@@ -127,11 +127,11 @@ class circuit:
             tsc.write(
                 '*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
 
-        f1=open('test.cir','r')
-        self.testtext=f1.read()
+        f1 = open('test.cir', 'r')
+        self.testtext = f1.read()
         f1.close()
-        f1=open('run.cir','r')
-        self.runtext=f1.read()
+        f1 = open('run.cir', 'r')
+        self.runtext = f1.read()
         f1.close()
 
     def fixinclude(self, repl, mode):
@@ -165,7 +165,8 @@ class circuit:
             'ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
         if stderr:
-            logging.error(stderr.decode('ASCII')+'Please check if the netlist file or include file is valid')
+            logging.error(stderr.decode(
+                'ASCII')+'Please check if the netlist file or include file is valid')
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
 
         self.readnet()
@@ -304,8 +305,7 @@ class circuit:
 
     from ._write import create_prerun, create_sp, create_wst, create_sp2
 
-    from ._resultaly import resultdata,resultdata2
-
+    from ._resultaly import resultdata, resultdata2
 
     def plotcdf(self):
         plt.title("Cdf of Cutoff Frequency")

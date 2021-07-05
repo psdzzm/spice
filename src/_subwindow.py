@@ -25,7 +25,7 @@ class config(QtWidgets.QDialog):
         self.Cir = Cir
         uic.loadUi(root+'/src/config.ui', self)
         self.tab2UI()
-        self.barlayout=QtWidgets.QHBoxLayout(self.widget)
+        self.barlayout = QtWidgets.QHBoxLayout(self.widget)
         self.bar = NavigationToolbar(self.MplWidget.canvas, self)
         self.barlayout.addWidget(self.bar)
         self.setWindowTitle('Configuration')

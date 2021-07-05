@@ -5,12 +5,18 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 05-07-2021 22:19:47
+ LastEditTime: 06-07-2021 00:31:10
  FilePath: /circuit/src/Logging.py
 '''
 
-import os,sys
+import yaml
+import hashlib
+import logging
+import logging.config
+import os
+import sys
 import importlib
+
 
 def check_module(module_name):
     """
@@ -19,11 +25,12 @@ def check_module(module_name):
     """
     module_spec = importlib.util.find_spec(module_name)
     if module_spec is None:
-        if module_name!='coloredlogs':
+        if module_name != 'coloredlogs':
             sys.exit("ModuleNotFoundError: No module named {}".format(module_name))
     else:
         print("Module: {} can be imported".format(module_name))
         return module_spec
+
 
 def import_module_from_spec(module_spec):
     """
@@ -34,36 +41,36 @@ def import_module_from_spec(module_spec):
     module_spec.loader.exec_module(module)
     return module
 
-modulelist=['numpy','scipy','PyQt5','matplotlib','yaml','logging','hashlib']
+
+modulelist = ['numpy', 'scipy', 'PyQt5',
+              'matplotlib', 'yaml', 'logging', 'hashlib']
 for item in modulelist:
     check_module(item)
 
-import logging.config
-import logging
-import hashlib
-import yaml
 
-def GetHashofDirs(directory, verbose=0):
+def GetHashofDirs(directory):
     SHAhash = hashlib.md5()
     for item in directory:
         if not os.path.exists(item):
             return -1
         else:
-            for root, dirs, files in os.walk(item):
+            filepath = []
+            for root, _, files in os.walk(item):
                 for names in files:
-                    filepath = os.path.join(root, names)
-                    if verbose == 1:
-                        print('Hashing', filepath)
-                    try:
-                        f1 = open(filepath, 'rb')
-                        SHAhash.update(f1.read())
-                        f1.close()
-                    except:
-                        # You can't open the file for some reason
-                        f1.close()
-                        return
+                    filepath.append(os.path.join(root, names))
+            for subfile in sorted(filepath):
+                try:
+                    f1 = open(subfile, 'rb')
+                    SHAhash.update(f1.read())
+                    f1.close()
+                    # print(subfile,SHAhash.hexdigest())
+                except:
+                    # You can't open the file for some reason
+                    f1.close()
+                    return
 
     return SHAhash.hexdigest()
+
 
 def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
@@ -87,14 +94,16 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         logging.basicConfig(level=default_level)
         print('Failed to load configuration file. Using default configs')
 
-    check=check_module('coloredlogs')
+    check = check_module('coloredlogs')
     if check:
-        coloredlogs=import_module_from_spec(check)
-        coloredlogs.install(level=default_level,milliseconds=True,fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+        coloredlogs = import_module_from_spec(check)
+        coloredlogs.install(level=default_level, milliseconds=True,
+                            fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+
 
 def init():
-    if GetHashofDirs(['Workspace/bin','Workspace/share','Workspace/include','Workspace/lib/ngspice'])=='60687c6e167991cf8543dcbc521ebd47':
-        os.makedirs('lib/user',exist_ok=True)
+    if GetHashofDirs(['Workspace/bin', 'Workspace/share', 'Workspace/include', 'Workspace/lib/ngspice']) == '5691f9bebed5eee48e85997573b89f83':
+        os.makedirs('lib/user', exist_ok=True)
         home = os.path.expanduser('~')+'/.spiceinit'
         if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
             logging.info("Create '.spiceinit' file")
@@ -105,4 +114,5 @@ def init():
         logging.error('Initialization Failed')
         sys.exit('-1')
 
-# setup_logging('src/logging.yaml',logging.INFO)
+
+# setup_logging('src/logging.yaml', logging.INFO)

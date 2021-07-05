@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 05-07-2021 20:35:50
+ LastEditTime: 06-07-2021 00:20:45
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -28,7 +28,7 @@ def create_prerun(self):
         file_object.write(control)
 
 
-def create_sp2(self,add=False):
+def create_sp2(self, add=False):
     self.seed = int(time.time())
 
     if add:

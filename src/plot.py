@@ -55,7 +55,7 @@ class plotGUI(QtWidgets.QMainWindow):
         if fname:
             name = os.path.basename(fname)
             print(name)
-            if os.path.abspath(fname+'/../../')!=self.root+'/Workspace':
+            if os.path.abspath(fname+'/../../') != self.root+'/Workspace':
                 dir = name.split('.')[0]+' ' + \
                     datetime.now().strftime("%d%m%Y_%H%M%S")
                 os.mkdir(self.root+'/Workspace/'+dir)
@@ -64,7 +64,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 logging.info('Copy '+fname+' to '+os.getcwd()+f'/{name}')
             else:
                 os.chdir(os.path.dirname(fname))
-                files=os.listdir()
+                files = os.listdir()
                 files.remove(name)
                 for item in files:
                     os.remove(item)
@@ -86,7 +86,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 while True:
                     i += 1
                     if flag:
-                        if i<self.Cir2.includetime:
+                        if i < self.Cir2.includetime:
                             ret = QtWidgets.QMessageBox.critical(
                                 self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
 
@@ -99,24 +99,26 @@ class plotGUI(QtWidgets.QMainWindow):
                                     shutil.copyfile(
                                         temp, self.root+'/Workspace/lib/user/'+includefile[i])
                                     logging.info('Copy '+temp+' to ' +
-                                                self.root+'/Workspace/lib/user/'+includefile[i])
+                                                 self.root+'/Workspace/lib/user/'+includefile[i])
                                     message, flag = self.Cir2.fixinclude(
                                         includefile[i], flag)
                             else:
-                                logging.warning('Exit. Deleting the uploaded include file')
+                                logging.warning(
+                                    'Exit. Deleting the uploaded include file')
                                 for file in includefile:
                                     read.rm('../lib/user/'+file)
                                 return
                         else:
-                            logging.error('Incorrect include file provided! Reset the input circuit')
+                            logging.error(
+                                'Incorrect include file provided! Reset the input circuit')
                             for file in includefile:
                                 read.rm('../lib/user/'+file)
-                            with open('test.cir','w') as f1, open('run.cir','w') as f2:
+                            with open('test.cir', 'w') as f1, open('run.cir', 'w') as f2:
                                 f1.write(self.Cir2.testtext)
                                 f2.write(self.Cir2.runtext)
-                            message, flag=self.Cir2.init()
-                            message='Please provide the correct file for the include file\n'+message
-                            i=-1
+                            message, flag = self.Cir2.init()
+                            message = 'Please provide the correct file for the include file\n'+message
+                            i = -1
                             includefile = []
 
                     elif message:
