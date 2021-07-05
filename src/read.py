@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 05-07-2021 13:51:50
+ LastEditTime: 05-07-2021 22:07:26
  FilePath: /circuit/src/read.py
 '''
 
@@ -14,7 +14,6 @@ import logging
 import os
 import shutil
 import subprocess
-import hashlib
 import time
 import re
 import numpy as np
@@ -65,11 +64,10 @@ class circuit:
         self.tolr = 0.01
 
         self.libpath = os.getcwd()+'/../lib/'
-        logging.info(os.getcwd())
 
     def read(self):
         fileo, files = [], []
-        start, stop1, stop2 = 0, 0, 0
+        start, stop1, stop2,self.includetime = 0, 0, 0,0
         matches = ['.model', '.subckt', '.global', '.include', '.lib',
                    '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
         with open(self.name) as file_object:
@@ -78,7 +76,8 @@ class circuit:
                 if row != [] and row[0].lower() not in matches and '.' in row[0].lower():
                     continue
                 elif row != [] and row[0].lower() == '.include':
-                    inclname = row[1].split('/')[-1].split('.')[0].upper()
+                    self.includetime+=1
+                    inclname = os.path.basename(row[1]).split('.')[0].upper()
                     path2check = self.libpath+'user/'+inclname  # Only file name without extension
                     # Directory lib has include file
                     if os.path.isfile(self.libpath+inclname):
@@ -128,6 +127,13 @@ class circuit:
             tsc.write(
                 '*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
 
+        f1=open('test.cir','r')
+        self.testtext=f1.read()
+        f1.close()
+        f1=open('run.cir','r')
+        self.runtext=f1.read()
+        f1.close()
+
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:
             test = file_object.read()
@@ -155,11 +161,6 @@ class circuit:
     def init(self):
         rm('run.log')
         logging.info('Checking if the input circuit is valid.')
-        home = os.path.expanduser('~')+'/.spiceinit'
-        if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
-            logging.info("Create '.spiceinit' file")
-            with open(home, 'w') as f:
-                f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
         proc = subprocess.Popen(
             'ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()

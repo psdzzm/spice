@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 11:16:43
+ LastEditTime: 05-07-2021 20:38:20
  FilePath: /circuit/src/_resultaly.py
 '''
 import logging
@@ -80,7 +80,7 @@ def resultdata(self, worst=False):
         seq += product[index[i]]
         self.p[i] = 1/length*seq
 
-    self.p = (self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
+    # self.p = (self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
     for i in range(len(index0)-1):
         if index0[i+1]-index0[i] != 1:
             index0[i] = index0[i+1]-1

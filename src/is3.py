@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 18:56:02
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 18:13:49
+ LastEditTime: 05-07-2021 21:38:06
  FilePath: /circuit/src/is3.py
 '''
 import importlib
@@ -19,8 +19,9 @@ from matplotlib import pyplot as plt
 import hashlib
 import yaml
 from timeit import default_timer as timer
-isf=importlib.import_module('isf','src')
+isf = importlib.import_module('isf', 'src')
 print(isf)
+
 
 def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
@@ -47,6 +48,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         # coloredlogs.install(level=default_level)
         print('Failed to load configuration file. Using default configs')
 
+
 def check_module(module_name):
     """
     Checks if module can be imported without actually
@@ -60,6 +62,7 @@ def check_module(module_name):
         print("Module: {} can be imported".format(module_name))
         return module_spec
 
+
 def import_module_from_spec(module_spec):
     """
     Import the module via the passed in module specification
@@ -70,23 +73,50 @@ def import_module_from_spec(module_spec):
     return module
 
 
+def GetHashofDirs(directory, verbose=0):
+    SHAhash = hashlib.md5()
+    for item in directory:
+        if not os.path.exists(item):
+            return -1
+        else:
+            for root, dirs, files in os.walk(item):
+                for names in files:
+                    filepath = os.path.join(root, names)
+                    if verbose == 1:
+                        print('Hashing', filepath)
+                    try:
+                        f1 = open(filepath, 'rb')
+                        SHAhash.update(f1.read())
+                        f1.close()
+                    except:
+                        # You can't open the file for some reason
+                        f1.close()
+                        return
+
+    return SHAhash.hexdigest()
+
+
 if __name__=='__main__':
 
     spec=check_module('coloredlogs')
-    print(spec)
-    # setup_logging('src/logging.yaml')
-
-    # logging.debug("start func debug")
-
-    # logging.info("exec func info")
-
-    # logging.warning('warning')
-
-    # logging.error("end func error")
-
-    # logging.critical('Critical')
+    # print(spec)
 
     isf.try2()
+
+    logging.basicConfig(level=logging.DEBUG,format="%(asctime)s - %(filename)s - %(levelname)s - %(message)s")
+
+    os.chdir('Workspace')
+    if GetHashofDirs(['bin','share','include','lib/ngspice'])=='60687c6e167991cf8543dcbc521ebd47':
+        os.makedirs('lib/user',exist_ok=True)
+        logging.info('Initialization Successfully')
+    else:
+        logging.error('Initialization Failed')
+        sys.exit('-1')
+
+    print(__file__)
+    print(os.path.abspath(__file__+'/../../'))
+
+    '''
     print(isf.xyz)
     n=10000
     start=timer()
@@ -110,4 +140,4 @@ if __name__=='__main__':
     plt.plot(s,fit(s),'b')
     plt.plot(x,y,'r')
 
-    # plt.show()
+    # plt.show()'''

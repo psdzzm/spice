@@ -53,12 +53,21 @@ class plotGUI(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Open file', self.root+'/CirFile', "Spice Netlists (*.cir)")
         if fname:
-            name = fname.split('/')[-1]
-            dir = name.split('.')[0]+' ' + \
-                datetime.now().strftime("%d%m%Y_%H%M%S")
-            os.mkdir(self.root+'/Workspace/'+dir)
-            os.chdir(self.root+'/Workspace/'+dir)
-            shutil.copyfile(fname, os.getcwd()+f'/{name}')
+            name = os.path.basename(fname)
+            print(name)
+            if os.path.abspath(fname+'/../../')!=self.root+'/Workspace':
+                dir = name.split('.')[0]+' ' + \
+                    datetime.now().strftime("%d%m%Y_%H%M%S")
+                os.mkdir(self.root+'/Workspace/'+dir)
+                os.chdir(self.root+'/Workspace/'+dir)
+                shutil.copyfile(fname, os.getcwd()+f'/{name}')
+                logging.info('Copy '+fname+' to '+os.getcwd()+f'/{name}')
+            else:
+                os.chdir(os.path.dirname(fname))
+                files=os.listdir()
+                files.remove(name)
+                for item in files:
+                    os.remove(item)
 
             self.Cir2 = read.circuit(fname)
             self.Cir2.shortname = name
@@ -77,25 +86,38 @@ class plotGUI(QtWidgets.QMainWindow):
                 while True:
                     i += 1
                     if flag:
-                        ret = QtWidgets.QMessageBox.critical(
-                            self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
+                        if i<self.Cir2.includetime:
+                            ret = QtWidgets.QMessageBox.critical(
+                                self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
 
-                        if ret == QtWidgets.QMessageBox.Open:
-                            temp, _ = QtWidgets.QFileDialog.getOpenFileName(
-                                self, 'Select file for '+self.Cir2.subckt, '', "Model Files (*)")
-                            includefile.append(
-                                temp.split('/')[-1].split('.')[0])
-                            if temp:
-                                shutil.copyfile(
-                                    temp, self.root+'/Workspace/lib/user/'+includefile[i])
-                                logging.info('Copy '+temp+' to ' +
-                                             self.root+'/Workspace/lib/user/')
-                                message, flag = self.Cir2.fixinclude(
-                                    includefile[i], flag)
+                            if ret == QtWidgets.QMessageBox.Open:
+                                temp, _ = QtWidgets.QFileDialog.getOpenFileName(
+                                    self, 'Select file for '+self.Cir2.subckt, '', "Model Files (*)")
+                                includefile.append(
+                                    temp.split('/')[-1].split('.')[0])
+                                if temp:
+                                    shutil.copyfile(
+                                        temp, self.root+'/Workspace/lib/user/'+includefile[i])
+                                    logging.info('Copy '+temp+' to ' +
+                                                self.root+'/Workspace/lib/user/'+includefile[i])
+                                    message, flag = self.Cir2.fixinclude(
+                                        includefile[i], flag)
+                            else:
+                                logging.warning('Exit. Deleting the uploaded include file')
+                                for file in includefile:
+                                    read.rm('../lib/user/'+file)
+                                return
                         else:
+                            logging.error('Incorrect include file provided! Reset the input circuit')
                             for file in includefile:
                                 read.rm('../lib/user/'+file)
-                            return
+                            with open('test.cir','w') as f1, open('run.cir','w') as f2:
+                                f1.write(self.Cir2.testtext)
+                                f2.write(self.Cir2.runtext)
+                            message, flag=self.Cir2.init()
+                            message='Please provide the correct file for the include file\n'+message
+                            i=-1
+                            includefile = []
 
                     elif message:
                         QtWidgets.QMessageBox.critical(self, 'Error', message)
@@ -165,6 +187,9 @@ class plotGUI(QtWidgets.QMainWindow):
         logging.warning('Configuration Rejected')
         if hasattr(self, 'Cir'):
             os.chdir(self.Cir.dir)
+        else:
+            os.chdir('..')
+        shutil.rmtree(self.Cir2.dir)
         logging.warning(os.getcwd())
 
     def start_process(self, finishmode, runmode=0):
@@ -377,7 +402,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 self.presult.setText('Result:0')
                 return
         elif larsmll == '>':
-            result = 1-self.Cir.fit(fc)
+            result = self.y[-1]-self.Cir.fit(fc)
         else:
             result = self.Cir.fit(fc)
 

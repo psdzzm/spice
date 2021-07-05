@@ -5,16 +5,18 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 03-07-2021 19:01:39
+ LastEditTime: 05-07-2021 22:19:03
  FilePath: /circuit/main.py
 '''
-from src.Logging import setup_logging
+from src.Logging import init
+from src import Logging
 import logging
 from src.plot import plotGUI
 from PyQt5 import QtWidgets
 import os,sys
 
-setup_logging('src/logging.yaml')
+Logging.setup_logging('src/logging.yaml',logging.DEBUG)
+init()
 logging.info('Main Function started')
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 02-07-2021 20:16:25
+ LastEditTime: 05-07-2021 20:35:50
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -22,7 +22,7 @@ def create_prerun(self):
         else:
             self.rfmode = self.rfmode+str(self.rfnum)
 
-    control = f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tac dec 40 {self.startac} {self.stopac}\n\tmeas ac ymax MAX v({self.netselect})\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v({self.netselect})=v3db {self.rfmode}\n\tprint cut > cutoff\n.endc\n\n.end"
+    control = f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tac dec 40 {self.startac} {self.stopac}\n\tmeas ac ymax MAX v({self.netselect})\n\tlet v3db = ymax/sqrt(2)\n\tmeas ac cut when v({self.netselect})=v3db {self.rfmode}\n.endc\n\n.end"
 
     with open('run_control_pre.sp', 'w') as file_object:
         file_object.write(control)
