@@ -177,6 +177,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
+                logging.error('Cutoff frequency out of interval')
                 self.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
@@ -192,6 +193,7 @@ class plotGUI(QtWidgets.QMainWindow):
         else:
             os.chdir('..')
         shutil.rmtree(self.Cir2.dir)
+        logging.warning('Delete '+self.Cir2.dir)
         logging.warning(os.getcwd())
 
     def start_process(self, finishmode, runmode=0):
@@ -221,6 +223,8 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.p:
             self.p.kill()
             self.p = None
+            read.rm('run_log')
+            logging.warning('Delete run_log')
 
     def finishrun(self, mode):
         logging.info(f'Spice time: {timer()-self._start}s')
@@ -240,6 +244,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
+                logging.error('Cutoff frequency out of interval')
                 self.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return

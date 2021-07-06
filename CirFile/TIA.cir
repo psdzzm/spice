@@ -5,7 +5,7 @@ XU1 0 N002 V+ V- out LM6171A/NS
 V1 V+ 0 15
 V2 V- 0 -15
 R1 N002 out 39K
-C2 out N002 0.7p
+
 .include LM6171A.txt
 
 .control
@@ -47,5 +47,8 @@ C2 out N002 0.7p
     print cout cutoff
     wrdata tia cutoff
 .endc
+
+C2 out N002 0.7p
+.ac oct 40 1e2 100e6
 
 .end

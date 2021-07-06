@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 00:20:30
+ LastEditTime: 06-07-2021 15:04:21
  FilePath: /circuit/src/read.py
 '''
 
@@ -71,11 +71,28 @@ class circuit:
         matches = ['.model', '.subckt', '.global', '.include', '.lib',
                    '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
         with open(self.name) as file_object:
+            i = -1
             for lines in file_object:
+                i += 1
                 row = lines.split()
-                if row != [] and row[0].lower() not in matches and '.' in row[0].lower():
+                if row == []:
                     continue
-                elif row != [] and row[0].lower() == '.include':
+                elif not start:
+                    if row[0].lower() == '.control':
+                        start = i
+                        continue
+                elif not stop1:
+                    if row[0].lower() == '.endc':
+                        stop1 = i
+                    continue
+                elif row[0].lower() == '.end':
+                    stop2 = i
+                    break
+
+                # Filter other control command
+                if row[0].lower() not in matches and '.' in row[0].lower():
+                    continue
+                elif row[0].lower() == '.include':
                     self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()
                     path2check = self.libpath+'user/'+inclname  # Only file name without extension
@@ -94,45 +111,26 @@ class circuit:
                 fileo.append(lines)
                 files.append(row)
 
-        length = len(files)
-        for i in range(length):
-            if files[i] != []:
-                if files[i][0].lower() == '.control':
-                    start = i
-                elif files[i][0].lower() == '.endc':
-                    stop1 = i
-                elif files[i][0].lower() == '.end':
-                    stop2 = i
-                    break
 
-        if not stop2:
+        if stop1-start < 0:
+            logging.error("No 'endc' line!")
+            return "No 'endc' line!"
+        elif not stop2:
             logging.error("No 'end' line!")
             return "No 'end' line!"
+        else:
+            fileo = ''.join(fileo)+'\n.end'
 
-        with open('test.cir', 'w') as file_object, open('run.cir', 'w') as b, open('test_control.sp', 'w') as tsc:
-            if start and stop1:
-                file_object.write(''.join(fileo[0:start]))
-                file_object.write(''.join(fileo[stop1+1:stop2+1]))
-
-                b.write(''.join(fileo[0:start]))
-                b.write(''.join(fileo[stop1+1:stop2+1]))
-
-            else:
-                file_object.write(''.join(fileo[0:stop2]))
-                file_object.write('\n.end')
-
-                b.write(''.join(fileo[0:stop2]))
-                b.write('.end')
+        with open('test.cir', 'w+') as file_object, open('run.cir', 'w+') as b, open('test_control.sp', 'w') as tsc:
+            file_object.write(fileo)
+            b.write(fileo)
+            file_object.seek(0)
+            self.testtext = file_object.read()
+            b.seek(0)
+            self.runtext = b.read()
 
             tsc.write(
                 '*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
-
-        f1 = open('test.cir', 'r')
-        self.testtext = f1.read()
-        f1.close()
-        f1 = open('run.cir', 'r')
-        self.runtext = f1.read()
-        f1.close()
 
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:

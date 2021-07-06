@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 18:56:02
  LastEditors: Yichen Zhang
- LastEditTime: 05-07-2021 21:38:06
+ LastEditTime: 06-07-2021 13:28:18
  FilePath: /circuit/src/is3.py
 '''
 import importlib
@@ -57,7 +57,7 @@ def check_module(module_name):
     module_spec = importlib.util.find_spec(module_name)
     if module_spec is None:
         print("Module: {} not found".format(module_name))
-
+        raise ModuleNotFoundError("Module: {} not found".format(module_name))
     else:
         print("Module: {} can be imported".format(module_name))
         return module_spec
@@ -98,8 +98,8 @@ def GetHashofDirs(directory, verbose=0):
 
 if __name__=='__main__':
 
-    spec=check_module('coloredlogs')
-    # print(spec)
+    spec=check_module('coloedlogs')
+
 
     isf.try2()
 

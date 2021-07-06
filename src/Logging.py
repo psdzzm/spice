@@ -5,18 +5,11 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 00:31:10
+ LastEditTime: 06-07-2021 13:37:08
  FilePath: /circuit/src/Logging.py
 '''
 
-import yaml
-import hashlib
-import logging
-import logging.config
-import os
-import sys
 import importlib
-
 
 def check_module(module_name):
     """
@@ -26,7 +19,7 @@ def check_module(module_name):
     module_spec = importlib.util.find_spec(module_name)
     if module_spec is None:
         if module_name != 'coloredlogs':
-            sys.exit("ModuleNotFoundError: No module named {}".format(module_name))
+             raise ModuleNotFoundError("Module: {} not found".format(module_name))
     else:
         print("Module: {} can be imported".format(module_name))
         return module_spec
@@ -42,11 +35,15 @@ def import_module_from_spec(module_spec):
     return module
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5',
-              'matplotlib', 'yaml', 'logging', 'hashlib']
+modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit']
 for item in modulelist:
     check_module(item)
 
+import yaml
+import hashlib
+import logging
+import logging.config
+import os
 
 def GetHashofDirs(directory):
     SHAhash = hashlib.md5()
@@ -112,7 +109,7 @@ def init():
         logging.info('Initialization Successfully')
     else:
         logging.error('Initialization Failed')
-        sys.exit('-1')
+        raise
 
 
 # setup_logging('src/logging.yaml', logging.INFO)
