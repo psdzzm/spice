@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 15:04:21
+ LastEditTime: 06-07-2021 15:56:51
  FilePath: /circuit/src/read.py
 '''
 
@@ -85,12 +85,12 @@ class circuit:
                     if row[0].lower() == '.endc':
                         stop1 = i
                     continue
-                elif row[0].lower() == '.end':
+
+                if row[0].lower() == '.end':
                     stop2 = i
                     break
-
                 # Filter other control command
-                if row[0].lower() not in matches and '.' in row[0].lower():
+                elif row[0].lower() not in matches and '.' in row[0].lower():
                     continue
                 elif row[0].lower() == '.include':
                     self.includetime += 1
