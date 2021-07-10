@@ -5,12 +5,14 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 00:30:43
- FilePath: /circuit/main.py
+ LastEditTime: 10-07-2021 12:01:41
+ FilePath: /spice/main.py
 '''
 
 from src import Logging
 import logging
+from src import read_copy as read
+from src.batch import batchmode
 from src.plot import plotGUI
 from PyQt5 import QtWidgets
 import os
@@ -30,10 +32,14 @@ del path
 
 logging.debug(os.environ['PATH'])
 
-
+filename=read.getfile(root)
+batch=batchmode(filename,root)
+batch.openfile(filename)
+batch.config()
+'''
 app = QtWidgets.QApplication(sys.argv)
 main = plotGUI(root)
 main.show()
 app.exec_()
 logging.info(os.getcwd())
-logging.info('Main Function stopped\n\n')
+logging.info('Main Function stopped\n\n')'''
