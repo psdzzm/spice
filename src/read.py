@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 15:56:51
- FilePath: /circuit/src/read.py
+ LastEditTime: 10-07-2021 16:24:35
+ FilePath: /spice/src/read.py
 '''
 
 
@@ -44,7 +44,7 @@ class R:
         self.name = name
         self.r = r
         self.tol = tol
-        self.resistance = []
+        self.resistance = []    # Alter paramater list
 
 
 class C:

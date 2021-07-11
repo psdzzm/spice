@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        body {
+            height: 842px;
+            width: 595px;
+            /* to centre page on screen*/
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        table {
+            text-align: center;
+        }
+
+        table thead th {
+            text-align: center;
+        }
+    </style>
+    <title>{{title}} report</title>
+</head>
+
+<body>
+    <h1>{{title}} Tolerance Analysis Report</h1>
+    <h2>Component</h2>
+    <p>{{cnumber}}</p>
+    {% block ctable %}
+
+    {% endblock %}
+
+    <p>{{rnumber}}</p>
+    {% block rtable %}
+
+    {% endblock %}
+
+    <h2>Result</h2>
+    <p>AC analysis command: ac dec 40 10 100</p>
+    <p>Running Time: {{mc_runs}}</p>
+    <p>Measure port: {{port}}</p>
+    {% block righttail %}
+
+    {% endblock %}
+
+    {% block lefttail %}
+
+    {% endblock %}
+
+    {% block wsttable %}
+
+    {% endblock %}
+</body>
+
+</html>

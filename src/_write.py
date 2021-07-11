@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 00:20:45
- FilePath: /circuit/src/_write.py
+ LastEditTime: 10-07-2021 16:27:47
+ FilePath: /spice/src/_write.py
 '''
 import time
 
@@ -138,6 +138,13 @@ def create_wst(self):
             self.alter_r[i].name + \
             '=wc('+self.alter_r[i].r + \
             f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
+
+    loop = loop+'print '
+    for i in range(self.lengthc):
+        loop = loop+f'@{self.alter_c[i].name}[capacitance] '
+    for i in range(self.lengthr):
+        loop = loop+f'@{self.alter_r[i].name}[resistance] '
+    loop = loop+'>> paramwstlist\n\t\t'
 
     with open('run_control_wst.sp', 'w') as file_object:
         file_object.write(control[0])

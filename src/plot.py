@@ -54,7 +54,6 @@ class plotGUI(QtWidgets.QMainWindow):
             self, 'Open file', self.root+'/CirFile', "Spice Netlists (*.cir)")
         if fname:
             name = os.path.basename(fname)
-            print(name)
             if os.path.abspath(fname+'/../../') != self.root+'/Workspace':
                 dir = name.split('.')[0]+' ' + \
                     datetime.now().strftime("%d%m%Y_%H%M%S")
@@ -212,6 +211,8 @@ class plotGUI(QtWidgets.QMainWindow):
             elif runmode == 1:
                 read.rm('fc')
                 read.rm('fc_wst')
+                read.rm('paramlist')
+                read.rm('paramwstlist')
                 self.p.start(
                     "/bin/bash", ['-c', 'ngspice -b run_control.sp run_control_wst.sp -o run_log'])
 
