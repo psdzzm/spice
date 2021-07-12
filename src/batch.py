@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 10-07-2021 10:22:36
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 02:31:39
+ LastEditTime: 12-07-2021 11:24:05
  FilePath: /circuit/src/batch.py
 '''
 import shutil
@@ -14,6 +14,17 @@ import os,sys
 import logging
 import subprocess
 from src import read_copy as read
+import readline
+
+
+def rlinput(prompt, prefill=''):
+   readline.set_startup_hook(lambda: readline.insert_text(prefill))
+   try:
+      return input(prompt)  # or raw_input in Python 2
+   finally:
+      readline.set_startup_hook()
+
+
 
 class batchmode():
     def __init__(self,filename,root):
@@ -94,14 +105,14 @@ class batchmode():
     def config(self):
         print('out',self.Cir.net)
 
-        self.Cir.netselect=input('Please select which net to measure:')
+        self.Cir.netselect=rlinput('Please select which net to measure:',prefill='out')
         while True:
             if self.Cir.netselect in self.Cir.net or self.Cir.netselect=='out':
                 break
             else:
                 self.Cir.netselect=input('Please enter the correct net:')
 
-        self.Cir.mc_runs=input('Please enter how many times to run (>1):')
+        self.Cir.mc_runs=rlinput('Please enter how many times to run (>1):',prefill='1000')
         while True:
             if self.Cir.mc_runs.isnumeric() and int(self.Cir.mc_runs)>1:
                 self.Cir.mc_runs=int(self.Cir.mc_runs)
@@ -117,7 +128,7 @@ class batchmode():
         message='Please enter the start frequency (Hz):'
         while True:
             try:
-                self.Cir.startac=float(input(message))
+                self.Cir.startac=float(rlinput(message,prefill=self.Cir.startac))
             except ValueError:
                 message='Please enter a valid number:'
             else:
@@ -129,7 +140,7 @@ class batchmode():
         message='Please enter the stop frequency (Hz):'
         while True:
             try:
-                self.Cir.stopac=float(input(message))
+                self.Cir.stopac=float(rlinput(message,prefill=self.Cir.stopac))
             except ValueError:
                 message='Please enter a valid number:'
             else:

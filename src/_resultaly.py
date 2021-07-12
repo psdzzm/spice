@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 02:18:56
+ LastEditTime: 12-07-2021 11:29:51
  FilePath: /circuit/src/_resultaly.py
 '''
 import logging
@@ -204,7 +204,6 @@ def report(self):
     from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
-    from weasyprint import HTML
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'report.settings')
     sys.path.append(os.path.dirname(__file__)+'/report')
@@ -218,7 +217,7 @@ def report(self):
         files=table.read()
 
         t=Template(files)
-        renddict={'title':self.shortname,'mc_runs':self.total,'port':self.netselect,'std':self.stdcutoff,'tol':self.tol,'yield':self.yd}
+        renddict={'title':self.shortname,'freq':f'{self.startac} {self.stopac}','mc_runs':self.total,'port':self.netselect,'std':self.stdcutoff,'tol':self.tol,'yield':self.yd}
 
         if yd>=self.yd:
             renddict['comment']=f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."
@@ -240,5 +239,9 @@ def report(self):
         renderhtml=t.render(context)
         rendered.write(renderhtml)
 
-        html=HTML(string=renderhtml)
-        html.write_pdf('report.pdf')
+
+        check=check_module('weasyprint')
+        if check:
+            wypt=import_module_from_spec(check)
+            html=wypt.HTML(string=renderhtml)
+            html.write_pdf('report.pdf')

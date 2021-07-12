@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 01:55:10
+ LastEditTime: 12-07-2021 10:18:58
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -34,7 +34,7 @@ def import_module_from_spec(module_spec):
     return module
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit']
+modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit','django']
 for item in modulelist:
     check=check_module(item)
     if not check:

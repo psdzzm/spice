@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 02:42:00
+ LastEditTime: 12-07-2021 11:23:15
  FilePath: /circuit/src/read_copy.py
 '''
 
@@ -91,6 +91,8 @@ class circuit:
         self.tolr = 0.01
         self.tol=0.01
         self.yd=0.98
+        self.startac=[]
+        self.stopac=[]
 
         self.libpath = os.path.abspath(os.getcwd()+'/../lib')+'/'
 
@@ -119,6 +121,9 @@ class circuit:
                     stop2 = i
                     break
                 # Filter other control command
+                elif row[0].lower()=='.ac':
+                    self.startac=row[3]
+                    self.stopac=row[4]
                 elif row[0].lower() not in matches and '.' in row[0].lower():
                     continue
                 elif row[0].lower() == '.include':
