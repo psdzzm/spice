@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 01:55:10
+ LastEditTime: 12-07-2021 17:36:57
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -34,7 +34,7 @@ def import_module_from_spec(module_spec):
     return module
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit']
+modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit','django']
 for item in modulelist:
     check=check_module(item)
     if not check:
@@ -93,10 +93,13 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         print('Failed to load configuration file. Using default configs')
 
     check = check_module('coloredlogs')
-    if check:
-        coloredlogs = import_module_from_spec(check)
-        coloredlogs.install(level=default_level, milliseconds=True,
-                            fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+    # if check:
+    #     coloredlogs = import_module_from_spec(check)
+    #     coloredlogs.install(level=default_level, milliseconds=True,
+    #                         fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+
+    logger=logging.getLogger('<module>')
+    return logger
 
 
 def init():
@@ -113,4 +116,4 @@ def init():
         raise
 
 
-# setup_logging('src/logging.yaml', logging.INFO)
+# logger=setup_logging('src/logging.yaml', logging.DEBUG)

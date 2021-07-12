@@ -5,10 +5,11 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 02:18:56
+ LastEditTime: 12-07-2021 16:37:58
  FilePath: /circuit/src/_resultaly.py
 '''
 import logging
+import threading
 from timeit import default_timer as timer
 import numpy as np
 from scipy import stats
@@ -17,6 +18,7 @@ from scipy import interpolate
 import pandas as pd
 import os,sys
 from .Logging import check_module,import_module_from_spec
+import threading
 
 
 def resultdata(self, worst=False):
@@ -106,7 +108,8 @@ def resultdata(self, worst=False):
     self._fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
     self.fit = interpolate.PchipInterpolator(self.cutoff0, self.p0)
     logging.info(f'Analyse Data Time: {timer()-start}s')
-    report(self)
+    thread=threading.Thread(target=self.report,args=())
+    thread.start()
 
 
 def f(x, miu=2000, sigma=1, tol=0.01):
@@ -204,7 +207,6 @@ def report(self):
     from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
-    from weasyprint import HTML
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'report.settings')
     sys.path.append(os.path.dirname(__file__)+'/report')
@@ -240,5 +242,11 @@ def report(self):
         renderhtml=t.render(context)
         rendered.write(renderhtml)
 
-        html=HTML(string=renderhtml)
-        html.write_pdf('report.pdf')
+        check=check_module('weasyprint')
+        if check:
+            wypt=import_module_from_spec(check)
+            html=wypt.HTML(string=renderhtml)
+            html.write_pdf('report.pdf')
+            logging.info('Exporting report to '+self.dir)
+        else:
+            logging.warning("Can't findModule weasyprint! Fail to export pdf report. See html5 report in "+os.path.dirname(__file__)+'/report/htmlreport/templates/report.html')

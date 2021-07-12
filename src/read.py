@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 11-07-2021 23:51:30
+ LastEditTime: 12-07-2021 16:31:37
  FilePath: /circuit/src/read.py
 '''
 
@@ -308,7 +308,7 @@ class circuit:
 
     from ._write import create_prerun, create_sp, create_wst, create_sp2
 
-    from ._resultaly import resultdata, resultdata2
+    from ._resultaly import resultdata, resultdata2,report
 
     def plotcdf(self):
         plt.title("Cdf of Cutoff Frequency")
