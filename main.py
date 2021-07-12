@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 10-07-2021 12:01:41
- FilePath: /spice/main.py
+ LastEditTime: 12-07-2021 02:32:58
+ FilePath: /circuit/main.py
 '''
 
 from src import Logging
@@ -36,6 +36,7 @@ filename=read.getfile(root)
 batch=batchmode(filename,root)
 batch.openfile(filename)
 batch.config()
+batch.finish('Open')
 '''
 app = QtWidgets.QApplication(sys.argv)
 main = plotGUI(root)

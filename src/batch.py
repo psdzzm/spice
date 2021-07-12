@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 10-07-2021 10:22:36
  LastEditors: Yichen Zhang
- LastEditTime: 10-07-2021 14:17:30
- FilePath: /spice/src/batch.py
+ LastEditTime: 12-07-2021 02:31:39
+ FilePath: /circuit/src/batch.py
 '''
 import shutil
 from datetime import datetime
@@ -37,30 +37,30 @@ class batchmode():
             for item in files:
                 os.remove(item)
 
-        self.Cir2=read.circuit(filename)
-        self.Cir2.shortname = name
-        self.Cir2.dir = os.getcwd()
+        self.Cir=read.circuit(filename)
+        self.Cir.shortname = name
+        self.Cir.dir = os.getcwd()
 
-        message = self.Cir2.read()
+        message = self.Cir.read()
 
         if message:
             sys.exit(message)
         else:
-            message,flag=self.Cir2.init()
+            message,flag=self.Cir.init()
 
         i = -1
         includefile = []
         while True:
             i += 1
             if flag:
-                if i < self.Cir2.includetime:
+                if i < self.Cir.includetime:
                     # print(message)
                     temp=read.getfile(self.root)
                     includefile.append(temp.split('/')[-1].split('.')[0])
                     if temp:
                         shutil.copyfile(temp, self.root+'/Workspace/lib/user/'+includefile[i])
                         logging.info('Copy '+temp+' to ' +self.root+'/Workspace/lib/user/'+includefile[i])
-                        message, flag = self.Cir2.fixinclude(includefile[i], flag)
+                        message, flag = self.Cir.fixinclude(includefile[i], flag)
                     else:
                         logging.warning('Exit. Deleting the uploaded include file')
                         for file in includefile:
@@ -72,9 +72,9 @@ class batchmode():
                     for file in includefile:
                         read.rm('../lib/user/'+file)
                     with open('test.cir', 'w') as f1, open('run.cir', 'w') as f2:
-                        f1.write(self.Cir2.testtext)
-                        f2.write(self.Cir2.runtext)
-                    message, flag = self.Cir2.init()
+                        f1.write(self.Cir.testtext)
+                        f2.write(self.Cir.runtext)
+                    message, flag = self.Cir.init()
                     message = 'Please provide the correct file for the include file\n'+message
                     i = -1
                     includefile = []
@@ -92,36 +92,36 @@ class batchmode():
 
 
     def config(self):
-        print('out',self.Cir2.net)
+        print('out',self.Cir.net)
 
-        self.Cir2.netselect=input('Please select which net to measure:')
+        self.Cir.netselect=input('Please select which net to measure:')
         while True:
-            if self.Cir2.netselect in self.Cir2.net or self.Cir2.netselect=='out':
+            if self.Cir.netselect in self.Cir.net or self.Cir.netselect=='out':
                 break
             else:
-                self.Cir2.netselect=input('Please enter the correct net:')
+                self.Cir.netselect=input('Please enter the correct net:')
 
-        self.Cir2.mc_runs=input('Please enter how many times to run (>1):')
+        self.Cir.mc_runs=input('Please enter how many times to run (>1):')
         while True:
-            if self.Cir2.mc_runs.isnumeric() and int(self.Cir2.mc_runs)>1:
-                self.Cir2.mc_runs=int(self.Cir2.mc_runs)
+            if self.Cir.mc_runs.isnumeric() and int(self.Cir.mc_runs)>1:
+                self.Cir.mc_runs=int(self.Cir.mc_runs)
                 break
             else:
-                self.Cir2.mc_runs=input('Please enter a valid number (>1):')
+                self.Cir.mc_runs=input('Please enter a valid number (>1):')
 
-        self.Cir2.analmode = 0
-        self.Cir2.measmode = 'Cutoff Frequency'
-        self.Cir2.rfnum = 0
-        self.Cir2.risefall = 1
+        self.Cir.analmode = 0
+        self.Cir.measmode = 'Cutoff Frequency'
+        self.Cir.rfnum = 0
+        self.Cir.risefall = 1
 
         message='Please enter the start frequency (Hz):'
         while True:
             try:
-                self.Cir2.startac=float(input(message))
+                self.Cir.startac=float(input(message))
             except ValueError:
                 message='Please enter a valid number:'
             else:
-                if self.Cir2.startac>0:
+                if self.Cir.startac>0:
                     break
                 else:
                     message='Please enter a valid number:'
@@ -129,16 +129,16 @@ class batchmode():
         message='Please enter the stop frequency (Hz):'
         while True:
             try:
-                self.Cir2.stopac=float(input(message))
+                self.Cir.stopac=float(input(message))
             except ValueError:
                 message='Please enter a valid number:'
             else:
-                if self.Cir2.stopac>self.Cir2.startac:
+                if self.Cir.stopac>self.Cir.startac:
                     break
                 else:
                     message='Stop frequency is lower than start frequenct! Please enter a valid number:'
 
-        self.Cir2.create_prerun()
+        self.Cir.create_prerun()
         subprocess.run('ngspice -b run_control_pre.sp -o run_log',
                        shell=True, stdout=subprocess.DEVNULL)
 
@@ -150,8 +150,8 @@ class batchmode():
                 logging.error('Cutoff frequency out of interval')
                 sys.exit()
 
-        self.Cir2.create_sp()
-        self.Cir2.create_wst()
+        self.Cir.create_sp()
+        self.Cir.create_wst()
         self.start_process(1)
 
 
@@ -165,3 +165,18 @@ class batchmode():
             p=subprocess.run('ngspice -b run_control.sp run_control_wst.sp -o run_log',shell=True, stdout=sys.stdout)
 
         print('Finish')
+
+    def finish(self,mode):
+        with open('run.log', 'a') as file_object, open('run_log') as b:
+            file = b.read()
+            file_object.write(file)
+            read.rm('run_log')
+            if 'out of interval' in file:
+                logging.error('Cutoff frequency out of interval')
+                sys.exit('Cutoff frequency out of interval')
+            elif mode == 'Add':
+                self.Cir.total = self.Cir.total+self.Cir.mc_runs
+                self.Cir.resultdata()
+            elif mode == 'Open':
+                self.Cir.total = self.Cir.mc_runs
+                self.Cir.resultdata(worst=True)
