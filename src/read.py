@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 10-07-2021 16:24:35
- FilePath: /spice/src/read.py
+ LastEditTime: 11-07-2021 23:51:30
+ FilePath: /circuit/src/read.py
 '''
 
 
@@ -62,6 +62,8 @@ class circuit:
         self.mc_runs = 1000
         self.tolc = 0.05
         self.tolr = 0.01
+        self.tol=0.01
+        self.yd=0.98
 
         self.libpath = os.path.abspath(os.getcwd()+'/../lib')+'/'
 
@@ -102,9 +104,12 @@ class circuit:
                     # Source Directory has
                     elif os.path.isfile(os.path.dirname(self.name)+'/'+row[1]):
                         lines = '.include ../lib/user/'+inclname+'\n'
-                        shutil.copyfile(os.path.dirname(
-                            self.name)+'/'+row[1], path2check)
-                        logging.info('Copy '+row[1]+' to '+path2check)
+                        try:
+                            shutil.copyfile(os.path.dirname(self.name)+'/'+row[1], path2check)
+                            logging.info('Copy '+row[1]+' to '+path2check)
+                        except shutil.SameFileError:
+                            logging.warning('Include File Already Exist in '+path2check)
+
                     else:           # Directory ../lib/user has include file or will be later copied to
                         lines = '.include ../lib/user/'+inclname+'\n'
 

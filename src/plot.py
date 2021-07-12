@@ -157,7 +157,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Start point is larger than stop point')
                 self.analButton.clicked.connect(self.analy)
-                self.total = 0
+                self.Cir.total = 0
                 return
 
         for i in range(self.Cir.lengthc):
@@ -177,7 +177,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
                 logging.error('Cutoff frequency out of interval')
-                self.total = 0
+                self.Cir.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
 
@@ -246,13 +246,14 @@ class plotGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
                 logging.error('Cutoff frequency out of interval')
-                self.total = 0
+                self.Cir.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
             elif mode == 'Add':
+                self.Cir.total = self.Cir.total+self.Cir.mc_runs
                 self.Cir.resultdata()
-                self.total = self.total+self.Cir.mc_runs
             elif mode == 'Open':
+                self.Cir.total = self.Cir.mc_runs
                 self.Cir.resultdata(worst=True)
                 self.postinit()
                 return
@@ -260,14 +261,13 @@ class plotGUI(QtWidgets.QMainWindow):
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
         self.plot()
-        self.totaltime.setText(f'Total simulation time: {self.total}')
+        self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
         self.calcp()
 
     def postinit(self):
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
-        self.total = self.Cir.mc_runs
-        self.totaltime.setText(f'Total simulation time: {self.total}')
+        self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
 
         self.analButton.clicked.connect(self.analy)
         self.ResetButton.clicked.connect(self.reset)
@@ -418,7 +418,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def analy(self):
         self.configGUI = config(self.Cir, self.root)
-        self.configGUI.totaltime.setValue(self.total)
+        self.configGUI.totaltime.setValue(self.Cir.total)
         self.configGUI.startac.setValue(self.Cir.startac)
         self.configGUI.stopac.setValue(self.Cir.stopac)
         self.configGUI.rfnum.setValue(self.Cir.rfnum)
@@ -442,7 +442,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self . MplWidget . canvas . draw()
         self.addtimetext.clear()
-        self.total = 0
+        self.Cir.total = 0
         self.totaltime.setText('Total simulation time: 0')
         self.x, self.y, self.Cir._col2 = [], [], []
         self.calctext.setPlaceholderText('0')

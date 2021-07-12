@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 11-07-2021 19:12:18
- FilePath: /spice/src/_resultaly.py
+ LastEditTime: 12-07-2021 02:18:56
+ FilePath: /circuit/src/_resultaly.py
 '''
 import logging
 from timeit import default_timer as timer
@@ -16,6 +16,7 @@ from scipy.special import erf
 from scipy import interpolate
 import pandas as pd
 import os,sys
+from .Logging import check_module,import_module_from_spec
 
 
 def resultdata(self, worst=False):
@@ -27,7 +28,7 @@ def resultdata(self, worst=False):
         paramwst=paramwstlist.readlines()
 
         if worst:
-            wstdict={}
+            wstframe=pd.DataFrame(columns=('','Left','Right'))
             wst.readline()
             lines_wst = wst.readlines()
 
@@ -37,16 +38,18 @@ def resultdata(self, worst=False):
                 row = line.split()
                 self.wst_cutoff[i] = float(line.split()[1])
                 i += 1
+
+            self.stdcutoff=self.wst_cutoff[-1]
             self.wstindex=self.wst_cutoff.argsort()
             self.wst_cutoff=self.wst_cutoff[self.wstindex]
+            wstframe.loc[0]=['Frequency',self.wst_cutoff[0],self.wst_cutoff[-1]]
 
             for i in range(self.lengthc):
-                wstdict[self.alter_c[i].name]=[float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i].split()[-1]),float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i].split()[-1])]
+                wstframe.loc[i+1]=[self.alter_c[i].name,float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i].split()[-1]),float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i].split()[-1])]
             for i in range(self.lengthr):
-                wstdict[self.alter_r[i].name]=[float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i+self.lengthc].split()[-1]),float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i+self.lengthc].split()[-1])]
+                wstframe.loc[i+1+self.lengthc]=[self.alter_r[i].name,float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i+self.lengthc].split()[-1]),float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i+self.lengthc].split()[-1])]
 
-            print(self.wstindex[[0,-1]],wstdict)
-
+            self.wstframehtml='\n{% block wsttable %}\n'+wstframe.to_html(index=False,justify='center')+'\n{% endblock %}\n'
 
     self.cutoff = np.zeros(len(lines))
     i = 0
@@ -100,7 +103,8 @@ def resultdata(self, worst=False):
     if length-1-i != 1:
         index0[i+1] = length-1
     self.p0 = self.p[index0]
-    self.fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
+    self._fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
+    self.fit = interpolate.PchipInterpolator(self.cutoff0, self.p0)
     logging.info(f'Analyse Data Time: {timer()-start}s')
     report(self)
 
@@ -150,36 +154,91 @@ def report(self):
     for i in range(self.lengthr):
         rframe.loc[i]=[self.alter_r[i].name,self.alter_r[i].r,self.alter_r[i].tol]
 
+    # cframe.set_table_styles([{'selector': 'th', 'props': [('font-size', '12pt')]}])
+    # rframe.set_table_styles([{'selector': 'th', 'props': [('font-size', '12pt')]}])
     cframehtml='\n{% block ctable %}\n'+cframe.to_html(index=False)+'\n{% endblock %}\n'
     rframehtml='\n{% block rtable %}\n'+rframe.to_html(index=False)+'\n{% endblock %}\n'
+
+    llimit=self.stdcutoff*(1-self.tol)
+    rlimit=self.stdcutoff*(1+self.tol)
+    if llimit<self.cutoff[0]:
+        lfit=0
+    else:
+        lfit=self.fit(llimit)
+    if rlimit>self.cutoff[-1]:
+        rfit=0
+    else:
+        rfit=self.p[-1]-self.fit(rlimit)
+
+    yd=1-rfit-lfit
+    logging.info(f'Estimated yield: {yd}')
+
+    rtail=pd.DataFrame(columns=('Frequency/Hz (Larger than)','Probability'))
+    ltail=pd.DataFrame(columns=('Frequency/Hz (Smaller than)','Probability'))
+
+    if yd>=self.yd:
+        index1=np.linspace((1-self.yd)/2+0.05,(1-self.yd)/2,5,endpoint=False)
+        index1=np.concatenate((index1,np.linspace((1-self.yd)/2,(1-yd)/2,5,endpoint=False)))
+
+        index2=np.linspace(self.p0[-1]-(1-self.yd)/2-0.05,self.p0[-1]-(1-yd)/2,5,endpoint=False)
+        index2=np.concatenate((index2,np.linspace(self.p0[-1]-(1-self.yd)/2,self.p0[-1]-(1-yd)/2,5,endpoint=False)))
+
+        if (1-yd)/2 >0.0001:
+            index1=np.concatenate((index1,np.linspace((1-yd)/2,0,5,endpoint=False)))
+            index2=np.concatenate((index2,np.linspace(self.p0[-1]-(1-yd)/2,self.p0[-1],5,endpoint=False)))
+    else:
+        index1=np.linspace((1-yd)/2,(1-self.yd)/2,5,endpoint=False)
+        index1=np.concatenate((index1,np.linspace((1-self.yd)/2,0,5,endpoint=False)))
+        index2=np.linspace(self.p0[-1]-(1-yd)/2-0.05,self.p0[-1]-(1-self.yd)/2,5,endpoint=False)
+        index2=np.concatenate((index2,np.linspace(self.p0[-1]-(1-self.yd)/2,self.p0[-1],5,endpoint=False)))
+
+    for i in range(len(index1)):
+        ltail.loc[i]=[self._fit(index1[i]),index1[i]]
+        rtail.loc[i]=[self._fit(index2[i]),index1[i]]
+
+
+    ltailhtml='\n{% block lefttail %}\n'+ltail.to_html(index=False)+'\n{% endblock %}\n'
+    rtailhtml='\n{% block righttail %}\n'+rtail.to_html(index=False)+'\n{% endblock %}\n'
 
 
     from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
+    from weasyprint import HTML
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'report.settings')
     sys.path.append(os.path.dirname(__file__)+'/report')
     django.setup()
 
-    with open('/home/zyc/Desktop/projects/spice/src/report/htmlreport/templates/inherit.html','w+') as table,open('/home/zyc/Desktop/projects/spice/src/report/htmlreport/templates/report.html','w') as rendered:
-        table.write("{% extends 'base.html' %}\n"+cframehtml+rframehtml)
+    with open(os.path.dirname(__file__)+'/report/htmlreport/templates/inherit.html','w+') as table,open(os.path.dirname(__file__)+'/report/htmlreport/templates/report.html','w') as rendered:
+        table.write("{% extends 'base.html' %}\n"+cframehtml+rframehtml+ltailhtml+rtailhtml+self.wstframehtml)
 
         table.seek(0)
 
-        t=Template(table.read())
-        context=Context({'title':self.shortname,'cnumber':f'{self.lengthc} Capacitors','rnumber':f'{self.lengthr} Resistors'})
+        files=table.read()
 
-        rendered.write(t.render(context))
+        t=Template(files)
+        renddict={'title':self.shortname,'mc_runs':self.total,'port':self.netselect,'std':self.stdcutoff,'tol':self.tol,'yield':self.yd}
 
-    tail=np.zeros(10)
-    j=0
-    p=np.concatenate((np.arange(0.01,0.06,0.01),np.arange(self.p0[-1]-0.05,self.p0[-1],0.01)))
-    if len(p)>10:
-        p=np.delete(p,10)
+        if yd>=self.yd:
+            renddict['comment']=f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."
+        else:
+            renddict['comment']=f"This circuit design is not acceptable. The estimated yield from simulation is only {np.round(yd,4)}."
 
-    for i in p:
-        tail[j]=self.fit(i)
-        j+=1
+        if self.lengthc>1:
+            renddict['cnumber']=f'{self.lengthc} Capacitors'
+        else:
+            renddict['cnumber']=f'{self.lengthc} Capacitor'
 
-    np.savetxt('test.csv',np.column_stack((tail,np.concatenate((np.linspace(0.01,0.06,5,endpoint=False),np.linspace(0.95,1,5,endpoint=False))))),delimiter=',',fmt='%.4f')
+        if self.lengthr>1:
+            renddict['rnumber']=f'{self.lengthr} Resistors'
+        else:
+            renddict['rnumber']=f'{self.lengthr} Resistor'
+
+        context=Context(renddict)
+
+        renderhtml=t.render(context)
+        rendered.write(renderhtml)
+
+        html=HTML(string=renderhtml)
+        html.write_pdf('report.pdf')

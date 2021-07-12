@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 06-07-2021 13:37:08
+ LastEditTime: 12-07-2021 01:55:10
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -18,8 +18,7 @@ def check_module(module_name):
     """
     module_spec = importlib.util.find_spec(module_name)
     if module_spec is None:
-        if module_name != 'coloredlogs':
-             raise ModuleNotFoundError("Module: {} not found".format(module_name))
+        print("Module: {} does not exist".format(module_name))
     else:
         print("Module: {} can be imported".format(module_name))
         return module_spec
@@ -37,7 +36,9 @@ def import_module_from_spec(module_spec):
 
 modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit']
 for item in modulelist:
-    check_module(item)
+    check=check_module(item)
+    if not check:
+        raise ModuleNotFoundError("Module: {} not found".format(item))
 
 import yaml
 import hashlib

@@ -17,10 +17,20 @@
 
         table {
             text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
         }
 
-        table thead th {
+        table, thead, th, td {
             text-align: center;
+            border: 1px solid;
+        }
+
+        img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
     <title>{{title}} report</title>
@@ -29,28 +39,36 @@
 <body>
     <h1>{{title}} Tolerance Analysis Report</h1>
     <h2>Component</h2>
-    <p>{{cnumber}}</p>
+    <p style="text-align:center;margin-bottom:1px;">{{cnumber}}</p>
     {% block ctable %}
 
     {% endblock %}
 
-    <p>{{rnumber}}</p>
+    <p style="text-align:center;margin-bottom:1px;">{{rnumber}}</p>
     {% block rtable %}
 
     {% endblock %}
 
     <h2>Result</h2>
-    <p>AC analysis command: ac dec 40 10 100</p>
-    <p>Running Time: {{mc_runs}}</p>
-    <p>Measure port: {{port}}</p>
-    {% block righttail %}
+    AC analysis command: ac dec 40 10 100<br>
+    Running time: {{mc_runs}}<br>
+    Measure port: {{port}}<br>
+    Standard cutoff frequency: {{std}} Hz<br>
+    Acceptable tolerance of cutoff frequency: {{tol}}<br>
+    Acceptable lowest yield: {{yield}}<br>
 
-    {% endblock %}
-
+    <p>{{comment}}</p>
+    <p style="text-align:center;margin-bottom:1px;">Left Tail Probability Table</p>
     {% block lefttail %}
 
     {% endblock %}
 
+    <p style="text-align:center;margin-bottom:1px;">Right Tail Probability Table</p>
+    {% block righttail %}
+
+    {% endblock %}
+
+    <p style="text-align:center;margin-bottom:1px;">Worst Case Table</p>
     {% block wsttable %}
 
     {% endblock %}
