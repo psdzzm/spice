@@ -45,13 +45,13 @@ handlers:
 
 root:
     level: NOTSET
-    handlers: [console,info_file_handler,error_file_handler]
+    handlers: [info_file_handler,error_file_handler]
     propogate: yes
 
 loggers:
-    <module>:
-        level: INFO
-        handlers: [console,debug_file_handler]
+    default:
+        level: DEBUG
+        handlers: [console]
         propogate: no
 
     <module.x>:

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 17:36:57
+ LastEditTime: 12-07-2021 21:52:34
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -29,22 +29,28 @@ def import_module_from_spec(module_spec):
     Import the module via the passed in module specification
     Returns the newly imported module
     """
-    module = importlib.util.module_from_spec(module_spec)
-    module_spec.loader.exec_module(module)
+    if module_spec:
+        module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+    else:
+        module = None
+
     return module
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5','matplotlib', 'yaml', 'logging', 'hashlib','subprocess','shutil','datetime','timeit','django']
+modulelist = ['numpy', 'scipy', 'PyQt5', 'matplotlib', 'yaml', 'logging', 'pandas',
+              'hashlib', 'subprocess', 'shutil', 'datetime', 'timeit', 'django']
 for item in modulelist:
-    check=check_module(item)
+    check = check_module(item)
     if not check:
         raise ModuleNotFoundError("Module: {} not found".format(item))
 
-import yaml
-import hashlib
-import logging
-import logging.config
 import os
+import logging.config
+import logging
+import hashlib
+import yaml
+
 
 def GetHashofDirs(directory):
     SHAhash = hashlib.md5()
@@ -92,13 +98,13 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         logging.basicConfig(level=default_level)
         print('Failed to load configuration file. Using default configs')
 
+    logger = logging.getLogger('default')
     check = check_module('coloredlogs')
-    # if check:
-    #     coloredlogs = import_module_from_spec(check)
-    #     coloredlogs.install(level=default_level, milliseconds=True,
-    #                         fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+    if check:
+        coloredlogs = import_module_from_spec(check)
+        coloredlogs.install(level=default_level, milliseconds=True, logger=logger,
+                            fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
 
-    logger=logging.getLogger('<module>')
     return logger
 
 
@@ -107,13 +113,13 @@ def init():
         os.makedirs('lib/user', exist_ok=True)
         home = os.path.expanduser('~')+'/.spiceinit'
         if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
-            logging.info("Create '.spiceinit' file")
+            logger.info("Create '.spiceinit' file")
             with open(home, 'w') as f:
                 f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
-        logging.info('Initialization Successfully')
+        logger.info('Initialization Successfully')
     else:
-        logging.error('Initialization Failed')
+        logger.error('Initialization Failed')
         raise
 
 
-# logger=setup_logging('src/logging.yaml', logging.DEBUG)
+logger = setup_logging('src/logging.yaml', logging.DEBUG)

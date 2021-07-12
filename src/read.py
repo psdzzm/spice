@@ -5,12 +5,12 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 16:31:37
+ LastEditTime: 12-07-2021 18:30:39
  FilePath: /circuit/src/read.py
 '''
 
 
-import logging
+from .Logging import logger
 import os
 import shutil
 import subprocess
@@ -22,11 +22,12 @@ import operator
 from .runspice import runspice
 
 
-def rm(filename):
-    try:
-        os.remove(filename)
-    except OSError:
-        pass
+def rm(*filename):
+    for item in filename:
+        try:
+            os.remove(item)
+        except OSError:
+            pass
 
 
 def getfile():
@@ -62,8 +63,8 @@ class circuit:
         self.mc_runs = 1000
         self.tolc = 0.05
         self.tolr = 0.01
-        self.tol=0.01
-        self.yd=0.98
+        self.tol = 0.01
+        self.yd = 0.98
 
         self.libpath = os.path.abspath(os.getcwd()+'/../lib')+'/'
 
@@ -105,10 +106,12 @@ class circuit:
                     elif os.path.isfile(os.path.dirname(self.name)+'/'+row[1]):
                         lines = '.include ../lib/user/'+inclname+'\n'
                         try:
-                            shutil.copyfile(os.path.dirname(self.name)+'/'+row[1], path2check)
-                            logging.info('Copy '+row[1]+' to '+path2check)
+                            shutil.copyfile(os.path.dirname(
+                                self.name)+'/'+row[1], path2check)
+                            logger.info('Copy '+row[1]+' to '+path2check)
                         except shutil.SameFileError:
-                            logging.warning('Include File Already Exist in '+path2check)
+                            logger.warning(
+                                'Include File Already Exist in '+path2check)
 
                     else:           # Directory ../lib/user has include file or will be later copied to
                         lines = '.include ../lib/user/'+inclname+'\n'
@@ -116,12 +119,11 @@ class circuit:
                 fileo.append(lines)
                 files.append(row)
 
-
         if stop1-start < 0:
-            logging.error("No 'endc' line!")
+            logger.error("No 'endc' line!")
             return "No 'endc' line!"
         elif not stop2:
-            logging.error("No 'end' line!")
+            logger.error("No 'end' line!")
             return "No 'end' line!"
         else:
             fileo = ''.join(fileo)+'\n.end'
@@ -163,12 +165,12 @@ class circuit:
 
     def init(self):
         rm('run.log')
-        logging.info('Checking if the input circuit is valid.')
+        logger.info('Checking if the input circuit is valid.')
         proc = subprocess.Popen(
             'ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
         if stderr:
-            logging.error(stderr.decode(
+            logger.error(stderr.decode(
                 'ASCII')+'Please check if the netlist file or include file is valid')
             return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
 
@@ -197,7 +199,7 @@ class circuit:
                         flag = 2    # Subcircuit Error
                     elif 'fatal error' in fileo[i]:
                         error_r.append(fileo[i])
-                        logging.error(''.join(error_r))
+                        logger.error(''.join(error_r))
                         return ''.join(error_r), flag
 
                     error_r.append(fileo[i])
@@ -209,7 +211,7 @@ class circuit:
                     i += 1
 
             if error_r:
-                logging.error(''.join(error_r))
+                logger.error(''.join(error_r))
                 return ''.join(error_r), flag
             else:
                 try:
@@ -218,7 +220,7 @@ class circuit:
                     self.net.sort()
                     self.netc.sort()
                 except ValueError:
-                    logging.error("Error! No 'out' port!")
+                    logger.error("Error! No 'out' port!")
                     return "Error! No 'out' port!", flag
 
         with open('test_control2.sp', 'w') as file_object:
@@ -283,7 +285,7 @@ class circuit:
         self.lengthr = len(self.alter_r)
         self.alter_c.sort(key=operator.attrgetter('name'))
         self.alter_r.sort(key=operator.attrgetter('name'))
-        logging.info('Check successfully! Running simulation.')
+        logger.info('Check successfully! Running simulation.')
 
         return flag, flag
 
@@ -308,7 +310,7 @@ class circuit:
 
     from ._write import create_prerun, create_sp, create_wst, create_sp2
 
-    from ._resultaly import resultdata, resultdata2,report
+    from ._resultaly import resultdata, resultdata2, report
 
     def plotcdf(self):
         plt.title("Cdf of Cutoff Frequency")

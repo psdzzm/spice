@@ -1,4 +1,4 @@
-import logging
+from .Logging import logger,import_module_from_spec,check_module
 import subprocess
 from PyQt5.QtGui import QIntValidator
 from matplotlib import pyplot as plt
@@ -60,7 +60,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 os.mkdir(self.root+'/Workspace/'+dir)
                 os.chdir(self.root+'/Workspace/'+dir)
                 shutil.copyfile(fname, os.getcwd()+f'/{name}')
-                logging.info('Copy '+fname+' to '+os.getcwd()+f'/{name}')
+                logger.info('Copy '+fname+' to '+os.getcwd()+f'/{name}')
             else:
                 os.chdir(os.path.dirname(fname))
                 files = os.listdir()
@@ -97,18 +97,18 @@ class plotGUI(QtWidgets.QMainWindow):
                                 if temp:
                                     shutil.copyfile(
                                         temp, self.root+'/Workspace/lib/user/'+includefile[i])
-                                    logging.info('Copy '+temp+' to ' +
-                                                 self.root+'/Workspace/lib/user/'+includefile[i])
+                                    logger.info('Copy '+temp+' to ' +
+                                                self.root+'/Workspace/lib/user/'+includefile[i])
                                     message, flag = self.Cir2.fixinclude(
                                         includefile[i], flag)
                             else:
-                                logging.warning(
+                                logger.warning(
                                     'Exit. Deleting the uploaded include file')
                                 for file in includefile:
                                     read.rm('../lib/user/'+file)
                                 return
                         else:
-                            logging.error(
+                            logger.error(
                                 'Incorrect include file provided! Reset the input circuit')
                             for file in includefile:
                                 read.rm('../lib/user/'+file)
@@ -139,7 +139,7 @@ class plotGUI(QtWidgets.QMainWindow):
     def configCreate(self, i=False):
         if i:
             self.Cir = self.Cir2
-        logging.info('Config Entered')
+        logger.info('Config Entered')
 
         self.Cir.mc_runs = self.configGUI.totaltime.value()
         self.Cir.netselect = self.configGUI.measnode.currentText()
@@ -176,7 +176,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
-                logging.error('Cutoff frequency out of interval')
+                logger.error('Cutoff frequency out of interval')
                 self.Cir.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
@@ -186,14 +186,14 @@ class plotGUI(QtWidgets.QMainWindow):
         self.start_process('Open', 1)
 
     def configreject(self):
-        logging.warning('Configuration Rejected')
+        logger.warning('Configuration Rejected')
         if hasattr(self, 'Cir'):
             os.chdir(self.Cir.dir)
         else:
             os.chdir('..')
         shutil.rmtree(self.Cir2.dir)
-        logging.warning('Delete '+self.Cir2.dir)
-        logging.warning(os.getcwd())
+        logger.warning('Delete '+self.Cir2.dir)
+        logger.warning(os.getcwd())
 
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.
@@ -204,15 +204,12 @@ class plotGUI(QtWidgets.QMainWindow):
             self.process = self.processGui()
 
             self._start = timer()
-            logging.info('Spice Started')
+            logger.info('Spice Started')
             if runmode == 0:
                 self.p.start(
                     "/bin/bash", ['-c', 'ngspice -b run_control.sp -o run_log'])
             elif runmode == 1:
-                read.rm('fc')
-                read.rm('fc_wst')
-                read.rm('paramlist')
-                read.rm('paramwstlist')
+                read.rm('fc', 'fc_wst', 'paramlist', 'paramwstlist')
                 self.p.start(
                     "/bin/bash", ['-c', 'ngspice -b run_control.sp run_control_wst.sp -o run_log'])
 
@@ -225,15 +222,15 @@ class plotGUI(QtWidgets.QMainWindow):
             self.p.kill()
             self.p = None
             read.rm('run_log')
-            logging.warning('Delete run_log')
+            logger.warning('Delete run_log')
 
     def finishrun(self, mode):
-        logging.info(f'Spice time: {timer()-self._start}s')
+        logger.info(f'Spice time: {timer()-self._start}s')
         if self.p == None:
-            logging.warning('Spice Killed')
+            logger.warning('Spice Killed')
             return
         else:
-            logging.info('Spice Finished')
+            logger.info('Spice Finished')
 
         self.p = None
         self.dialog.close()
@@ -245,7 +242,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Cutoff frequency out of interval')
-                logging.error('Cutoff frequency out of interval')
+                logger.error('Cutoff frequency out of interval')
                 self.Cir.total = 0
                 self.analButton.clicked.connect(self.analy)
                 return
@@ -336,7 +333,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.plot()
 
     def plot(self):
-        logging.info('Plot')
+        logger.info('Plot')
         if self.x == []:
             return
 
@@ -356,7 +353,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.plotwst()
 
     def plotwst(self):
-        logging.info('wst')
+        logger.info('wst')
         if self.x == []:
             return
 
@@ -377,7 +374,7 @@ class plotGUI(QtWidgets.QMainWindow):
     def AddTime(self):
 
         self.Cir.mc_runs = int(self.addtimetext.text())
-        logging.info(f'Added:{self.Cir.mc_runs}')
+        logger.info(f'Added:{self.Cir.mc_runs}')
         self.Cir.create_sp(add=True)
 
         self.start_process('Add')
@@ -427,7 +424,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.configGUI.accepted.connect(self.configCreate)
 
     def reset(self):
-        logging.info('Reset')
+        logger.info('Reset')
         self.ax.legend()
         try:
             line = self.line1.pop(0)
