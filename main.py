@@ -5,11 +5,11 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 21:54:24
+ LastEditTime: 14-07-2021 01:29:05
  FilePath: /circuit/main.py
 '''
 
-from src.Logging import setup_logging,init,logger,import_module_from_spec,check_module
+from src.Logging import init,logger
 import logging
 from src.plot import plotGUI
 from PyQt5 import QtWidgets

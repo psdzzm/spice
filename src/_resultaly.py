@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 21:53:30
+ LastEditTime: 14-07-2021 02:11:52
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -19,13 +19,11 @@ import os
 import sys
 from .Logging import check_module, import_module_from_spec, logger
 import threading
-# import weasyprint
-# import html5print
+from datetime import datetime
 
-wypt=None
-btf=None
-wypt=import_module_from_spec(check_module('weasyprint'))
-btf=import_module_from_spec(check_module('html5print'))
+wypt = import_module_from_spec(check_module('weasyprint'))
+btf = import_module_from_spec(check_module('bs4'))
+
 
 def resultdata(self, worst=False):
     start = timer()
@@ -170,7 +168,6 @@ def report(self):
         rframe.loc[i] = [self.alter_r[i].name,
                          self.alter_r[i].r, self.alter_r[i].tol]
 
-
     cframehtml = '\n{% block ctable %}\n' + \
         cframe.to_html(index=False)+'\n{% endblock %}\n'
     rframehtml = '\n{% block rtable %}\n' + \
@@ -245,8 +242,9 @@ def report(self):
         files = table.read()
 
         t = Template(files)
-        renddict = {'title': self.shortname, 'mc_runs': self.total,
-                    'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
+
+        renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime(
+            "%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
             renddict[
@@ -269,7 +267,8 @@ def report(self):
 
         renderhtml = t.render(context)
         if btf:
-            renderhtml=btf.HTMLBeautifier.beautify(renderhtml,4)
+            renderhtml = btf.BeautifulSoup(
+                renderhtml, 'html5lib').prettify()
 
         rendered.write(renderhtml)
 

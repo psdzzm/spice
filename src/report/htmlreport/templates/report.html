@@ -1,501 +1,508 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <style>
-            h1 {
-                text-align          : center;
-            }
-            body {
-                height              : 842px;
-                width               : 595px;
-               /* to centre page on screen*/
-                margin-left         : auto;
-                margin-right        : auto;
-            }
-            table {
-                text-align          : center;
-                margin-left         : auto;
-                margin-right        : auto;
-                border-collapse     : collapse;
-            }
-            table, thead, th, td {
-                text-align          : center;
-                border              : 1px solid;
-            }
-            img {
-                display             : block;
-                margin-left         : auto;
-                margin-right        : auto;
-            }
-        </style>
-        <title>
-            Sallen.cir report
-        </title>
-    </head>
-    <body>
-        <h1>
-            Sallen.cir Tolerance Analysis Report
-        </h1>
-        <h2>
-            Component
-        </h2>
-        <p style="text-align:center;margin-bottom:1px;">
-            3 Capacitors
-        </p>
-        <table border="1" class="dataframe">
-            <thead>
-                <tr style="text-align: right;">
-                    <th>
-                        Name
-                    </th>
-                    <th>
-                        Value/F
-                    </th>
-                    <th>
-                        Tolerance
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        c1
-                    </td>
-                    <td>
-                        2e-09
-                    </td>
-                    <td>
-                        0.05
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        c10
-                    </td>
-                    <td>
-                        1e-09
-                    </td>
-                    <td>
-                        0.05
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        c2
-                    </td>
-                    <td>
-                        1e-09
-                    </td>
-                    <td>
-                        0.05
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <p style="text-align:center;margin-bottom:1px;">
-            5 Resistors
-        </p>
-        <table border="1" class="dataframe">
-            <thead>
-                <tr style="text-align: right;">
-                    <th>
-                        Name
-                    </th>
-                    <th>
-                        Value/&Omega;
-                    </th>
-                    <th>
-                        Tolerance
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        r1
-                    </td>
-                    <td>
-                        11200
-                    </td>
-                    <td>
-                        0.01
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        r10
-                    </td>
-                    <td>
-                        15900
-                    </td>
-                    <td>
-                        0.01
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        r2
-                    </td>
-                    <td>
-                        11200
-                    </td>
-                    <td>
-                        0.01
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        ra
-                    </td>
-                    <td>
-                        1e+08
-                    </td>
-                    <td>
-                        0.01
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        rb
-                    </td>
-                    <td>
-                        1
-                    </td>
-                    <td>
-                        0.01
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h2>
-            Result
-        </h2>
-        AC analysis command: ac dec 40 10 100
-        <br>
-        Running time: 100
-        <br>
-        Measure port: out
-        <br>
-        Standard cutoff frequency: 65.05133 Hz
-        <br>
-        Acceptable tolerance of cutoff frequency: 0.01
-        <br>
-        Acceptable lowest yield: 0.98
-        <br>
-        <p>
-            This circuit design is acceptable. The estimated yield from simulation is 1.
-        </p>
-        <p style="text-align:center;margin-bottom:1px;">
-            Left Tail Probability Table
-        </p>
-        <table border="1" class="dataframe">
-            <thead>
-                <tr style="text-align: right;">
-                    <th>
-                        Frequency/Hz (Smaller than)
-                    </th>
-                    <th>
-                        Probability
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        65.04391292954448
-                    </td>
-                    <td>
-                        0.060
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.04388873421804
-                    </td>
-                    <td>
-                        0.050
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.04387755199002
-                    </td>
-                    <td>
-                        0.040
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.0438627440523
-                    </td>
-                    <td>
-                        0.030
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.04381738709735
-                    </td>
-                    <td>
-                        0.020
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.03109305465061
-                    </td>
-                    <td>
-                        0.010
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.0309482311054
-                    </td>
-                    <td>
-                        0.008
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.03052377251757
-                    </td>
-                    <td>
-                        0.006
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.02856948894483
-                    </td>
-                    <td>
-                        0.004
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.02814713869778
-                    </td>
-                    <td>
-                        0.002
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <p style="text-align:center;margin-bottom:1px;">
-            Right Tail Probability Table
-        </p>
-        <table border="1" class="dataframe">
-            <thead>
-                <tr style="text-align: right;">
-                    <th>
-                        Frequency/Hz (Larger than)
-                    </th>
-                    <th>
-                        Probability
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        65.07147499177164
-                    </td>
-                    <td>
-                        0.060
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07147819519696
-                    </td>
-                    <td>
-                        0.050
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.0714867770215
-                    </td>
-                    <td>
-                        0.040
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07150347096125
-                    </td>
-                    <td>
-                        0.030
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07153101073213
-                    </td>
-                    <td>
-                        0.020
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07153684710049
-                    </td>
-                    <td>
-                        0.010
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07154307333458
-                    </td>
-                    <td>
-                        0.008
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07154970209051
-                    </td>
-                    <td>
-                        0.006
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.0736632421422
-                    </td>
-                    <td>
-                        0.004
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        65.07380082360325
-                    </td>
-                    <td>
-                        0.002
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <p style="text-align:center;margin-bottom:1px;">
-            Worst Case Table
-        </p>
-        <table border="1" class="dataframe">
-            <thead>
-                <tr style="text-align: center;">
-                    <th>
-                    </th>
-                    <th>
-                        Left
-                    </th>
-                    <th>
-                        Right
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        Frequency
-                    </td>
-                    <td>
-                        6.500254e+01
-                    </td>
-                    <td>
-                        6.509930e+01
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        c1
-                    </td>
-                    <td>
-                        1.900000e-09
-                    </td>
-                    <td>
-                        2.100000e-09
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        c10
-                    </td>
-                    <td>
-                        1.050000e-09
-                    </td>
-                    <td>
-                        9.500000e-10
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        c2
-                    </td>
-                    <td>
-                        1.050000e-09
-                    </td>
-                    <td>
-                        9.500000e-10
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        r1
-                    </td>
-                    <td>
-                        1.131200e+04
-                    </td>
-                    <td>
-                        1.108800e+04
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        r10
-                    </td>
-                    <td>
-                        1.605900e+04
-                    </td>
-                    <td>
-                        1.574100e+04
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        r2
-                    </td>
-                    <td>
-                        1.131200e+04
-                    </td>
-                    <td>
-                        1.108800e+04
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        ra
-                    </td>
-                    <td>
-                        9.900000e+07
-                    </td>
-                    <td>
-                        9.900000e+07
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        rb
-                    </td>
-                    <td>
-                        1.010000e+00
-                    </td>
-                    <td>
-                        9.900000e-01
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </body>
+ <head>
+  <style>
+   h1 {
+            text-align: center;
+        }
+
+        body {
+            height: 842px;
+            width: 595px;
+            /* to centre page on screen*/
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        table {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
+        }
+
+        table, thead, th, td {
+            text-align: center;
+            border: 1px solid;
+        }
+
+        img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+  </style>
+  <title>
+   Sallen.cir report
+  </title>
+ </head>
+ <body>
+  <h1>
+   Sallen.cir Tolerance Analysis Report
+  </h1>
+  <p style="text-align:center;margin-top:-15px;">
+   Creation date: 14/07/2021 01:12:05 UTC
+  </p>
+  <h2>
+   Component
+  </h2>
+  <p style="text-align:center;margin-bottom:1px;">
+   3 Capacitors
+  </p>
+  <table border="1" class="dataframe">
+   <thead>
+    <tr style="text-align: right;">
+     <th>
+      Name
+     </th>
+     <th>
+      Value/F
+     </th>
+     <th>
+      Tolerance
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      c1
+     </td>
+     <td>
+      2e-09
+     </td>
+     <td>
+      0.05
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c10
+     </td>
+     <td>
+      1e-09
+     </td>
+     <td>
+      0.05
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c2
+     </td>
+     <td>
+      1e-09
+     </td>
+     <td>
+      0.05
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p style="text-align:center;margin-bottom:1px;">
+   5 Resistors
+  </p>
+  <table border="1" class="dataframe">
+   <thead>
+    <tr style="text-align: right;">
+     <th>
+      Name
+     </th>
+     <th>
+      Value/Ω
+     </th>
+     <th>
+      Tolerance
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      r1
+     </td>
+     <td>
+      11200
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r10
+     </td>
+     <td>
+      15900
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r2
+     </td>
+     <td>
+      11200
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      ra
+     </td>
+     <td>
+      1e+08
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      rb
+     </td>
+     <td>
+      1
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <h2>
+   Result
+  </h2>
+  AC analysis command: ac dec 40 10 100
+  <br/>
+  Running time: 100
+  <br/>
+  Measure port: out
+  <br/>
+  Standard cutoff frequency: 65.05133 Hz
+  <br/>
+  Acceptable tolerance of cutoff frequency: 0.01
+  <br/>
+  Acceptable lowest yield: 0.98
+  <br/>
+  <p>
+   This circuit design is acceptable. The estimated yield from simulation is 1.
+  </p>
+  <p style="text-align:center;margin-bottom:1px;">
+   Left Tail Probability Table
+  </p>
+  <table border="1" class="dataframe">
+   <thead>
+    <tr style="text-align: right;">
+     <th>
+      Frequency/Hz (Smaller than)
+     </th>
+     <th>
+      Probability
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      65.03951969083957
+     </td>
+     <td>
+      0.060
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.03947426400235
+     </td>
+     <td>
+      0.050
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.0344971126912
+     </td>
+     <td>
+      0.040
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.03023845192358
+     </td>
+     <td>
+      0.030
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.02773245755372
+     </td>
+     <td>
+      0.020
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.02068450413361
+     </td>
+     <td>
+      0.010
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.02023373425817
+     </td>
+     <td>
+      0.008
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.02010882874576
+     </td>
+     <td>
+      0.006
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.01987168067286
+     </td>
+     <td>
+      0.004
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.01908418311587
+     </td>
+     <td>
+      0.002
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p style="text-align:center;margin-bottom:1px;">
+   Right Tail Probability Table
+  </p>
+  <table border="1" class="dataframe">
+   <thead>
+    <tr style="text-align: right;">
+     <th>
+      Frequency/Hz (Larger than)
+     </th>
+     <th>
+      Probability
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      65.0690250374446
+     </td>
+     <td>
+      0.060
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.06902698464067
+     </td>
+     <td>
+      0.050
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.06903116893244
+     </td>
+     <td>
+      0.040
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.06903851413708
+     </td>
+     <td>
+      0.030
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.06904994407179
+     </td>
+     <td>
+      0.020
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.07433144559067
+     </td>
+     <td>
+      0.010
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.07559790265444
+     </td>
+     <td>
+      0.008
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.07567457983349
+     </td>
+     <td>
+      0.006
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.07782622778129
+     </td>
+     <td>
+      0.004
+     </td>
+    </tr>
+    <tr>
+     <td>
+      65.07787206960627
+     </td>
+     <td>
+      0.002
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p style="text-align:center;margin-bottom:1px;">
+   Worst Case Table
+  </p>
+  <table border="1" class="dataframe">
+   <thead>
+    <tr style="text-align: center;">
+     <th>
+     </th>
+     <th>
+      Left
+     </th>
+     <th>
+      Right
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      Frequency
+     </td>
+     <td>
+      6.500254e+01
+     </td>
+     <td>
+      6.509930e+01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c1
+     </td>
+     <td>
+      1.900000e-09
+     </td>
+     <td>
+      2.100000e-09
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c10
+     </td>
+     <td>
+      1.050000e-09
+     </td>
+     <td>
+      9.500000e-10
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c2
+     </td>
+     <td>
+      1.050000e-09
+     </td>
+     <td>
+      9.500000e-10
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r1
+     </td>
+     <td>
+      1.131200e+04
+     </td>
+     <td>
+      1.108800e+04
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r10
+     </td>
+     <td>
+      1.605900e+04
+     </td>
+     <td>
+      1.574100e+04
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r2
+     </td>
+     <td>
+      1.131200e+04
+     </td>
+     <td>
+      1.108800e+04
+     </td>
+    </tr>
+    <tr>
+     <td>
+      ra
+     </td>
+     <td>
+      9.900000e+07
+     </td>
+     <td>
+      9.900000e+07
+     </td>
+    </tr>
+    <tr>
+     <td>
+      rb
+     </td>
+     <td>
+      1.010000e+00
+     </td>
+     <td>
+      9.900000e-01
+     </td>
+    </tr>
+   </tbody>
+  </table>
+ </body>
 </html>

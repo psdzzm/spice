@@ -1,4 +1,4 @@
-from .Logging import logger,import_module_from_spec,check_module
+from .Logging import logger
 import subprocess
 from PyQt5.QtGui import QIntValidator
 from matplotlib import pyplot as plt
