@@ -5,11 +5,17 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 21:52:34
+ LastEditTime: 14-07-2021 15:28:26
  FilePath: /circuit/src/Logging.py
 '''
 
+import os
+import logging.config
+import logging
+import hashlib
+import yaml
 import importlib
+
 
 def check_module(module_name):
     """
@@ -21,35 +27,45 @@ def check_module(module_name):
         print("Module: {} does not exist".format(module_name))
     else:
         print("Module: {} can be imported".format(module_name))
-        return module_spec
+        return module_name
 
 
-def import_module_from_spec(module_spec):
+def import_module(module_name, name=None):
     """
     Import the module via the passed in module specification
     Returns the newly imported module
     """
-    if module_spec:
-        module = importlib.util.module_from_spec(module_spec)
-        module_spec.loader.exec_module(module)
+    if module_name == None:
+        return
     else:
-        module = None
+        module = importlib.import_module(module_name)
 
-    return module
+    if name == None:
+        return module
+    elif isinstance(name, str):
+        print('Import '+module_name+'.'+name)
+        return getattr(module, name)
+    elif isinstance(name, list):
+        length = len(name)
+        if length == 1:
+            print('Import '+module_name+'.'+name[0])
+            return getattr(module, name[0])
+        elif length > 1:
+            sub = [None]*length
+            for item, i in zip(name, range(length)):
+                sub[i] = getattr(module, item)
+                print('Import '+module_name+'.'+item)
+            return sub
+        else:
+            raise BaseException("Empty list")
+    else:
+        raise TypeError("Unsupported type {} of "+name)
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5', 'matplotlib', 'yaml', 'logging', 'pandas',
-              'hashlib', 'subprocess', 'shutil', 'datetime', 'timeit', 'django']
+modulelist = ['numpy', 'scipy', 'PyQt5', 'matplotlib', 'pandas', 'django']
 for item in modulelist:
-    check = check_module(item)
-    if not check:
+    if not check_module(item):
         raise ModuleNotFoundError("Module: {} not found".format(item))
-
-import os
-import logging.config
-import logging
-import hashlib
-import yaml
 
 
 def GetHashofDirs(directory):
@@ -101,7 +117,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
     logger = logging.getLogger('default')
     check = check_module('coloredlogs')
     if check:
-        coloredlogs = import_module_from_spec(check)
+        coloredlogs = import_module(check)
         coloredlogs.install(level=default_level, milliseconds=True, logger=logger,
                             fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
 

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 14-07-2021 02:11:52
+ LastEditTime: 14-07-2021 15:31:03
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -17,12 +17,12 @@ from scipy import interpolate
 import pandas as pd
 import os
 import sys
-from .Logging import check_module, import_module_from_spec, logger
+from .Logging import check_module, import_module, logger
 import threading
 from datetime import datetime
 
-wypt = import_module_from_spec(check_module('weasyprint'))
-btf = import_module_from_spec(check_module('bs4'))
+wypt = import_module(check_module('weasyprint'), 'HTML')
+btf = import_module(check_module('bs4'), 'BeautifulSoup')
 
 
 def resultdata(self, worst=False):
@@ -267,13 +267,12 @@ def report(self):
 
         renderhtml = t.render(context)
         if btf:
-            renderhtml = btf.BeautifulSoup(
-                renderhtml, 'html5lib').prettify()
+            renderhtml = btf(renderhtml, 'html5lib').prettify()
 
         rendered.write(renderhtml)
 
         if wypt:
-            html = wypt.HTML(string=renderhtml)
+            html = wypt(string=renderhtml)
             html.write_pdf('report.pdf')
             logger.info('Exporting report to '+self.dir)
         else:
