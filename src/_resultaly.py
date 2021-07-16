@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 14-07-2021 15:31:03
+ LastEditTime: 16-07-2021 17:28:05
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -20,29 +20,27 @@ import sys
 from .Logging import check_module, import_module, logger
 import threading
 from datetime import datetime
+import psutil
 
 wypt = import_module(check_module('weasyprint'), 'HTML')
 btf = import_module(check_module('bs4'), 'BeautifulSoup')
 
 
-def resultdata(self, worst=False):
+def resultdata(self, worst=False, add=False):
     start = timer()
-    with open('fc', 'r') as fileobject, open('fc_wst', 'r') as wst, open('paramlist', 'r') as paramlist, open('paramwstlist', 'r') as paramwstlist:
-        fileobject.readline()
-        lines = fileobject.readlines()
-        param = paramlist.readlines()
-        paramwst = paramwstlist.readlines()
 
-        if worst:
-            wstframe = pd.DataFrame(columns=('', 'Left', 'Right'))
+    if worst:
+        with open('fc_wst', 'r') as wst, open('paramwstlist', 'r') as paramwstlist:
             wst.readline()
             lines_wst = wst.readlines()
+            paramwst = paramwstlist.readlines()
+            wstframe = pd.DataFrame(columns=('', 'Left', 'Right'))
 
             self.wst_cutoff = np.zeros(len(lines_wst))
             i = 0
             for line in lines_wst:
                 row = line.split()
-                self.wst_cutoff[i] = float(line.split()[1])
+                self.wst_cutoff[i] = line.split()[1]
                 i += 1
 
             self.stdcutoff = self.wst_cutoff[-1]
@@ -61,11 +59,29 @@ def resultdata(self, worst=False):
             self.wstframehtml = '\n{% block wsttable %}\n'+wstframe.to_html(
                 index=False, justify='center')+'\n{% endblock %}\n'
 
-    self.cutoff = np.zeros(len(lines))
+    with open('fc', 'r') as fileobject,  open('paramlist', 'r') as paramlist:
+        fileobject.readline()
+        if add:
+            fileobject.seek(self._fctell)
+            paramlist.seek(self._paramtell)
+
+        lines = fileobject.readlines()
+        param = paramlist.readlines()
+        self._fctell = fileobject.tell()
+        self._paramtell = paramlist.tell()
+
+    cutoff = np.zeros(len(lines))
     i = 0
     for line in lines:
-        self.cutoff[i] = float(line.split()[1])
+        # For numpy array, no need to use float() to convert first
+        cutoff[i] = line.split()[1]
         i += 1
+
+    if add:
+        self.cutoff = np.concatenate([self.cutoff, cutoff])
+    else:
+        self.cutoff = cutoff
+    del cutoff
 
     index = self.cutoff.argsort()
     self.cutoff = self.cutoff[index]
@@ -74,22 +90,33 @@ def resultdata(self, worst=False):
     logger.info(
         f'Initial length={length}, Truncated length={len(self.cutoff0)}')
 
-    for i in range(self.lengthc):
-        self.alter_c[i].capacitance = np.append(
-            self.alter_c[i].capacitance, np.zeros(self.mc_runs))
-    for i in range(self.lengthr):
-        self.alter_r[i].resistance = np.append(
-            self.alter_r[i].resistance, np.zeros(self.mc_runs))
-
     i, j = 0, 0
+    alterc = np.zeros([self.lengthc, self.mc_runs])
+    alterr = np.zeros([self.lengthr, self.mc_runs])
     while i < len(param):
         for k in range(self.lengthc):
-            self.alter_c[k].capacitance[j] = float(param[i].split()[-1])
+            alterc[k, j] = param[i].split()[-1]
             i += 1
         for k in range(self.lengthr):
-            self.alter_r[k].resistance[j] = float(param[i].split()[-1])
+            alterr[k, j] = param[i].split()[-1]
             i += 1
         j += 1
+
+    if add:
+        for i in range(self.lengthc):
+            self.alter_c[i].capacitance = np.concatenate(
+                [self.alter_c[i].capacitance, alterc[i]])
+        for i in range(self.lengthr):
+            self.alter_r[i].resistance = np.concatenate(
+                [self.alter_r[i].resistance, alterr[i]])
+    else:
+        for i in range(self.lengthc):
+            self.alter_c[i].capacitance = alterc[i]
+        for i in range(self.lengthr):
+            self.alter_r[i].resistance = alterr[i]
+
+    del alterc, alterr
+    logger.debug(f'Length:{len(self.alter_c[0].capacitance)}')
 
     product = 1
     for i in range(self.lengthc):
@@ -117,6 +144,7 @@ def resultdata(self, worst=False):
     self._fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
     self.fit = interpolate.PchipInterpolator(self.cutoff0, self.p0)
     logger.info(f'Analyse Data Time: {timer()-start}s')
+
     thread = threading.Thread(target=self.report, args=())
     thread.start()
 
@@ -225,7 +253,7 @@ def report(self):
     rtailhtml = '\n{% block righttail %}\n' + \
         rtail.to_html(index=False)+'\n{% endblock %}\n'
 
-    from django.template.loader import render_to_string
+    # from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
 

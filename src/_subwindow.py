@@ -19,27 +19,17 @@ class processing(QtWidgets.QDialog):
 
 class config(QtWidgets.QDialog):
 
-    def __init__(self, Cir, root):
+    def __init__(self, root):
         super().__init__()
 
-        self.Cir = Cir
         uic.loadUi(root+'/src/config.ui', self)
-        self.tab2UI()
+
         self.barlayout = QtWidgets.QHBoxLayout(self.widget)
         self.bar = NavigationToolbar(self.MplWidget.canvas, self)
         self.barlayout.addWidget(self.bar)
         self.setWindowTitle('Configuration')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-        self.totaltime.setValue(100)
-        self.measnode.addItems(Cir.net)
-        self.rfnum.setSpecialValueText('LAST')
-        self.risefall.setCurrentIndex(1)
-        # self.tolcolor()
-
-        # self.buttonBox.setDefault(False)
-        # self.buttonBox.setAutoDefault(False)
+        # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.measnode.currentTextChanged.connect(self.netchange)
 
@@ -47,8 +37,22 @@ class config(QtWidgets.QDialog):
 
         self.measmode.currentTextChanged.connect(self.showhide)
 
-        self.MplWidget.figure.clear()
+        self.scroll = QtWidgets.QVBoxLayout(self.tab2)
 
+    def init(self, Cir):
+        self.Cir = Cir
+        self.tab2UI()
+
+        self.totaltime.setValue(1000*(Cir.lengthc+Cir.lengthr))
+        self.measnode.currentTextChanged.disconnect()
+        self.measnode.clear()
+        self.measnode.addItem('out')
+        self.measnode.addItems(self.Cir.net)
+        self.measnode.currentTextChanged.connect(self.netchange)
+        self.rfnum.setSpecialValueText('LAST')
+        self.risefall.setCurrentIndex(1)
+
+        self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[0, :])
@@ -87,9 +91,10 @@ class config(QtWidgets.QDialog):
             self.widget_5.setHidden(True)
 
     def tab2UI(self):
-        self.scroll = QtWidgets.QVBoxLayout()
+        for i in reversed(range(self.scroll.count())):
+            self.scroll.itemAt(i).widget().deleteLater()
 
-        self.scrollc = QtWidgets.QScrollArea()
+        self.scrollc = QtWidgets.QScrollArea(self.tab2)
         self.scrollc.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetc = QtWidgets.QWidget(self.scrollc)
 
@@ -125,7 +130,8 @@ class config(QtWidgets.QDialog):
         self.scrollc.setWidget(self.layoutWidgetc)
         self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollc)
-        self.scrollr = QtWidgets.QScrollArea()
+
+        self.scrollr = QtWidgets.QScrollArea(self.tab2)
         self.scrollr.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
 
@@ -163,7 +169,7 @@ class config(QtWidgets.QDialog):
         self.scroll.addWidget(self.scrollr)
         self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
-        self.tab2.setLayout(self.scroll)
+        # self.tab2.setLayout(self.scroll)
 
     def tolcolor(self):
         for i in range(self.Cir.lengthc):

@@ -1,7 +1,6 @@
 from .Logging import logger
 import subprocess
 from PyQt5.QtGui import QIntValidator
-from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import numpy as np
 import os
@@ -13,6 +12,7 @@ import shutil
 from datetime import datetime
 from timeit import default_timer as timer
 from ._subwindow import processing, config
+import psutil
 
 
 def pyqt5plot():
@@ -35,6 +35,10 @@ class plotGUI(QtWidgets.QMainWindow):
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
 
         self.dialog = processing()
+        self.dialog.rejected.connect(self.kill)
+        self.configGUI = config(self.root)
+        self.configGUI.accepted.connect(self.configCreate)
+        self.configGUI.rejected.connect(self.configreject)
 
         self.onlyInt = QIntValidator()
         self.addtimetext.setValidator(self.onlyInt)
@@ -50,6 +54,27 @@ class plotGUI(QtWidgets.QMainWindow):
         self.p = None
 
     def openfile(self):
+
+        if hasattr(self, 'Cir'):
+            ret = QtWidgets.QMessageBox.warning(
+                self, 'Warning', 'You will lose currenct analysis result', QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
+            if ret == QtWidgets.QMessageBox.Cancel:
+                return
+            else:
+                del self.Cir
+        try:
+            for i in reversed(range(self.scroll.count())):
+                self.scroll.itemAt(i).widget().deleteLater()
+        except AttributeError:
+            pass
+        self.MplWidget.figure.clear()
+        self.MplWidget.canvas.draw()
+        reconnect(self.analButton.clicked)
+        reconnect(self.ResetButton.clicked)
+        reconnect(self.addtimetext.returnPressed)
+        reconnect(self.wstcase.toggled)
+        reconnect(self.calctext.returnPressed)
+
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Open file', self.root+'/CirFile', "Spice Netlists (*.cir)")
         if fname:
@@ -68,30 +93,30 @@ class plotGUI(QtWidgets.QMainWindow):
                 for item in files:
                     os.remove(item)
 
-            self.Cir2 = read.circuit(fname)
-            self.Cir2.shortname = name
-            self.Cir2.dir = os.getcwd()
+            self.Cir = read.circuit(fname)
+            self.Cir.shortname = name
+            self.Cir.dir = os.getcwd()
 
-            message = self.Cir2.read()
+            message = self.Cir.read()
 
             if message:
                 QtWidgets.QMessageBox.critical(self, 'Error', message)
                 return
             else:
-                message, flag = self.Cir2.init()
+                message, flag = self.Cir.init()
 
                 i = -1
                 includefile = []
                 while True:
                     i += 1
                     if flag:
-                        if i < self.Cir2.includetime:
+                        if i < self.Cir.includetime:
                             ret = QtWidgets.QMessageBox.critical(
                                 self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
 
                             if ret == QtWidgets.QMessageBox.Open:
                                 temp, _ = QtWidgets.QFileDialog.getOpenFileName(
-                                    self, 'Select file for '+self.Cir2.subckt, '', "Model Files (*)")
+                                    self, 'Select file for '+self.Cir.subckt, '', "Model Files (*)")
                                 includefile.append(
                                     temp.split('/')[-1].split('.')[0])
                                 if temp:
@@ -99,7 +124,7 @@ class plotGUI(QtWidgets.QMainWindow):
                                         temp, self.root+'/Workspace/lib/user/'+includefile[i])
                                     logger.info('Copy '+temp+' to ' +
                                                 self.root+'/Workspace/lib/user/'+includefile[i])
-                                    message, flag = self.Cir2.fixinclude(
+                                    message, flag = self.Cir.fixinclude(
                                         includefile[i], flag)
                             else:
                                 logger.warning(
@@ -113,9 +138,9 @@ class plotGUI(QtWidgets.QMainWindow):
                             for file in includefile:
                                 read.rm('../lib/user/'+file)
                             with open('test.cir', 'w') as f1, open('run.cir', 'w') as f2:
-                                f1.write(self.Cir2.testtext)
-                                f2.write(self.Cir2.runtext)
-                            message, flag = self.Cir2.init()
+                                f1.write(self.Cir.testtext)
+                                f2.write(self.Cir.runtext)
+                            message, flag = self.Cir.init()
                             message = 'Please provide the correct file for the include file\n'+message
                             i = -1
                             includefile = []
@@ -129,16 +154,14 @@ class plotGUI(QtWidgets.QMainWindow):
                     else:
                         break
 
-            self.configGUI = config(self.Cir2, self.root)
-            self.configGUI.accepted.connect(lambda: self.configCreate(True))
-            self.configGUI.rejected.connect(self.configreject)
+            self.configGUI.init(self.Cir)
+            reconnect(self.configGUI.rejected, self.configreject)
+            self.configGUI.show()
 
         else:
             return
 
-    def configCreate(self, i=False):
-        if i:
-            self.Cir = self.Cir2
+    def configCreate(self):
         logger.info('Config Entered')
 
         self.Cir.mc_runs = self.configGUI.totaltime.value()
@@ -156,7 +179,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if self.Cir.startac >= self.Cir.stopac:
                 QtWidgets.QMessageBox.critical(
                     self, 'Error!', 'Start point is larger than stop point')
-                self.analButton.clicked.connect(self.analy)
+                reconnect(self.analButton.clicked, self.analy)
                 self.Cir.total = 0
                 return
 
@@ -178,7 +201,7 @@ class plotGUI(QtWidgets.QMainWindow):
                     self, 'Error!', 'Cutoff frequency out of interval')
                 logger.error('Cutoff frequency out of interval')
                 self.Cir.total = 0
-                self.analButton.clicked.connect(self.analy)
+                reconnect(self.analButton.clicked, self.analy)
                 return
 
         self.Cir.create_sp()
@@ -187,13 +210,12 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def configreject(self):
         logger.warning('Configuration Rejected')
-        if hasattr(self, 'Cir'):
-            os.chdir(self.Cir.dir)
-        else:
-            os.chdir('..')
-        shutil.rmtree(self.Cir2.dir)
-        logger.warning('Delete '+self.Cir2.dir)
+        os.chdir('..')
+        reconnect(self.analButton.clicked, None, None)
+        shutil.rmtree(self.Cir.dir)
+        logger.warning('Delete '+self.Cir.dir)
         logger.warning(os.getcwd())
+        del self.Cir
 
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.
@@ -215,7 +237,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def processGui(self):
         self.dialog.show()
-        self.dialog.rejected.connect(self.kill)
 
     def kill(self):
         if self.p:
@@ -233,7 +254,6 @@ class plotGUI(QtWidgets.QMainWindow):
             logger.info('Spice Finished')
 
         self.p = None
-        self.dialog.close()
 
         with open('run.log', 'a') as file_object, open('run_log') as b:
             file = b.read()
@@ -244,17 +264,20 @@ class plotGUI(QtWidgets.QMainWindow):
                     self, 'Error!', 'Cutoff frequency out of interval')
                 logger.error('Cutoff frequency out of interval')
                 self.Cir.total = 0
-                self.analButton.clicked.connect(self.analy)
+                reconnect(self.analButton.clicked, self.analy)
+                self.dialog.close()
                 return
             elif mode == 'Add':
                 self.Cir.total = self.Cir.total+self.Cir.mc_runs
-                self.Cir.resultdata()
+                self.Cir.resultdata(add=True)
             elif mode == 'Open':
                 self.Cir.total = self.Cir.mc_runs
                 self.Cir.resultdata(worst=True)
                 self.postinit()
+                self.dialog.close()
                 return
 
+        self.dialog.close()
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
         self.plot()
@@ -266,16 +289,16 @@ class plotGUI(QtWidgets.QMainWindow):
         self.y = self.Cir.p
         self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
 
-        self.analButton.clicked.connect(self.analy)
-        self.ResetButton.clicked.connect(self.reset)
-        self.addtimetext.returnPressed.connect(self.AddTime)
-        self.wstcase.toggled.connect(self.plotwst)
-        self.calctext.returnPressed.connect(self.calcp)
+        reconnect(self.analButton.clicked, self.analy)
+        reconnect(self.ResetButton.clicked, self.reset)
+        reconnect(self.addtimetext.returnPressed, self.AddTime)
+        reconnect(self.wstcase.toggled, self.plotwst)
+        reconnect(self.calctext.returnPressed, self.calcp)
 
         try:
             for i in reversed(range(self.scroll.count())):
                 self.scroll.itemAt(i).widget().deleteLater()
-        except:
+        except AttributeError:
             self.scroll = QtWidgets.QVBoxLayout(self.rightwidget)
 
         self.scrollc = QtWidgets.QScrollArea(self.rightwidget)
@@ -335,9 +358,10 @@ class plotGUI(QtWidgets.QMainWindow):
     def plot(self):
         logger.info('Plot')
         if self.x == []:
+            logger.warning('Nothing to plot')
             return
 
-        self . MplWidget .figure. clear()
+        self.MplWidget.figure.clear()
 
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_ylim(-0.05, 1.05)
@@ -372,7 +396,6 @@ class plotGUI(QtWidgets.QMainWindow):
         self.MplWidget.canvas.draw()
 
     def AddTime(self):
-
         self.Cir.mc_runs = int(self.addtimetext.text())
         logger.info(f'Added:{self.Cir.mc_runs}')
         self.Cir.create_sp(add=True)
@@ -414,14 +437,8 @@ class plotGUI(QtWidgets.QMainWindow):
         self.presult.setText(f'Result:{np.round(result,4)}')
 
     def analy(self):
-        self.configGUI = config(self.Cir, self.root)
-        self.configGUI.totaltime.setValue(self.Cir.total)
-        self.configGUI.startac.setValue(self.Cir.startac)
-        self.configGUI.stopac.setValue(self.Cir.stopac)
-        self.configGUI.rfnum.setValue(self.Cir.rfnum)
-        self.configGUI.risefall.setCurrentIndex(self.Cir.risefall)
-        self.configGUI.measnode.setCurrentText(self.Cir.netselect)
-        self.configGUI.accepted.connect(self.configCreate)
+        self.configGUI.show()
+        reconnect(self.configGUI.rejected, None, None)
 
     def reset(self):
         logger.info('Reset')
@@ -437,10 +454,24 @@ class plotGUI(QtWidgets.QMainWindow):
         except IndexError:
             pass
 
-        self . MplWidget . canvas . draw()
+        self.MplWidget.canvas.draw()
         self.addtimetext.clear()
         self.Cir.total = 0
         self.totaltime.setText('Total simulation time: 0')
         self.x, self.y, self.Cir._col2 = [], [], []
         self.calctext.setPlaceholderText('0')
         self.presult.setText('Result: 1')
+
+
+def reconnect(signal, newhandler=None, oldhandler=None):
+    try:
+        if oldhandler is None:
+            signal.disconnect()
+        else:
+            while True:
+                signal.disconnect(oldhandler)
+    except TypeError:
+        pass
+    finally:
+        if newhandler is not None:
+            signal.connect(newhandler)
