@@ -164,48 +164,52 @@ class plotGUI(QtWidgets.QMainWindow):
     def configCreate(self):
         logger.info('Config Entered')
 
-        self.Cir.mc_runs = self.configGUI.totaltime.value()
-        self.Cir.netselect = self.configGUI.measnode.currentText()
-        self.Cir.analmode = self.configGUI.analmode.currentIndex()
-        self.Cir.measmode = self.configGUI.measmode.currentText()
-        self.Cir.rfnum = self.configGUI.rfnum.value()
-        self.Cir.risefall = self.configGUI.risefall.currentIndex()
+        if self.configGUI.tabWidget.currentIndex() == 2:
+            self.Cir.netselect = self.configGUI.measnode.currentText()
+        else:
+            self.Cir.mc_runs = self.configGUI.totaltime.value()
+            self.Cir.netselect = self.configGUI.measnode.currentText()
+            self.Cir.analmode = self.configGUI.analmode.currentIndex()
+            self.Cir.measmode = self.configGUI.measmode.currentText()
+            self.Cir.rfnum = self.configGUI.rfnum.value()
+            self.Cir.risefall = self.configGUI.risefall.currentIndex()
 
-        if self.Cir.analmode == 0:    # TODO: noise analysis configuration
-            self.Cir.startac = self.configGUI.startac.value(
-            )*10**(self.configGUI.startunit.currentIndex()*3)
-            self.Cir.stopac = self.configGUI.stopac.value(
-            )*10**(self.configGUI.stopunit.currentIndex()*3)
-            if self.Cir.startac >= self.Cir.stopac:
-                QtWidgets.QMessageBox.critical(
-                    self, 'Error!', 'Start point is larger than stop point')
-                reconnect(self.analButton.clicked, self.analy)
-                self.Cir.total = 0
-                return
+            if self.Cir.analmode == 0:    # TODO: noise analysis configuration
+                self.Cir.startac = self.configGUI.startac.value(
+                )*10**(self.configGUI.startunit.currentIndex()*3)
+                self.Cir.stopac = self.configGUI.stopac.value(
+                )*10**(self.configGUI.stopunit.currentIndex()*3)
+                if self.Cir.startac >= self.Cir.stopac:
+                    QtWidgets.QMessageBox.critical(
+                        self, 'Error!', 'Start point is larger than stop point')
+                    reconnect(self.analButton.clicked, self.analy)
+                    self.Cir.total = 0
+                    return
 
-        for i in range(self.Cir.lengthc):
-            self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
-        for i in range(self.Cir.lengthr):
-            self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
+            for i in range(self.Cir.lengthc):
+                self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
+            for i in range(self.Cir.lengthr):
+                self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
 
-        self.Cir.create_prerun()
-        subprocess.run('ngspice -b run_control_pre.sp -o run_log',
-                       shell=True, stdout=subprocess.DEVNULL)
+            self.Cir.create_prerun()
+            subprocess.run('ngspice -b run_control_pre.sp -o run_log',
+                           shell=True, stdout=subprocess.DEVNULL)
 
-        with open('run.log', 'a') as file_object, open('run_log') as b:
-            file = b.read()
-            file_object.write(file)
-            read.rm('run_log')
-            if 'out of interval' in file:
-                QtWidgets.QMessageBox.critical(
-                    self, 'Error!', 'Cutoff frequency out of interval')
-                logger.error('Cutoff frequency out of interval')
-                self.Cir.total = 0
-                reconnect(self.analButton.clicked, self.analy)
-                return
+            with open('run.log', 'a') as file_object, open('run_log') as b:
+                file = b.read()
+                file_object.write(file)
+                read.rm('run_log')
+                if 'out of interval' in file:
+                    QtWidgets.QMessageBox.critical(
+                        self, 'Error!', 'Cutoff frequency out of interval')
+                    logger.error('Cutoff frequency out of interval')
+                    self.Cir.total = 0
+                    reconnect(self.analButton.clicked, self.analy)
+                    return
 
-        self.Cir.create_sp()
-        self.Cir.create_wst()
+            self.Cir.create_sp()
+            self.Cir.create_wst()
+
         self.start_process('Open', 1)
 
     def configreject(self):

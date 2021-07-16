@@ -52,6 +52,17 @@ class config(QtWidgets.QDialog):
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
 
+        self.measnode_2.clear()
+        self.measnode_2.addItem('out')
+        self.measnode_2.addItems(self.Cir.net)
+        self.measnode_2.currentTextChanged.connect(self.netchange)
+        for i in range(Cir.lengthc):
+            self.stepcomp.addItem(Cir.alter_c[i].name)
+        for i in range(Cir.lengthr):
+            self.stepcomp.addItem(Cir.alter_r[i].name)
+
+        self.stepcomp.currentTextChanged.connect(self.compchange)
+
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
@@ -89,6 +100,22 @@ class config(QtWidgets.QDialog):
             self.widget_5.setHidden(False)
         else:
             self.widget_5.setHidden(True)
+
+    def compchange(self):
+        if self.stepcomp.currentIndex() < self.Cir.lengthc and 'F' not in self.startunit_2.currentText():
+            self.startunit_2.clear()
+            self.stopunit_2.clear()
+            self.increunit_2.clear()
+            self.startunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+            self.stopunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+            self.increunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+        elif self.stepcomp.currentIndex() >= self.Cir.lengthc and 'Ω' not in self.stepcomp.currentText():
+            self.startunit_2.clear()
+            self.stopunit_2.clear()
+            self.increunit_2.clear()
+            self.startunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+            self.stopunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+            self.increunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
 
     def tab2UI(self):
         for i in reversed(range(self.scroll.count())):
