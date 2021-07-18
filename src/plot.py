@@ -12,6 +12,7 @@ import shutil
 from datetime import datetime
 from timeit import default_timer as timer
 from ._subwindow import processing, config, reconnect
+from quantiphy import Quantity
 import psutil
 
 
@@ -159,17 +160,21 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.compselect = self.configGUI.stepcomp.currentText()
             if self.configGUI.analmode_2.currentIndex() == 0:
                 if self.configGUI.stepcomp.currentIndex() < self.Cir.lengthc:
-                    self.Cir.startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 12)
-                    self.Cir.stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 12)
-                    self.Cir.increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 12)
+                    startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 12)
+                    stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 12)
+                    increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 12)
                 else:
-                    self.Cir.startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 3)
-                    self.Cir.stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 3)
-                    self.Cir.increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 3)
-                logger.debug(f'start: {self.Cir.startcomp}, stop: {self.Cir.stopcomp}, incre: {self.Cir.increcomp}')
+                    startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 3)
+                    stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 3)
+                    increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 3)
+
+                self.Cir.stepValue = f'start={startcomp} stop={stopcomp} step={increcomp}'
+                logger.debug(self.Cir.stepValue)
             else:
-                self.Cir._listvalue = self.configGUI.plainTextEdit.toPlainText().split()
-                logger.debug(self.Cir._listvalue)
+                self.Cir.stepValue = f"values {' '.join(self.configGUI.plainTextEdit.toPlainText().split())}"
+                logger.debug(self.Cir.stepValue)
+
+            self.Cir.create_step()
             return
         else:
             self.Cir.mc_runs = self.configGUI.totaltime.value()

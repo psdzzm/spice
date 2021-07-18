@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 14:06:21
- FilePath: /circuit/src/_write.py
+ LastEditTime: 18-07-2021 16:51:27
+ FilePath: /spice/src/_write.py
 '''
 import time
 
@@ -147,3 +147,16 @@ def create_wst(self):
         file_object.write(loop)
         file_object.write(self.control[1])
         file_object.write('wrdata fc_wst cutoff\n.endc\n\n.end')
+
+
+def create_step(self):
+    control = [f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tcompose comp {self.stepValue}\n\tlet cutoff = unitvec(length(comp))\n\n\tdowhile run < length(comp)\n\t\talter {self.compselect}=comp[run]\n\t\t"]
+    # control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {self.rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+    control.append(f'ac dec 40 10 100\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db fall=last\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+    control.append('wrdata fc cutoff\n.endc\n\n.end')
+
+    with open('run_control.sp', 'w') as file_object:
+        file_object.write(control[0])
+        file_object.write(control[1])
+        file_object.write(control[2])

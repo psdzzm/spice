@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 13:59:48
- FilePath: /circuit/src/read.py
+ LastEditTime: 18-07-2021 16:47:57
+ FilePath: /spice/src/read.py
 '''
 
 
@@ -292,7 +292,7 @@ class circuit:
                             self.netc.append(item)
                             self.net.append(item)
 
-    from ._write import create_prerun, create_sp, create_wst, create_sp2
+    from ._write import create_prerun, create_sp, create_wst, create_sp2, create_step
 
     from ._resultaly import resultdata, resultdata2, report
 

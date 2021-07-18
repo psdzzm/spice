@@ -3,20 +3,16 @@
 .control
 	source run.cir
 	save out
-	set wr_vecnames appendwrite
-	let mc_runs = 100
+	set wr_vecnames
 	let run = 0
 	set curplot=new          $ create a new plot
 	set scratch=$curplot     $ store its name to 'scratch'
-	let cutoff=unitvec(mc_runs)
-	setseed 1625158535
+	compose x start=11200 stop=12000 step=60
+	let cutoff=unitvec(length(x))
 
-	dowhile run < mc_runs
-		alter c1=unif(2e-12,0.05)
-		alter c2=unif(7e-13,0.05)
-		alter r1=unif(39000,0.01)
-		print @c1[capacitance] @c2[capacitance] @r1[resistance] >> paramlist
-		ac dec 40 1000000.0 1000001.0
+	dowhile run < length(x)
+		alter r2=x[run]
+		ac dec 40 10.0 1000.0
 
 		meas ac ymax MAX v(out)
 		let v3db = ymax/sqrt(2)
@@ -25,8 +21,7 @@
 		destroy $curplot
 		let run = run + 1
 	end
-	
-	rusage time
+
 	setplot $scratch
 	wrdata fc cutoff
 .endc
