@@ -1,5 +1,6 @@
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtWidgets, uic, QtCore
+from quantiphy import Quantity
 
 
 class processing(QtWidgets.QDialog):
@@ -32,10 +33,10 @@ class config(QtWidgets.QDialog):
         # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.widget_4.setHidden(True)
+        self.widget_7.setHidden(True)
+        self.widget_8.setHidden(True)
 
         self.measnode.currentTextChanged.connect(self.netchange)
-
-        self.measnode_2.currentTextChanged.connect(self.netchange)
 
         self.analmode.currentTextChanged.connect(self.analchange)
 
@@ -60,19 +61,14 @@ class config(QtWidgets.QDialog):
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
 
-        self.measnode_2.currentTextChanged.disconnect()
-        self.measnode_2.clear()
-        self.measnode_2.addItem('out')
-        self.measnode_2.addItems(self.Cir.net)
-        self.measnode_2.currentTextChanged.connect(self.netchange)
-
         self.stepcomp.currentTextChanged.disconnect()
         for i in range(Cir.lengthc):
             self.stepcomp.addItem(Cir.alter_c[i].name)
         for i in range(Cir.lengthr):
             self.stepcomp.addItem(Cir.alter_r[i].name)
-
         self.stepcomp.currentTextChanged.connect(self.compchange)
+
+        self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[0].c,units='F').render()}")
 
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
@@ -99,7 +95,10 @@ class config(QtWidgets.QDialog):
         self.MplWidget.canvas.draw()
 
     def analchange(self):
-        if self.tabWidget.currentIndex() == 2:
+        if self.analmode.currentIndex() == 1:
+            self.widget_8.setHidden(False)
+            self.label_2.setHidden(True)
+            self.totaltime.setHidden(True)
             mode = self.analmode_2.currentIndex()
             if mode == 0:
                 self.widget_4.setHidden(True)
@@ -108,6 +107,12 @@ class config(QtWidgets.QDialog):
                 self.widget_4.setHidden(False)
                 self.widget_7.setHidden(True)
         else:
+            self.label_2.setHidden(False)
+            self.totaltime.setHidden(False)
+            self.widget_4.setHidden(True)
+            self.widget_7.setHidden(True)
+            self.widget_8.setHidden(True)
+
             mode = self.analmode.currentIndex()
             if mode == 0:
                 self.widget_3.setHidden(False)
@@ -122,20 +127,25 @@ class config(QtWidgets.QDialog):
             self.widget_5.setHidden(True)
 
     def compchange(self):
-        if self.stepcomp.currentIndex() < self.Cir.lengthc and 'F' not in self.startunit_2.currentText():
-            self.startunit_2.clear()
-            self.stopunit_2.clear()
-            self.increunit_2.clear()
-            self.startunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
-            self.stopunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
-            self.increunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
-        elif self.stepcomp.currentIndex() >= self.Cir.lengthc and 'Ω' not in self.stepcomp.currentText():
-            self.startunit_2.clear()
-            self.stopunit_2.clear()
-            self.increunit_2.clear()
-            self.startunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
-            self.stopunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
-            self.increunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+        index = self.stepcomp.currentIndex()
+        if index < self.Cir.lengthc:
+            self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[index].c,units='F').render()}")
+            if 'F' not in self.startunit_2.currentText():
+                self.startunit_2.clear()
+                self.stopunit_2.clear()
+                self.increunit_2.clear()
+                self.startunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+                self.stopunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+                self.increunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+        elif index >= self.Cir.lengthc:
+            self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_r[index-self.Cir.lengthc].r,units='Ω').render()}")
+            if 'Ω' not in self.stepcomp.currentText():
+                self.startunit_2.clear()
+                self.stopunit_2.clear()
+                self.increunit_2.clear()
+                self.startunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+                self.stopunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+                self.increunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
 
     def tab2UI(self):
         for i in reversed(range(self.scroll.count())):

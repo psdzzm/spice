@@ -34,6 +34,8 @@ class plotGUI(QtWidgets.QMainWindow):
         self.setWindowTitle("Tolerance Analysis Tool")
 
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
+        self.scroll = QtWidgets.QVBoxLayout(self.rightwidget)
+        self.scroll.setAlignment(QtCore.Qt.AlignTop)
 
         self.dialog = processing()
         self.dialog.rejected.connect(self.kill)
@@ -153,51 +155,7 @@ class plotGUI(QtWidgets.QMainWindow):
             return
 
     def configCreate(self):
-        logger.info('Config Entered')
-
-        if self.configGUI.tabWidget.currentIndex() == 2:
-            self.Cir.netselect = self.configGUI.measnode.currentText()
-            self.Cir.compselect = self.configGUI.stepcomp.currentText()
-            if self.configGUI.analmode_2.currentIndex() == 0:
-                if self.configGUI.stepcomp.currentIndex() < self.Cir.lengthc:
-                    startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 12)
-                    stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 12)
-                    increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 12)
-                else:
-                    startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 3)
-                    stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 3)
-                    increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 3)
-
-                self.Cir.stepValue = f'start={startcomp} stop={stopcomp} step={increcomp}'
-                logger.debug(self.Cir.stepValue)
-            else:
-                self.Cir.stepValue = f"values {' '.join(self.configGUI.plainTextEdit.toPlainText().split())}"
-                logger.debug(self.Cir.stepValue)
-
-            self.Cir.create_step()
-            return
-        else:
-            self.Cir.mc_runs = self.configGUI.totaltime.value()
-            self.Cir.netselect = self.configGUI.measnode.currentText()
-            self.Cir.analmode = self.configGUI.analmode.currentIndex()
-            self.Cir.measmode = self.configGUI.measmode.currentText()
-            self.Cir.rfnum = self.configGUI.rfnum.value()
-            self.Cir.risefall = self.configGUI.risefall.currentIndex()
-
-            if self.Cir.analmode == 0:    # TODO: noise analysis configuration
-                self.Cir.startac = self.configGUI.startac.value() * 10**(self.configGUI.startunit.currentIndex() * 3)
-                self.Cir.stopac = self.configGUI.stopac.value() * 10**(self.configGUI.stopunit.currentIndex() * 3)
-                if self.Cir.startac >= self.Cir.stopac:
-                    QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
-                    reconnect(self.analButton.clicked, self.analy)
-                    self.Cir.total = 0
-                    return
-
-            for i in range(self.Cir.lengthc):
-                self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
-            for i in range(self.Cir.lengthr):
-                self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
-
+        def pre_run():
             self.Cir.create_prerun()
             subprocess.run('ngspice -b run_control_pre.sp -o run_log', shell=True, stdout=subprocess.DEVNULL)
 
@@ -205,17 +163,85 @@ class plotGUI(QtWidgets.QMainWindow):
                 file = b.read()
                 file_object.write(file)
                 read.rm('run_log')
-                if 'out of interval' in file:
-                    QtWidgets.QMessageBox.critical(self, 'Error!', 'Cutoff frequency out of interval')
-                    logger.error('Cutoff frequency out of interval')
-                    self.Cir.total = 0
+
+            if 'out of interval' in file:
+                QtWidgets.QMessageBox.critical(self, 'Error!', 'Cutoff frequency out of interval')
+                logger.error('Cutoff frequency out of interval')
+                self.Cir.total = 0
+                reconnect(self.analButton.clicked, self.analy)
+                return -1
+            else:
+                return 0
+
+        logger.info('Config Entered')
+
+        self.Cir.netselect = self.configGUI.measnode.currentText()
+        self.Cir.compselect = self.configGUI.stepcomp.currentText()
+        self.Cir.mc_runs = self.configGUI.totaltime.value()
+        self.Cir.analmode = self.configGUI.analmode.currentIndex()
+        self.Cir.measmode = self.configGUI.measmode.currentText()
+        self.Cir.rfnum = self.configGUI.rfnum.value()
+        self.Cir.risefall = self.configGUI.risefall.currentIndex()
+
+        self.Cir.startac = self.configGUI.startac.value() * 10**(self.configGUI.startunit.currentIndex() * 3)
+        self.Cir.stopac = self.configGUI.stopac.value() * 10**(self.configGUI.stopunit.currentIndex() * 3)
+        if self.Cir.startac >= self.Cir.stopac:
+            QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
+            reconnect(self.analButton.clicked, self.analy)
+            self.Cir.total = 0
+            return
+
+        if self.Cir.analmode == 1:
+            if self.configGUI.stepcomp.currentIndex() < self.Cir.lengthc:
+                self.__unit = 'F'
+                startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 12)
+                stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 12)
+                increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 12)
+            else:
+                self.__unit = 'Ω'
+                startcomp = self.configGUI.startac_2.value() * 10**(self.configGUI.startunit_2.currentIndex() * 3 - 3)
+                stopcomp = self.configGUI.stopac_2.value() * 10**(self.configGUI.stopunit_2.currentIndex() * 3 - 3)
+                increcomp = self.configGUI.stopac_3.value() * 10**(self.configGUI.increunit_2.currentIndex() * 3 - 3)
+
+            if self.configGUI.analmode_2.currentIndex() == 0:
+                if len(np.arange(startcomp, stopcomp, increcomp)) < 2:
+                    QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point or step value is too large')
                     reconnect(self.analButton.clicked, self.analy)
+                    self.Cir.total = 0
                     return
+
+                self.Cir.stepValue = f'start={startcomp} stop={stopcomp} step={increcomp}'
+                logger.debug(self.Cir.stepValue)
+                stepinfo = Quantity.extract(self.Cir.stepValue.replace(' ', '\n'), units=self.__unit)
+                self._stepinfo = ''
+                for p, q in stepinfo.items():
+                    self._stepinfo += f'{p} = {q}\n'
+
+            else:
+                self.Cir.stepValue = f"values {' '.join(self.configGUI.plainTextEdit.toPlainText().split())}"
+                self._stepinfo = self.Cir.stepValue
+                logger.debug(self.Cir.stepValue)
+
+            if pre_run() == -1:
+                return
+
+            self.Cir.create_step()
+            self.start_process('Step')  # Runmode 0, only run control.sp
+            return
+
+        else:
+            for i in range(self.Cir.lengthc):
+                self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
+            for i in range(self.Cir.lengthr):
+                self.Cir.alter_r[i].tol = self.configGUI.Rtol[i].value()
+
+            if pre_run() == -1:
+                return
 
             self.Cir.create_sp()
             self.Cir.create_wst()
 
-        self.start_process('Open', 1)
+            self.start_process('Open', 1)
 
     def configreject(self):
         logger.warning('Configuration Rejected')
@@ -266,22 +292,38 @@ class plotGUI(QtWidgets.QMainWindow):
             file = b.read()
             file_object.write(file)
             read.rm('run_log')
+            error_r = []
+            for line in file.splitlines():
+                if line.lower().lstrip().startswith('error'):
+                    error_r.append(line)
+
+        if error_r:
+            self.dialog.close()
             if 'out of interval' in file:
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Cutoff frequency out of interval')
                 logger.error('Cutoff frequency out of interval')
-                self.Cir.total = 0
-                reconnect(self.analButton.clicked, self.analy)
-                self.dialog.close()
-                return
-            elif mode == 'Add':
-                self.Cir.total = self.Cir.total + self.Cir.mc_runs
-                self.Cir.resultdata(add=True)
-            elif mode == 'Open':
-                self.Cir.total = self.Cir.mc_runs
-                self.Cir.resultdata(worst=True)
-                self.postinit()
-                self.dialog.close()
-                return
+            else:
+                error_r = ''.join(error_r)
+                QtWidgets.QMessageBox.critical(self, 'Error!', error_r)
+                logger.error(error_r)
+            self.Cir.total = 0
+            reconnect(self.analButton.clicked, self.analy)
+            return
+        elif mode == 'Add':
+            self.Cir.total = self.Cir.total + self.Cir.mc_runs
+            self.Cir.resultdata(add=True)
+        elif mode == 'Open':
+            self.Cir.total = self.Cir.mc_runs
+            self.Cir.resultdata(worst=True)
+            self.postinit()
+            self.dialog.close()
+            return
+        elif mode == 'Step':
+            self.Cir.total = 0
+            self.Cir.resultdata(mode='Step')
+            self.postinit('Step')
+            self.dialog.close()
+            return
 
         self.dialog.close()
         self.x = self.Cir.cutoff
@@ -290,22 +332,28 @@ class plotGUI(QtWidgets.QMainWindow):
         self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
         self.calcp()
 
-    def postinit(self):
+    def postinit(self, mode=None):
         self.x = self.Cir.cutoff
         self.y = self.Cir.p
         self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
 
+        for i in reversed(range(self.scroll.count())):
+            self.scroll.itemAt(i).widget().deleteLater()
+
         reconnect(self.analButton.clicked, self.analy)
         reconnect(self.ResetButton.clicked, self.reset)
+
+        if mode == 'Step':
+            self.plot('Step')
+            self.stepinfo = QtWidgets.QPlainTextEdit(self._stepinfo)
+            self.stepinfo.setReadOnly(True)
+            self.stepinfo.setMaximumSize(QtCore.QSize(180, 150))
+            self.scroll.addWidget(self.stepinfo)
+            return
+
         reconnect(self.addtimetext.returnPressed, self.AddTime)
         reconnect(self.wstcase.toggled, self.plotwst)
         reconnect(self.calctext.returnPressed, self.calcp)
-
-        try:
-            for i in reversed(range(self.scroll.count())):
-                self.scroll.itemAt(i).widget().deleteLater()
-        except AttributeError:
-            self.scroll = QtWidgets.QVBoxLayout(self.rightwidget)
 
         self.scrollc = QtWidgets.QScrollArea(self.rightwidget)
         self.scrollc.setMaximumSize(QtCore.QSize(180, 150))
@@ -354,32 +402,51 @@ class plotGUI(QtWidgets.QMainWindow):
         self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
 
-        self.scroll.setAlignment(QtCore.Qt.AlignTop)
         self.plot()
 
-    def plot(self):
+    def plot(self, mode=None):
         logger.info('Plot')
         if self.x == []:
             logger.warning('Nothing to plot')
             return
 
         self.MplWidget.figure.clear()
-
         self.ax = self.MplWidget.figure.add_subplot(111)
-        self.ax.set_ylim(-0.05, 1.05)
-        t = int(self.Cir.cutoff[-1] - self.Cir.cutoff[0])
-        x = np.linspace(self.Cir.cutoff[0], self.Cir.cutoff[-1], 10**4 if t < 10**3 else 10**6 if t > 10**5 else 10 * t)
-        self.line1 = self.ax . plot(self.x, self.y)
+        # self.ax.set_ylim(-0.05, 1.05)
+        # t = int(self.Cir.cutoff[-1] - self.Cir.cutoff[0])
+        # x = np.linspace(self.Cir.cutoff[0], self.Cir.cutoff[-1], 10**4 if t < 10**3 else 10**6 if t > 10**5 else 10 * t)
         # self.ax.plot(x,self.Cir.fit(x))
+        self.line1 = self.ax.plot(self.x, self.y)
         self.ax. set_title(f"Tolerance Analysis of {self.Cir.shortname}")
         self.ax.grid()
-        self.ax.set_xlabel('Cutoff Frequency/Hz')
-        self.ax.set_ylabel('CDF')
-        self.plotwst()
 
-    def plotwst(self):
+        if mode == 'Step':
+            if len(self.x) < 25:
+                line = self.line1.pop(0)
+                line.remove()
+                self.line1 = self.ax.plot(self.x, self.y, marker='x')
+
+            self.ax.set_xlabel(f'{self.Cir.compselect}/{self.__unit}')
+            if self.Cir.measmode == 'Cutoff Frequency':
+                self.ax.set_ylabel('Cutoff Frequency/Hz')
+            elif self.Cir.measmode == 'Gain Ripple':
+                self.ax.set_ylabel('Gain Ripple/dB')
+            else:
+                self.ax.set_ylabel('Gain/dB')
+            self.MplWidget.canvas.draw()
+        else:
+            if self.Cir.measmode == 'Cutoff Frequency':
+                self.ax.set_xlabel('Cutoff Frequency/Hz')
+            elif self.Cir.measmode == 'Gain Ripple':
+                self.ax.set_xlabel('Gain Ripple/dB')
+            else:
+                self.ax.set_xlabel('Gain/dB')
+            self.ax.set_ylabel('CDF')
+            self.plotwst(True)
+
+    def plotwst(self, mode=None):
         logger.info('wst')
-        if self.x == []:
+        if self.x == [] or mode == None:
             return
 
         self.ax.legend()
@@ -449,7 +516,7 @@ class plotGUI(QtWidgets.QMainWindow):
         try:
             line = self.line2.pop(0)
             line.remove()
-        except IndexError:
+        except (IndexError, AttributeError):
             pass
 
         self.MplWidget.canvas.draw()

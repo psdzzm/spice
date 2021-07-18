@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 14-07-2021 15:28:26
+ LastEditTime: 18-07-2021 17:55:17
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -43,26 +43,26 @@ def import_module(module_name, name=None):
     if name == None:
         return module
     elif isinstance(name, str):
-        print('Import '+module_name+'.'+name)
+        print('Import ' + module_name + '.' + name)
         return getattr(module, name)
     elif isinstance(name, list):
         length = len(name)
         if length == 1:
-            print('Import '+module_name+'.'+name[0])
+            print('Import ' + module_name + '.' + name[0])
             return getattr(module, name[0])
         elif length > 1:
-            sub = [None]*length
+            sub = [None] * length
             for item, i in zip(name, range(length)):
                 sub[i] = getattr(module, item)
-                print('Import '+module_name+'.'+item)
+                print('Import ' + module_name + '.' + item)
             return sub
         else:
             raise BaseException("Empty list")
     else:
-        raise TypeError("Unsupported type {} of "+name)
+        raise TypeError("Unsupported type {} of " + name)
 
 
-modulelist = ['numpy', 'scipy', 'PyQt5', 'matplotlib', 'pandas', 'django']
+modulelist = ['numpy', 'scipy', 'PyQt5', 'matplotlib', 'pandas', 'django', 'quantiphy']
 for item in modulelist:
     if not check_module(item):
         raise ModuleNotFoundError("Module: {} not found".format(item))
@@ -127,7 +127,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
 def init():
     if GetHashofDirs(['Workspace/bin', 'Workspace/share', 'Workspace/include', 'Workspace/lib/ngspice']) == '5691f9bebed5eee48e85997573b89f83':
         os.makedirs('lib/user', exist_ok=True)
-        home = os.path.expanduser('~')+'/.spiceinit'
+        home = os.path.expanduser('~') + '/.spiceinit'
         if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
             logger.info("Create '.spiceinit' file")
             with open(home, 'w') as f:

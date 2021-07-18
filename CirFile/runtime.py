@@ -1,7 +1,18 @@
+# !usr/bin/env python
+# -*- coding:utf-8 -*-
+'''
+ Description:
+ Author: Yichen Zhang
+ Date: 26-06-2021 14:43:04
+ LastEditors: Yichen Zhang
+ LastEditTime: 18-07-2021 23:11:18
+ FilePath: /circuit/CirFile/runtime.py
+'''
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QPlainTextEdit, QVBoxLayout, QWidget)
+    QApplication, QLabel, QLineEdit, QMainWindow, QPushButton, QPlainTextEdit, QVBoxLayout, QWidget)
 from PyQt5.QtCore import QProcess
 import sys
+
 
 class MainWindow(QMainWindow):
 
@@ -12,12 +23,14 @@ class MainWindow(QMainWindow):
 
         self.btn = QPushButton("Execute")
         self.btn.pressed.connect(self.start_process)
-        self.text = QPlainTextEdit()
-        # self.text.setReadOnly(True)
+        self.text = QPlainTextEdit('124rewgdbrefdbcsewrasfdbxdgrewfsddrwe')
+        # self.line = QLabel('abc')
+        self.text.setReadOnly(True)
 
         l = QVBoxLayout()
         l.addWidget(self.btn)
         l.addWidget(self.text)
+        # l.addWidget(self.line)
 
         w = QWidget()
         w.setLayout(l)
@@ -33,7 +46,7 @@ class MainWindow(QMainWindow):
             self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
             self.p.readyReadStandardOutput.connect(self.handle_stdout)
             self.p.finished.connect(self.process_finished)
-            self.p.start("python3.9",['../src/runspice.py','-0'])
+            self.p.start("python3.9", ['../src/runspice.py', '-0'])
 
     def handle_stdout(self):
         data = self.p.readAllStandardOutput()
@@ -43,6 +56,7 @@ class MainWindow(QMainWindow):
     def process_finished(self):
         self.message("Process finished.")
         self.p = None
+
 
 app = QApplication(sys.argv)
 

@@ -12,12 +12,11 @@
 
 	dowhile run < length(x)
 		alter r2=x[run]
-		ac dec 40 10.0 1000.0
+		ac dec 40 10.0 100.0
 
-		meas ac ymax MAX v(out)
-		let v3db = ymax/sqrt(2)
-		meas ac cut when v(out)=v3db fall=last
-		let {$scratch}.cutoff[run] = cut
+		meas ac ymax MAX vdb(out)
+		meas ac ymin MIN vdb(out)
+		let {$scratch}.cutoff[run] = ymax-ymin
 		destroy $curplot
 		let run = run + 1
 	end
@@ -25,5 +24,4 @@
 	setplot $scratch
 	wrdata fc cutoff
 .endc
-
 .end

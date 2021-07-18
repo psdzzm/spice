@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 14:04:58
+ LastEditTime: 18-07-2021 19:04:04
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -26,7 +26,7 @@ wypt = import_module(check_module('weasyprint'), 'HTML')
 btf = import_module(check_module('bs4'), 'BeautifulSoup')
 
 
-def resultdata(self, worst=False, add=False):
+def resultdata(self, worst=False, add=False, mode=None):
     start = timer()
 
     if worst:
@@ -56,23 +56,42 @@ def resultdata(self, worst=False, add=False):
 
             self.wstframehtml = '\n{% block wsttable %}\n' + wstframe.to_html(index=False, justify='center') + '\n{% endblock %}\n'
 
-    with open('fc', 'r') as fileobject, open('paramlist', 'r') as paramlist:
+    with open('fc', 'r') as fileobject:
         fileobject.readline()
         if add:
             fileobject.seek(self._fctell)
-            paramlist.seek(self._paramtell)
 
         lines = fileobject.readlines()
-        param = paramlist.readlines()
         self._fctell = fileobject.tell()
-        self._paramtell = paramlist.tell()
 
     cutoff = np.zeros(len(lines))
     i = 0
-    for line in lines:
-        # For numpy array, no need to use float() to convert first
-        cutoff[i] = line.split()[1]
-        i += 1
+    if mode == 'Step':
+        comp = np.zeros(len(lines))
+        for line in lines:
+            comp[i] = line.split()[0]
+            cutoff[i] = line.split()[1]
+            i += 1
+
+        comp, index = np.unique(cutoff, return_index=True)
+        cutoff = cutoff[index]
+
+        self.p = cutoff
+        self.cutoff = comp
+
+        return
+    else:
+        with open('paramlist', 'r') as paramlist:
+            if add:
+                paramlist.seek(self._paramtell)
+
+            param = paramlist.readlines()
+            self._paramtell = paramlist.tell()
+
+        for line in lines:
+            # For numpy array, no need to use float() to convert first
+            cutoff[i] = line.split()[1]
+            i += 1
 
     if add:
         self.cutoff = np.concatenate([self.cutoff, cutoff])
@@ -257,11 +276,9 @@ def report(self):
         renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
-            renddict[
-                'comment'] = f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."
+            renddict['comment'] = f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."
         else:
-            renddict[
-                'comment'] = f"This circuit design is not acceptable. The estimated yield from simulation is only {np.round(yd,4)}."
+            renddict['comment'] = f"This circuit design is not acceptable. The estimated yield from simulation is only {np.round(yd,4)}."
 
         if self.lengthc > 1:
             renddict['cnumber'] = f'{self.lengthc} Capacitors'
