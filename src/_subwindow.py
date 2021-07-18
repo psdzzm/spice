@@ -22,7 +22,7 @@ class config(QtWidgets.QDialog):
     def __init__(self, root):
         super().__init__()
 
-        uic.loadUi(root+'/src/config.ui', self)
+        uic.loadUi(root + '/src/config.ui', self)
 
         self.barlayout = QtWidgets.QHBoxLayout(self.widget)
         self.bar = NavigationToolbar(self.MplWidget.canvas, self)
@@ -31,11 +31,19 @@ class config(QtWidgets.QDialog):
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+        self.widget_4.setHidden(True)
+
         self.measnode.currentTextChanged.connect(self.netchange)
+
+        self.measnode_2.currentTextChanged.connect(self.netchange)
 
         self.analmode.currentTextChanged.connect(self.analchange)
 
+        self.analmode_2.currentTextChanged.connect(self.analchange)
+
         self.measmode.currentTextChanged.connect(self.showhide)
+
+        self.stepcomp.currentTextChanged.connect(self.compchange)
 
         self.scroll = QtWidgets.QVBoxLayout(self.tab2)
 
@@ -43,7 +51,7 @@ class config(QtWidgets.QDialog):
         self.Cir = Cir
         self.tab2UI()
 
-        self.totaltime.setValue(1000*(Cir.lengthc+Cir.lengthr))
+        self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))
         self.measnode.currentTextChanged.disconnect()
         self.measnode.clear()
         self.measnode.addItem('out')
@@ -52,10 +60,13 @@ class config(QtWidgets.QDialog):
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
 
+        self.measnode_2.currentTextChanged.disconnect()
         self.measnode_2.clear()
         self.measnode_2.addItem('out')
         self.measnode_2.addItems(self.Cir.net)
         self.measnode_2.currentTextChanged.connect(self.netchange)
+
+        self.stepcomp.currentTextChanged.disconnect()
         for i in range(Cir.lengthc):
             self.stepcomp.addItem(Cir.alter_c[i].name)
         for i in range(Cir.lengthr):
@@ -88,11 +99,20 @@ class config(QtWidgets.QDialog):
         self.MplWidget.canvas.draw()
 
     def analchange(self):
-        mode = self.analmode.currentIndex()
-        if mode == 0:
-            self.widget_3.setHidden(False)
+        if self.tabWidget.currentIndex() == 2:
+            mode = self.analmode_2.currentIndex()
+            if mode == 0:
+                self.widget_4.setHidden(True)
+                self.widget_7.setHidden(False)
+            else:
+                self.widget_4.setHidden(False)
+                self.widget_7.setHidden(True)
         else:
-            self.widget_3.setHidden(True)
+            mode = self.analmode.currentIndex()
+            if mode == 0:
+                self.widget_3.setHidden(False)
+            else:
+                self.widget_3.setHidden(True)
 
     def showhide(self):
         mode = self.measmode.currentIndex()
@@ -125,35 +145,29 @@ class config(QtWidgets.QDialog):
         self.scrollc.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetc = QtWidgets.QWidget(self.scrollc)
 
-        self.C = ['']*self.Cir.lengthc
-        self.Ctol = ['']*self.Cir.lengthc
+        self.C = [''] * self.Cir.lengthc
+        self.Ctol = [''] * self.Cir.lengthc
         self.formLayoutc = QtWidgets.QFormLayout(self.layoutWidgetc)
         self.Mapper = QtCore.QSignalMapper(self)
         for i in range(self.Cir.lengthc):
-            self.C[i] = QtWidgets.QLabel(
-                f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
+            self.C[i] = QtWidgets.QLabel(f'{self.Cir.alter_c[i].name}', self.layoutWidgetc)
             self.Ctol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetc)
             self.Ctol[i].setValue(self.Cir.alter_c[i].tol)
-            # self.Ctol[i].valueChanged.connect(self.tolcolor)
-            self.Ctol[i].valueChanged.connect(self.Mapper.map)
+            reconnect(self.Ctol[i].valueChanged, self.Mapper.map)
             self.Mapper.setMapping(self.Ctol[i], f'C{i}')
             self.Ctol[i].setSingleStep(0.01)
             self.Ctol[i].setMaximum(0.9999)
             self.Ctol[i].setDecimals(4)
             self.Ctol[i].setMaximumWidth(85)
-            self.formLayoutc.setWidget(
-                i+2, QtWidgets.QFormLayout.LabelRole, self.C[i])
-            self.formLayoutc.setWidget(
-                i+2, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
+            self.formLayoutc.setWidget(i + 2, QtWidgets.QFormLayout.LabelRole, self.C[i])
+            self.formLayoutc.setWidget(i + 2, QtWidgets.QFormLayout.FieldRole, self.Ctol[i])
 
         self.titleC = QtWidgets.QLabel('Capacitor', self.layoutWidgetc)
         self.titleC.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayoutc.setWidget(
-            0, QtWidgets.QFormLayout.SpanningRole, self.titleC)
+        self.formLayoutc.setWidget(0, QtWidgets.QFormLayout.SpanningRole, self.titleC)
         self.checkC = QtWidgets.QCheckBox('Same Tolerance', self.layoutWidgetc)
-        self.checkC.toggled.connect(self.sametol)
-        self.formLayoutc.setWidget(
-            1, QtWidgets.QFormLayout.SpanningRole, self.checkC)
+        reconnect(self.checkC.toggled, self.sametol)
+        self.formLayoutc.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.checkC)
         self.scrollc.setWidget(self.layoutWidgetc)
         self.scrollc.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollc)
@@ -162,35 +176,29 @@ class config(QtWidgets.QDialog):
         self.scrollr.setMaximumSize(QtCore.QSize(250, 250))
         self.layoutWidgetr = QtWidgets.QWidget(self.scrollr)
 
-        self.R = ['']*self.Cir.lengthr
-        self.Rtol = ['']*self.Cir.lengthr
+        self.R = [''] * self.Cir.lengthr
+        self.Rtol = [''] * self.Cir.lengthr
         self.formLayoutr = QtWidgets.QFormLayout(self.layoutWidgetr)
         for i in range(self.Cir.lengthr):
-            self.R[i] = QtWidgets.QLabel(
-                f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
+            self.R[i] = QtWidgets.QLabel(f'{self.Cir.alter_r[i].name}', self.layoutWidgetr)
             self.Rtol[i] = QtWidgets.QDoubleSpinBox(self.layoutWidgetr)
             self.Rtol[i].setValue(self.Cir.alter_r[i].tol)
-            # self.Rtol[i].valueChanged.connect(self.tolcolor)
-            self.Rtol[i].valueChanged.connect(self.Mapper.map)
+            reconnect(self.Rtol[i].valueChanged, self.Mapper.map)
             self.Mapper.setMapping(self.Rtol[i], f'R{i}')
             self.Rtol[i].setSingleStep(0.01)
             self.Rtol[i].setMaximum(0.9999)
             self.Rtol[i].setDecimals(4)
             self.Rtol[i].setMaximumWidth(85)
-            self.formLayoutr.setWidget(
-                i+2, QtWidgets.QFormLayout.LabelRole, self.R[i])
-            self.formLayoutr.setWidget(
-                i+2, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
+            self.formLayoutr.setWidget(i + 2, QtWidgets.QFormLayout.LabelRole, self.R[i])
+            self.formLayoutr.setWidget(i + 2, QtWidgets.QFormLayout.FieldRole, self.Rtol[i])
 
-        self.Mapper.mappedString.connect(self.sametol)
+        reconnect(self.Mapper.mappedString, self.sametol)
         self.titleR = QtWidgets.QLabel('Resistor', self.layoutWidgetr)
         self.titleR.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayoutr.setWidget(
-            0, QtWidgets.QFormLayout.SpanningRole, self.titleR)
+        self.formLayoutr.setWidget(0, QtWidgets.QFormLayout.SpanningRole, self.titleR)
         self.checkR = QtWidgets.QCheckBox('Same Tolerance', self.layoutWidgetr)
-        self.checkR.toggled.connect(self.sametol)
-        self.formLayoutr.setWidget(
-            1, QtWidgets.QFormLayout.SpanningRole, self.checkR)
+        reconnect(self.checkR.toggled, self.sametol)
+        self.formLayoutr.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.checkR)
         self.scrollr.setWidget(self.layoutWidgetr)
         self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
@@ -235,3 +243,17 @@ class config(QtWidgets.QDialog):
                     self.Rtol[j].blockSignals(True)
                     self.Rtol[j].setValue(self.Rtol[i].value())
                     self.Rtol[j].blockSignals(False)
+
+
+def reconnect(signal, newhandler=None, oldhandler=None):
+    try:
+        if oldhandler is None:
+            signal.disconnect()
+        else:
+            while True:
+                signal.disconnect(oldhandler)
+    except TypeError:
+        pass
+    finally:
+        if newhandler is not None:
+            signal.connect(newhandler)

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 16-07-2021 17:28:05
+ LastEditTime: 18-07-2021 14:04:58
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -50,16 +50,13 @@ def resultdata(self, worst=False, add=False):
                                self.wst_cutoff[0], self.wst_cutoff[-1]]
 
             for i in range(self.lengthc):
-                wstframe.loc[i+1] = [self.alter_c[i].name, float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i].split(
-                )[-1]), float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i].split()[-1])]
+                wstframe.loc[i + 1] = [self.alter_c[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i].split()[-1])]
             for i in range(self.lengthr):
-                wstframe.loc[i+1+self.lengthc] = [self.alter_r[i].name, float(paramwst[self.wstindex[0]*(self.lengthc+self.lengthr)+i+self.lengthc].split(
-                )[-1]), float(paramwst[self.wstindex[-1]*(self.lengthc+self.lengthr)+i+self.lengthc].split()[-1])]
+                wstframe.loc[i + 1 + self.lengthc] = [self.alter_r[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i + self.lengthc].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i + self.lengthc].split()[-1])]
 
-            self.wstframehtml = '\n{% block wsttable %}\n'+wstframe.to_html(
-                index=False, justify='center')+'\n{% endblock %}\n'
+            self.wstframehtml = '\n{% block wsttable %}\n' + wstframe.to_html(index=False, justify='center') + '\n{% endblock %}\n'
 
-    with open('fc', 'r') as fileobject,  open('paramlist', 'r') as paramlist:
+    with open('fc', 'r') as fileobject, open('paramlist', 'r') as paramlist:
         fileobject.readline()
         if add:
             fileobject.seek(self._fctell)
@@ -87,8 +84,7 @@ def resultdata(self, worst=False, add=False):
     self.cutoff = self.cutoff[index]
     self.cutoff0, index0 = np.unique(self.cutoff, return_index=True)
     length = len(self.cutoff)
-    logger.info(
-        f'Initial length={length}, Truncated length={len(self.cutoff0)}')
+    logger.info(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
 
     i, j = 0, 0
     alterc = np.zeros([self.lengthc, self.mc_runs])
@@ -104,11 +100,9 @@ def resultdata(self, worst=False, add=False):
 
     if add:
         for i in range(self.lengthc):
-            self.alter_c[i].capacitance = np.concatenate(
-                [self.alter_c[i].capacitance, alterc[i]])
+            self.alter_c[i].capacitance = np.concatenate([self.alter_c[i].capacitance, alterc[i]])
         for i in range(self.lengthr):
-            self.alter_r[i].resistance = np.concatenate(
-                [self.alter_r[i].resistance, alterr[i]])
+            self.alter_r[i].resistance = np.concatenate([self.alter_r[i].resistance, alterr[i]])
     else:
         for i in range(self.lengthc):
             self.alter_c[i].capacitance = alterc[i]
@@ -120,26 +114,24 @@ def resultdata(self, worst=False, add=False):
 
     product = 1
     for i in range(self.lengthc):
-        self.alter_c[i].fx = f(self.alter_c[i].capacitance, float(self.alter_c[i].c), float(
-            self.alter_c[i].c)*self.alter_c[i].tol/3, self.alter_c[i].tol)*(float(self.alter_c[i].c)*self.alter_c[i].tol*2)
+        self.alter_c[i].fx = f(self.alter_c[i].capacitance, float(self.alter_c[i].c), float(self.alter_c[i].c) * self.alter_c[i].tol / 3, self.alter_c[i].tol) * (float(self.alter_c[i].c) * self.alter_c[i].tol * 2)
         product *= self.alter_c[i].fx
     for i in range(self.lengthr):
-        self.alter_r[i].fx = f(self.alter_r[i].resistance, float(self.alter_r[i].r), float(
-            self.alter_r[i].r)*self.alter_r[i].tol/3, self.alter_r[i].tol)*(float(self.alter_r[i].r)*self.alter_r[i].tol*2)
+        self.alter_r[i].fx = f(self.alter_r[i].resistance, float(self.alter_r[i].r), float(self.alter_r[i].r) * self.alter_r[i].tol / 3, self.alter_r[i].tol) * (float(self.alter_r[i].r) * self.alter_r[i].tol * 2)
         product *= self.alter_r[i].fx
 
     seq = 0
     self.p = np.zeros(length)
     for i in range(length):
         seq += product[index[i]]
-        self.p[i] = 1/length*seq
+        self.p[i] = 1 / length * seq
 
     # self.p = (self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
-    for i in range(len(index0)-1):
-        if index0[i+1]-index0[i] != 1:
-            index0[i] = index0[i+1]-1
-    if length-1-i != 1:
-        index0[i+1] = length-1
+    for i in range(len(index0) - 1):
+        if index0[i + 1] - index0[i] != 1:
+            index0[i] = index0[i + 1] - 1
+    if length - 1 - i != 1:
+        index0[i + 1] = length - 1
     self.p0 = self.p[index0]
     self._fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
     self.fit = interpolate.PchipInterpolator(self.cutoff0, self.p0)
@@ -150,11 +142,11 @@ def resultdata(self, worst=False, add=False):
 
 
 def f(x, miu=2000, sigma=1, tol=0.01):
-    return np.exp(-1/2*((x-miu)/sigma)**2)/(sigma*np.sqrt(2*np.pi)*(erf(tol*miu/sigma/np.sqrt(2))-erf(-tol*miu/sigma/np.sqrt(2)))/2)
+    return np.exp(-1 / 2 * ((x - miu) / sigma)**2) / (sigma * np.sqrt(2 * np.pi) * (erf(tol * miu / sigma / np.sqrt(2)) - erf(-tol * miu / sigma / np.sqrt(2))) / 2)
 
 
 def unif(miu=2000, tol=0.01):
-    return stats.uniform(miu*(1-tol), 2*miu*tol)
+    return stats.uniform(miu * (1 - tol), 2 * miu * tol)
 
 
 def resultdata2(self, worst=False):
@@ -183,7 +175,7 @@ def resultdata2(self, worst=False):
     self.cutoff.sort()
     length = len(self.cutoff)
 
-    self.p = np.arange(1, 1+length)/length
+    self.p = np.arange(1, 1 + length) / length
 
 
 def report(self):
@@ -197,12 +189,12 @@ def report(self):
                          self.alter_r[i].r, self.alter_r[i].tol]
 
     cframehtml = '\n{% block ctable %}\n' + \
-        cframe.to_html(index=False)+'\n{% endblock %}\n'
+        cframe.to_html(index=False) + '\n{% endblock %}\n'
     rframehtml = '\n{% block rtable %}\n' + \
-        rframe.to_html(index=False)+'\n{% endblock %}\n'
+        rframe.to_html(index=False) + '\n{% endblock %}\n'
 
-    llimit = self.stdcutoff*(1-self.tol)
-    rlimit = self.stdcutoff*(1+self.tol)
+    llimit = self.stdcutoff * (1 - self.tol)
+    rlimit = self.stdcutoff * (1 + self.tol)
     if llimit < self.cutoff[0]:
         lfit = 0
     else:
@@ -210,60 +202,51 @@ def report(self):
     if rlimit > self.cutoff[-1]:
         rfit = 0
     else:
-        rfit = self.p[-1]-self.fit(rlimit)
+        rfit = self.p[-1] - self.fit(rlimit)
 
-    yd = 1-rfit-lfit
+    yd = 1 - rfit - lfit
     logger.info(f'Estimated yield: {yd}')
 
     rtail = pd.DataFrame(columns=('Frequency/Hz (Larger than)', 'Probability'))
-    ltail = pd.DataFrame(
-        columns=('Frequency/Hz (Smaller than)', 'Probability'))
+    ltail = pd.DataFrame(columns=('Frequency/Hz (Smaller than)', 'Probability'))
 
     if yd >= self.yd:
-        index1 = np.linspace((1-self.yd)/2+0.05,
-                             (1-self.yd)/2, 5, endpoint=False)
-        index1 = np.concatenate((index1, np.linspace(
-            (1-self.yd)/2, (1-yd)/2, 5, endpoint=False)))
+        index1 = np.linspace((1 - self.yd) / 2 + 0.05,
+                             (1 - self.yd) / 2, 5, endpoint=False)
+        index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, (1 - yd) / 2, 5, endpoint=False)))
 
-        index2 = np.linspace(
-            self.p0[-1]-(1-self.yd)/2-0.05, self.p0[-1]-(1-yd)/2, 5, endpoint=False)
-        index2 = np.concatenate((index2, np.linspace(
-            self.p0[-1]-(1-self.yd)/2, self.p0[-1]-(1-yd)/2, 5, endpoint=False)))
+        index2 = np.linspace(self.p0[-1] - (1 - self.yd) / 2 - 0.05, self.p0[-1] - (1 - yd) / 2, 5, endpoint=False)
+        index2 = np.concatenate((index2, np.linspace(self.p0[-1] - (1 - self.yd) / 2, self.p0[-1] - (1 - yd) / 2, 5, endpoint=False)))
 
-        if (1-yd)/2 > 0.0001:
-            index1 = np.concatenate(
-                (index1, np.linspace((1-yd)/2, 0, 5, endpoint=False)))
-            index2 = np.concatenate((index2, np.linspace(
-                self.p0[-1]-(1-yd)/2, self.p0[-1], 5, endpoint=False)))
+        if (1 - yd) / 2 > 0.0001:
+            index1 = np.concatenate((index1, np.linspace((1 - yd) / 2, 0, 5, endpoint=False)))
+            index2 = np.concatenate((index2, np.linspace(self.p0[-1] - (1 - yd) / 2, self.p0[-1], 5, endpoint=False)))
     else:
-        index1 = np.linspace((1-yd)/2, (1-self.yd)/2, 5, endpoint=False)
-        index1 = np.concatenate(
-            (index1, np.linspace((1-self.yd)/2, 0, 5, endpoint=False)))
-        index2 = np.linspace(
-            self.p0[-1]-(1-yd)/2-0.05, self.p0[-1]-(1-self.yd)/2, 5, endpoint=False)
-        index2 = np.concatenate((index2, np.linspace(
-            self.p0[-1]-(1-self.yd)/2, self.p0[-1], 5, endpoint=False)))
+        index1 = np.linspace((1 - yd) / 2, (1 - self.yd) / 2, 5, endpoint=False)
+        index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, 0, 5, endpoint=False)))
+        index2 = np.linspace(self.p0[-1] - (1 - yd) / 2 - 0.05, self.p0[-1] - (1 - self.yd) / 2, 5, endpoint=False)
+        index2 = np.concatenate((index2, np.linspace(self.p0[-1] - (1 - self.yd) / 2, self.p0[-1], 5, endpoint=False)))
 
     for i in range(len(index1)):
         ltail.loc[i] = [self._fit(index1[i]), index1[i]]
         rtail.loc[i] = [self._fit(index2[i]), index1[i]]
 
     ltailhtml = '\n{% block lefttail %}\n' + \
-        ltail.to_html(index=False)+'\n{% endblock %}\n'
+        ltail.to_html(index=False) + '\n{% endblock %}\n'
     rtailhtml = '\n{% block righttail %}\n' + \
-        rtail.to_html(index=False)+'\n{% endblock %}\n'
+        rtail.to_html(index=False) + '\n{% endblock %}\n'
 
     # from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'report.settings')
-    sys.path.append(os.path.dirname(__file__)+'/report')
+    sys.path.append(os.path.dirname(__file__) + '/report')
     django.setup()
 
-    with open(os.path.dirname(__file__)+'/report/htmlreport/templates/inherit.html', 'w+') as table, open(os.path.dirname(__file__)+'/report/htmlreport/templates/report.html', 'w') as rendered:
-        table.write("{% extends 'base.html' %}\n"+cframehtml +
-                    rframehtml+ltailhtml+rtailhtml+self.wstframehtml)
+    with open(os.path.dirname(__file__) + '/report/htmlreport/templates/inherit.html', 'w+') as table, open(os.path.dirname(__file__) + '/report/htmlreport/templates/report.html', 'w') as rendered:
+        table.write("{% extends 'base.html' %}\n" + cframehtml +
+                    rframehtml + ltailhtml + rtailhtml + self.wstframehtml)
 
         table.seek(0)
 
@@ -271,8 +254,7 @@ def report(self):
 
         t = Template(files)
 
-        renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime(
-            "%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
+        renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
             renddict[
@@ -302,7 +284,7 @@ def report(self):
         if wypt:
             html = wypt(string=renderhtml)
             html.write_pdf('report.pdf')
-            logger.info('Exporting report to '+self.dir)
+            logger.info('Exporting report to ' + self.dir)
         else:
             logger.warning("Can't findModule weasyprint! Fail to export pdf report. See html5 report in " +
-                           os.path.dirname(__file__)+'/report/htmlreport/templates/report.html')
+                           os.path.dirname(__file__) + '/report/htmlreport/templates/report.html')

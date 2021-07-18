@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 12-07-2021 18:30:39
+ LastEditTime: 18-07-2021 13:59:48
  FilePath: /circuit/src/read.py
 '''
 
@@ -36,8 +36,7 @@ def getfile():
         if os.path.isfile(filename):
             return filename
         else:
-            filename = input(
-                f'{filename} does no exist! Please enter the correct filename: ')
+            filename = input(f'{filename} does no exist! Please enter the correct filename: ')
 
 
 class R:
@@ -66,7 +65,7 @@ class circuit:
         self.tol = 0.01
         self.yd = 0.98
 
-        self.libpath = os.path.abspath(os.getcwd()+'/../lib')+'/'
+        self.libpath = os.path.abspath(os.getcwd() + '/../lib') + '/'
 
     def read(self):
         fileo, files = [], []
@@ -98,35 +97,33 @@ class circuit:
                 elif row[0].lower() == '.include':
                     self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()
-                    path2check = self.libpath+'user/'+inclname  # Only file name without extension
+                    path2check = self.libpath + 'user/' + inclname  # Only file name without extension
                     # Directory lib has include file
-                    if os.path.isfile(self.libpath+inclname):
-                        lines = '.include ../lib/'+inclname+'\n'
+                    if os.path.isfile(self.libpath + inclname):
+                        lines = '.include ../lib/' + inclname + '\n'
                     # Source Directory has
-                    elif os.path.isfile(os.path.dirname(self.name)+'/'+row[1]):
-                        lines = '.include ../lib/user/'+inclname+'\n'
+                    elif os.path.isfile(os.path.dirname(self.name) + '/' + row[1]):
+                        lines = '.include ../lib/user/' + inclname + '\n'
                         try:
-                            shutil.copyfile(os.path.dirname(
-                                self.name)+'/'+row[1], path2check)
-                            logger.info('Copy '+row[1]+' to '+path2check)
+                            shutil.copyfile(os.path.dirname(self.name) + '/' + row[1], path2check)
+                            logger.info('Copy ' + row[1] + ' to ' + path2check)
                         except shutil.SameFileError:
-                            logger.warning(
-                                'Include File Already Exist in '+path2check)
+                            logger.warning('Include File Already Exist in ' + path2check)
 
                     else:           # Directory ../lib/user has include file or will be later copied to
-                        lines = '.include ../lib/user/'+inclname+'\n'
+                        lines = '.include ../lib/user/' + inclname + '\n'
 
                 fileo.append(lines)
                 files.append(row)
 
-        if stop1-start < 0:
+        if stop1 - start < 0:
             logger.error("No 'endc' line!")
             return "No 'endc' line!"
         elif not stop2:
             logger.error("No 'end' line!")
             return "No 'end' line!"
         else:
-            fileo = ''.join(fileo)+'\n.end'
+            fileo = ''.join(fileo) + '\n.end'
 
         with open('test.cir', 'w+') as file_object, open('run.cir', 'w+') as b, open('test_control.sp', 'w') as tsc:
             file_object.write(fileo)
@@ -136,22 +133,18 @@ class circuit:
             b.seek(0)
             self.runtext = b.read()
 
-            tsc.write(
-                '*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
+            tsc.write('*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
 
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:
             test = file_object.read()
             run = b.read()
             if mode == 1:     # Include error
-                test = test.replace('.include ../lib/user/'+self.subckt,
-                                    '.include ../lib/user/'+repl)
-                run = run.replace('.include ../lib/user/'+self.subckt,
-                                  '.include ../lib/user/'+repl)
+                test = test.replace('.include ../lib/user/' + self.subckt, '.include ../lib/user/' + repl)
+                run = run.replace('.include ../lib/user/' + self.subckt, '.include ../lib/user/' + repl)
             elif mode == 2:   # Subcircuit error
-                test = test.replace(
-                    '.control\n', '.include ../lib/user/'+repl+'\n.control\n')
-                run = run[:-4]+'.include ../lib/user/'+repl+'\n.end'
+                test = test.replace('.control\n', '.include ../lib/user/' + repl + '\n.control\n')
+                run = run[:-4] + '.include ../lib/user/' + repl + '\n.end'
 
             file_object.seek(0)
             file_object.truncate()
@@ -166,13 +159,11 @@ class circuit:
     def init(self):
         rm('run.log')
         logger.info('Checking if the input circuit is valid.')
-        proc = subprocess.Popen(
-            'ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        proc = subprocess.Popen('ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _, stderr = proc.communicate()
         if stderr:
-            logger.error(stderr.decode(
-                'ASCII')+'Please check if the netlist file or include file is valid')
-            return stderr.decode('ASCII')+'Please check if the netlist file or include file is valid', False
+            logger.error(stderr.decode('ASCII') + 'Please check if the netlist file or include file is valid')
+            return stderr.decode('ASCII') + 'Please check if the netlist file or include file is valid', False
 
         self.readnet()
 
@@ -186,14 +177,12 @@ class circuit:
                     # elif fileo[i] == 'Error: measure  cut  (WHEN) : out of interval\n':
                     #     return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
                     if 'Could not find include file' in fileo[i]:
-                        self.subckt = fileo[i].split(
-                        )[-1].replace('../lib/user/', '').rstrip()
+                        self.subckt = fileo[i].split()[-1].replace('../lib/user/', '').rstrip()
                         fileo[i] = fileo[i].replace('../lib/user/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 1    # Include Error
                     elif 'unknown subckt' in fileo[i]:
-                        self.subckt = fileo[i].split(
-                        )[-1].replace('../lib/user/', '').rstrip().upper()
+                        self.subckt = fileo[i].split()[-1].replace('../lib/user/', '').rstrip().upper()
                         fileo[i] = fileo[i].replace('../lib/user/', '') + \
                             f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 2    # Subcircuit Error
@@ -224,17 +213,15 @@ class circuit:
                     return "Error! No 'out' port!", flag
 
         with open('test_control2.sp', 'w') as file_object:
-            file_object.write(
-                f"*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac all\n.endc\n\n.end ")
+            file_object.write(f"*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tsave out {' '.join(self.net)}\n\tac dec 40 1 1G\n\twrdata ac all\n.endc\n\n.end ")
 
-        subprocess.run('ngspice test_control2.sp -b -o test2.log',
-                       shell=True, stdout=subprocess.DEVNULL)
+        subprocess.run('ngspice test_control2.sp -b -o test2.log', shell=True, stdout=subprocess.DEVNULL)
 
         with open('ac') as file_object:
             title = file_object.readline().split()
             data = file_object.readlines()
             self.initx = np.zeros(len(data))
-            length = len(self.net)+1
+            length = len(self.net) + 1
             self.inity = np.zeros([length, len(data)], dtype=np.complex_)
 
             index = [i for i, x in enumerate(title) if x == "out"]
@@ -256,11 +243,10 @@ class circuit:
                     line = line.split()
                     self.initx[i] = float(line[0])
                     for j in range(length):
-                        self.inity[j, i] = float(
-                            line[index[j][0]])+float(line[index[j][1]])*1j
+                        self.inity[j, i] = float(line[index[j][0]]) + float(line[index[j][1]]) * 1j
                     i += 1
 
-            self.inity = 20*np.log10(np.abs(self.inity))
+            self.inity = 20 * np.log10(np.abs(self.inity))
 
         with open('list') as file_object:
             self.alter_r = []
@@ -274,12 +260,10 @@ class circuit:
                 if files[i][0] == 'device':
                     for j in range(1, len(files[i])):
                         if 'r.x' not in files[i][j] and 'c.x' not in files[i][j]:
-                            if files[i+2][0] == 'resistance':
-                                self.alter_r.append(
-                                    R(files[i][j], files[i+2][j]))
-                            elif files[i+2][0] == 'capacitance':
-                                self.alter_c.append(
-                                    C(files[i][j], files[i+2][j]))
+                            if files[i + 2][0] == 'resistance':
+                                self.alter_r.append(R(files[i][j], files[i + 2][j]))
+                            elif files[i + 2][0] == 'capacitance':
+                                self.alter_c.append(C(files[i][j], files[i + 2][j]))
 
         self.lengthc = len(self.alter_c)
         self.lengthr = len(self.alter_r)
