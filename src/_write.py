@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 00:43:02
- FilePath: /spice/src/_write.py
+ LastEditTime: 19-07-2021 09:12:11
+ FilePath: /circuit/src/_write.py
 '''
 import time
 
@@ -40,15 +40,9 @@ def create_sp2(self, add=False):
     loop = '\tdowhile run < mc_runs\n\t\t'
 
     for i in range(self.lengthc):
-        loop = loop + 'alter ' + \
-            self.alter_c[i].name + \
-            '=gauss(' + self.alter_c[i].c + \
-            f',{self.alter_c[i].tol},3)\n\t\t'
+        loop = loop + 'alter ' + self.alter_c[i].name + '=gauss(' + self.alter_c[i].c + f',{self.alter_c[i].tol},3)\n\t\t'
     for i in range(self.lengthr):
-        loop = loop + 'alter ' + \
-            self.alter_r[i].name + \
-            '=gauss(' + self.alter_r[i].r + \
-            f',{self.alter_r[i].tol},3)\n\t\t'
+        loop = loop + 'alter ' + self.alter_r[i].name + '=gauss(' + self.alter_r[i].r + f',{self.alter_r[i].tol},3)\n\t\t'
 
     if self.measmode == 'Cutoff Frequency':
         if self.risefall:
@@ -84,15 +78,9 @@ def create_sp(self, add=False):
     loop = '\tdowhile run < mc_runs\n\t\t'
 
     for i in range(self.lengthc):
-        loop = loop + 'alter ' + \
-            self.alter_c[i].name + \
-            '=unif(' + self.alter_c[i].c + \
-            f',{self.alter_c[i].tol})\n\t\t'
+        loop = loop + 'alter ' + self.alter_c[i].name + '=unif(' + self.alter_c[i].c + f',{self.alter_c[i].tol})\n\t\t'
     for i in range(self.lengthr):
-        loop = loop + 'alter ' + \
-            self.alter_r[i].name + \
-            '=unif(' + self.alter_r[i].r + \
-            f',{self.alter_r[i].tol})\n\t\t'
+        loop = loop + 'alter ' + self.alter_r[i].name + '=unif(' + self.alter_r[i].r + f',{self.alter_r[i].tol})\n\t\t'
 
     loop = loop + 'print '
     for i in range(self.lengthc):
@@ -126,14 +114,9 @@ def create_wst(self):
     loop = '\tdowhile run <= numruns\n\t\t'
 
     for i in range(self.lengthc):
-        loop = loop + 'alter ' + \
-            self.alter_c[i].name + '=wc(' + self.alter_c[i].c + \
-            f',{self.alter_c[i].tol},{i},run,numruns)\n\t\t'
+        loop = loop + 'alter ' + self.alter_c[i].name + '=wc(' + self.alter_c[i].c + f',{self.alter_c[i].tol},{i},run,numruns)\n\t\t'
     for i in range(self.lengthr):
-        loop = loop + 'alter ' + \
-            self.alter_r[i].name + \
-            '=wc(' + self.alter_r[i].r + \
-            f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
+        loop = loop + 'alter ' + self.alter_r[i].name + '=wc(' + self.alter_r[i].r + f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
 
     loop = loop + 'print '
     for i in range(self.lengthc):

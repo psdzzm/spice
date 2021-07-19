@@ -1,3 +1,4 @@
+from logging import Logger, exception
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtWidgets, uic, QtCore
 from quantiphy import Quantity
@@ -62,6 +63,7 @@ class config(QtWidgets.QDialog):
         self.risefall.setCurrentIndex(1)
 
         self.stepcomp.currentTextChanged.disconnect()
+        self.stepcomp.clear()
         for i in range(Cir.lengthc):
             self.stepcomp.addItem(Cir.alter_c[i].name)
         for i in range(Cir.lengthr):
@@ -69,6 +71,25 @@ class config(QtWidgets.QDialog):
         self.stepcomp.currentTextChanged.connect(self.compchange)
 
         self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[0].c,units='F').render()}")
+
+        if hasattr(Cir, 'startac'):
+            temp = setunit(Cir.startac, 0, 4)
+            self.startac.setValue(temp[0])
+            self.startunit.setCurrentIndex(temp[1])
+            temp = setunit(Cir.stopac, 0, 4)
+            self.stopac.setValue(temp[0])
+            self.stopunit.setCurrentIndex(temp[1])
+
+        if hasattr(Cir, 'netselect'):
+            try:
+                if Cir.netselect == 'out':
+                    pass
+                else:
+                    self.measnode.setCurrentIndex(Cir.net.index(Cir.netselect) + 1)
+            except:
+                Logger.exception()
+
+        self.compchange()
 
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
@@ -79,6 +100,7 @@ class config(QtWidgets.QDialog):
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
 
+        self.MplWidget.canvas.draw()
         self.show()
 
     def netchange(self):
@@ -96,6 +118,7 @@ class config(QtWidgets.QDialog):
 
     def analchange(self):
         if self.analmode.currentIndex() == 1:
+            self.tabWidget.setTabVisible(1, False)
             self.widget_8.setHidden(False)
             self.label_2.setHidden(True)
             self.totaltime.setHidden(True)
@@ -107,6 +130,7 @@ class config(QtWidgets.QDialog):
                 self.widget_4.setHidden(False)
                 self.widget_7.setHidden(True)
         else:
+            self.tabWidget.setTabVisible(1, True)
             self.label_2.setHidden(False)
             self.totaltime.setHidden(False)
             self.widget_4.setHidden(True)
@@ -129,7 +153,9 @@ class config(QtWidgets.QDialog):
     def compchange(self):
         index = self.stepcomp.currentIndex()
         if index < self.Cir.lengthc:
-            self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[index].c,units='F').render()}")
+            q = Quantity(self.Cir.alter_c[index].c, units='F')
+            temp = setunit(q.real, -12, 5)
+            self.CompValue.setText(f"Original Value: {q.render()}")
             if 'F' not in self.startunit_2.currentText():
                 self.startunit_2.clear()
                 self.stopunit_2.clear()
@@ -137,8 +163,11 @@ class config(QtWidgets.QDialog):
                 self.startunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
                 self.stopunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
                 self.increunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+
         elif index >= self.Cir.lengthc:
-            self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_r[index-self.Cir.lengthc].r,units='Ω').render()}")
+            q = Quantity(self.Cir.alter_r[index - self.Cir.lengthc].r, units='Ω')
+            temp = setunit(q.real, -3, 4)
+            self.CompValue.setText(f"Original Value: {q.render()}")
             if 'Ω' not in self.stepcomp.currentText():
                 self.startunit_2.clear()
                 self.stopunit_2.clear()
@@ -146,6 +175,13 @@ class config(QtWidgets.QDialog):
                 self.startunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
                 self.stopunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
                 self.increunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
+
+        self.startac_2.setValue(temp[0])
+        self.stopac_2.setValue(temp[0])
+        self.stopac_3.setValue(temp[0] / 10)
+        self.startunit_2.setCurrentIndex(temp[1])
+        self.stopunit_2.setCurrentIndex(temp[1])
+        self.increunit_2.setCurrentIndex(temp[1])
 
     def tab2UI(self):
         for i in reversed(range(self.scroll.count())):
@@ -267,3 +303,11 @@ def reconnect(signal, newhandler=None, oldhandler=None):
     finally:
         if newhandler is not None:
             signal.connect(newhandler)
+
+
+def setunit(value, base, level):
+    for i in range(level):
+        if value < 10**(base + 3 * i + 3):
+            return value / 10**(base + 3 * i), i
+
+    return value / 10**(base + 3 * i), i

@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 00:53:56
- FilePath: /spice/src/read.py
+ LastEditTime: 19-07-2021 11:58:54
+ FilePath: /circuit/src/read.py
 '''
 
 
@@ -19,7 +19,7 @@ import re
 import numpy as np
 from matplotlib import pyplot as plt
 import operator
-from .runspice import runspice
+from quantiphy import Quantity
 
 
 def rm(*filename):
@@ -70,7 +70,7 @@ class circuit:
     def read(self):
         fileo, files = [], []
         start, stop1, stop2, self.includetime = 0, 0, 0, 0
-        matches = ['.model', '.subckt', '.global', '.include', '.lib', '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
+        matches = ['.model', '.subckt', '.global', '.include', '.lib', '.param', '.func', '.temp', '.ends', '.ac', '.probe']
         with open(self.name) as file_object:
             i = -1
             for lines in file_object:
@@ -93,6 +93,17 @@ class circuit:
                 # Filter other control command
                 elif row[0].lower() not in matches and '.' in row[0].lower():
                     continue
+                elif row[0].lower() == '.ac':
+                    try:
+                        self.startac = Quantity(row[3]).real
+                        self.stopac = Quantity(row[4]).real
+                    except:
+                        self.startac, self.stopac = 0, 0
+                elif row[0].lower() == '.probe':
+                    try:
+                        self.netselect = row[1]
+                    except IndexError:
+                        pass
                 elif row[0].lower() == '.include' or row[0].lower() == '.lib':
                     self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()
@@ -177,13 +188,11 @@ class circuit:
                     #     return "Error! No AC stimulus found or cutoff frequency out of range:\nSet the value of a current or voltage source to 'AC 1.'to make it behave as a signal generator for AC analysis.", flag
                     if 'Could not find include file' in fileo[i]:
                         self.subckt = fileo[i].split()[-1].replace('../lib/user/', '').rstrip()
-                        fileo[i] = fileo[i].replace('../lib/user/', '') + \
-                            f"Please provide the simulation model file for {self.subckt}\n"
+                        fileo[i] = fileo[i].replace('../lib/user/', '') + f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 1    # Include Error
                     elif 'unknown subckt' in fileo[i]:
                         self.subckt = fileo[i].split()[-1].replace('../lib/user/', '').rstrip().upper()
-                        fileo[i] = fileo[i].replace('../lib/user/', '') + \
-                            f"Please provide the simulation model file for {self.subckt}\n"
+                        fileo[i] = fileo[i].replace('../lib/user/', '') + f"Please provide the simulation model file for {self.subckt}\n"
                         flag = 2    # Subcircuit Error
                     elif 'fatal error' in fileo[i]:
                         error_r.append(fileo[i])

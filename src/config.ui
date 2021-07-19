@@ -97,7 +97,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>271</width>
+          <width>274</width>
           <height>111</height>
          </rect>
         </property>
@@ -387,7 +387,7 @@
          <height>81</height>
         </rect>
        </property>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -456,7 +456,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>0</x>
@@ -468,7 +468,7 @@
        <layout class="QVBoxLayout" name="verticalLayout" stretch="3,1,1,2">
         <item>
          <widget class="QWidget" name="widget_2" native="true">
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -760,7 +760,7 @@
                </sizepolicy>
               </property>
               <property name="minimum">
-               <double>1.000000000000000</double>
+               <double>0.010000000000000</double>
               </property>
               <property name="maximum">
                <double>1000000000000.000000000000000</double>

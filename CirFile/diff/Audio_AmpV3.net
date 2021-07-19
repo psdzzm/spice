@@ -13,5 +13,5 @@ C3 N004 0 440p
 R1 N004 0 100k
 .tran 0 20ms 10ms 0.1ms
 .lib MCP6271.mod
-.backanno
+.ac dec 40 100 3k
 .end

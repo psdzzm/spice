@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 00:53:04
- FilePath: /spice/src/_resultaly.py
+ LastEditTime: 19-07-2021 09:11:21
+ FilePath: /circuit/src/_resultaly.py
 '''
 import threading
 from timeit import default_timer as timer
@@ -204,10 +204,8 @@ def report(self):
     for i in range(self.lengthr):
         rframe.loc[i] = [self.alter_r[i].name, self.alter_r[i].r, self.alter_r[i].tol]
 
-    cframehtml = '\n{% block ctable %}\n' + \
-        cframe.to_html(index=False) + '\n{% endblock %}\n'
-    rframehtml = '\n{% block rtable %}\n' + \
-        rframe.to_html(index=False) + '\n{% endblock %}\n'
+    cframehtml = '\n{% block ctable %}\n' + cframe.to_html(index=False) + '\n{% endblock %}\n'
+    rframehtml = '\n{% block rtable %}\n' + rframe.to_html(index=False) + '\n{% endblock %}\n'
 
     llimit = self.stdcutoff * (1 - self.tol)
     rlimit = self.stdcutoff * (1 + self.tol)
@@ -246,10 +244,8 @@ def report(self):
         ltail.loc[i] = [self._fit(index1[i]), index1[i]]
         rtail.loc[i] = [self._fit(index2[i]), index1[i]]
 
-    ltailhtml = '\n{% block lefttail %}\n' + \
-        ltail.to_html(index=False) + '\n{% endblock %}\n'
-    rtailhtml = '\n{% block righttail %}\n' + \
-        rtail.to_html(index=False) + '\n{% endblock %}\n'
+    ltailhtml = '\n{% block lefttail %}\n' + ltail.to_html(index=False) + '\n{% endblock %}\n'
+    rtailhtml = '\n{% block righttail %}\n' + rtail.to_html(index=False) + '\n{% endblock %}\n'
 
     # from django.template.loader import render_to_string
     from django.template import Context, Template
@@ -260,8 +256,7 @@ def report(self):
     django.setup()
 
     with open(os.path.dirname(__file__) + '/report/htmlreport/templates/inherit.html', 'w+') as table, open(os.path.dirname(__file__) + '/report/htmlreport/templates/report.html', 'w') as rendered:
-        table.write("{% extends 'base.html' %}\n" + cframehtml +
-                    rframehtml + ltailhtml + rtailhtml + self.wstframehtml)
+        table.write("{% extends 'base.html' %}\n" + cframehtml + rframehtml + ltailhtml + rtailhtml + self.wstframehtml)
 
         table.seek(0)
 
@@ -299,5 +294,4 @@ def report(self):
             html.write_pdf('report.pdf')
             logger.info('Exporting report to ' + self.dir)
         else:
-            logger.warning("Can't findModule weasyprint! Fail to export pdf report. See html5 report in " +
-                           os.path.dirname(__file__) + '/report/htmlreport/templates/report.html')
+            logger.warning("Can't findModule weasyprint! Fail to export pdf report. See html5 report in " + os.path.dirname(__file__) + '/report/htmlreport/templates/report.html')

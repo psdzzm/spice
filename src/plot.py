@@ -81,8 +81,7 @@ class plotGUI(QtWidgets.QMainWindow):
         if fname:
             name = os.path.basename(fname)
             if os.path.abspath(fname + '/../../') != self.root + '/Workspace':
-                dir = name.split('.')[0] + ' ' + \
-                    datetime.now().strftime("%d%m%Y_%H%M%S")
+                dir = name.split('.')[0] + ' ' + datetime.now().strftime("%d%m%Y_%H%M%S")
                 os.mkdir(self.root + '/Workspace/' + dir)
                 os.chdir(self.root + '/Workspace/' + dir)
                 shutil.copyfile(fname, os.getcwd() + f'/{name}')
@@ -211,7 +210,6 @@ class plotGUI(QtWidgets.QMainWindow):
                     return
 
                 self.Cir.stepValue = f'start={startcomp} stop={stopcomp} step={increcomp}'
-                logger.debug(self.Cir.stepValue)
                 stepinfo = Quantity.extract(self.Cir.stepValue.replace(' ', '\n'), units=self.__unit)
                 self._stepinfo = ''
                 for p, q in stepinfo.items():
@@ -220,7 +218,6 @@ class plotGUI(QtWidgets.QMainWindow):
             else:
                 self.Cir.stepValue = f"values {' '.join(self.configGUI.plainTextEdit.toPlainText().split())}"
                 self._stepinfo = self.Cir.stepValue
-                logger.debug(self.Cir.stepValue)
 
             if pre_run() == -1:
                 return
@@ -228,7 +225,10 @@ class plotGUI(QtWidgets.QMainWindow):
             self.psign.clear()
             self.psign.addItem('=')
             self.fcunit.clear()
-            self.fcunit.addItem(self.__unit)
+            if self.__unit == 'F':
+                self.fcunit.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
+            else:
+                self.fcunit.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
 
             self.Cir.create_step()
             self.start_process('Step')  # Runmode 0, only run control.sp
@@ -238,7 +238,11 @@ class plotGUI(QtWidgets.QMainWindow):
             self.psign.clear()
             self.psign.addItems(['>', '<'])
             self.fcunit.clear()
-            self.fcunit.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+            if self.Cir.measmode == 'Gain Ripple':
+                self.fcunit.addItem('dB')
+            else:
+                self.fcunit.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+
             for i in range(self.Cir.lengthc):
                 self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
             for i in range(self.Cir.lengthr):
@@ -351,6 +355,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
         reconnect(self.analButton.clicked, self.analy)
         reconnect(self.ResetButton.clicked, self.reset)
+        reconnect(self.calctext.returnPressed, self.calcp)
 
         if mode == 'Step':
             self.plot('Step')
@@ -362,7 +367,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
         reconnect(self.addtimetext.returnPressed, self.AddTime)
         reconnect(self.wstcase.toggled, self.plotwst)
-        reconnect(self.calctext.returnPressed, self.calcp)
 
         self.scrollc = QtWidgets.QScrollArea(self.rightwidget)
         self.scrollc.setMaximumSize(QtCore.QSize(180, 150))
@@ -481,7 +485,8 @@ class plotGUI(QtWidgets.QMainWindow):
     def calcp(self):
         try:
             fc = float(self.calctext.text())
-        except:
+        except SyntaxError:
+            self.presult.setText('Result: SyntaxError')
             return
         larsmll = self.psign.currentText()
         unit = self.fcunit.currentIndex()
@@ -489,26 +494,37 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.x == []:
             return
         else:
-            fc = fc * 10**(unit * 3)
+            if 'Hz' in self.fcunit.currentText():
+                fc = fc * 10**(unit * 3)
+            elif 'F' in self.fcunit.currentText():
+                fc = fc * 10**(unit * 3 - 12)
+            elif 'Ω' in self.fcunit.currentText():  # dB no need to change
+                fc = fc * 10**(unit * 3 - 3)
 
-        if fc < self.x[0]:
-            if larsmll == '<':
-                self.presult.setText('Result:0')
+        if self.Cir.analmode == 1:
+            if fc < self.x[0] or fc > self.x[-1]:
+                self.presult.setText('Result: Invalid')
+                return
             else:
-                self.presult.setText('Result:1')
-            return
-        elif fc > self.x[-1]:
-            if larsmll == '<':
-                self.presult.setText('Result:1')
-            else:
-                self.presult.setText('Result:0')
-            return
-        elif self.Cir.analmode == 'Step':
-            result = self.Cir.fit(fc)
-        elif larsmll == '>':
-            result = self.y[-1] - self.Cir.fit(fc)
+                result = self.Cir.fit(fc)
+
         else:
-            result = self.Cir.fit(fc)
+            if fc < self.x[0]:
+                if larsmll == '<':
+                    self.presult.setText('Result: 0')
+                else:
+                    self.presult.setText('Result: 1')
+                return
+            elif fc > self.x[-1]:
+                if larsmll == '<':
+                    self.presult.setText('Result: 1')
+                else:
+                    self.presult.setText('Result: 0')
+                return
+            elif larsmll == '>':
+                result = self.y[-1] - self.Cir.fit(fc)
+            else:
+                result = self.Cir.fit(fc)
 
         self.presult.setText(f'Result:{np.round(result,4)}')
 

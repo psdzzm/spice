@@ -5,12 +5,11 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 14-07-2021 01:29:05
+ LastEditTime: 19-07-2021 09:08:23
  FilePath: /circuit/main.py
 '''
 
-from src.Logging import init,logger
-import logging
+from src.Logging import init, logger
 from src.plot import plotGUI
 from PyQt5 import QtWidgets
 import os
@@ -22,9 +21,9 @@ logger.info('Main Function started')
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root = os.getcwd()
-path = root+'/Workspace/bin'
+path = root + '/Workspace/bin'
 if path not in os.environ['PATH']:
-    os.environ['PATH'] += ':'+path
+    os.environ['PATH'] += ':' + path
 del path
 
 logger.debug(os.environ['PATH'])
