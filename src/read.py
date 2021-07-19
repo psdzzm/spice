@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 16:47:57
+ LastEditTime: 19-07-2021 00:53:56
  FilePath: /spice/src/read.py
 '''
 
@@ -70,8 +70,7 @@ class circuit:
     def read(self):
         fileo, files = [], []
         start, stop1, stop2, self.includetime = 0, 0, 0, 0
-        matches = ['.model', '.subckt', '.global', '.include', '.lib',
-                   '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
+        matches = ['.model', '.subckt', '.global', '.include', '.lib', '.param', '.func', '.temp', '.control', '.endc', '.end', '.ends']
         with open(self.name) as file_object:
             i = -1
             for lines in file_object:
@@ -94,7 +93,7 @@ class circuit:
                 # Filter other control command
                 elif row[0].lower() not in matches and '.' in row[0].lower():
                     continue
-                elif row[0].lower() == '.include':
+                elif row[0].lower() == '.include' or row[0].lower() == '.lib':
                     self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()
                     path2check = self.libpath + 'user/' + inclname  # Only file name without extension

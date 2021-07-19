@@ -118,8 +118,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
     check = check_module('coloredlogs')
     if check:
         coloredlogs = import_module(check)
-        coloredlogs.install(level=default_level, milliseconds=True, logger=logger,
-                            fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
+        coloredlogs.install(level=default_level, milliseconds=True, logger=logger, fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
 
     return logger
 

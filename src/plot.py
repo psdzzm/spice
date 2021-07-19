@@ -77,7 +77,7 @@ class plotGUI(QtWidgets.QMainWindow):
         reconnect(self.wstcase.toggled)
         reconnect(self.calctext.returnPressed)
 
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Spice Netlists (*.cir)")
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Spice Netlists (*.cir *.net)")
         if fname:
             name = os.path.basename(fname)
             if os.path.abspath(fname + '/../../') != self.root + '/Workspace':
@@ -225,11 +225,20 @@ class plotGUI(QtWidgets.QMainWindow):
             if pre_run() == -1:
                 return
 
+            self.psign.clear()
+            self.psign.addItem('=')
+            self.fcunit.clear()
+            self.fcunit.addItem(self.__unit)
+
             self.Cir.create_step()
             self.start_process('Step')  # Runmode 0, only run control.sp
             return
 
         else:
+            self.psign.clear()
+            self.psign.addItems(['>', '<'])
+            self.fcunit.clear()
+            self.fcunit.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
             for i in range(self.Cir.lengthc):
                 self.Cir.alter_c[i].tol = self.configGUI.Ctol[i].value()
             for i in range(self.Cir.lengthr):
@@ -494,6 +503,8 @@ class plotGUI(QtWidgets.QMainWindow):
             else:
                 self.presult.setText('Result:0')
             return
+        elif self.Cir.analmode == 'Step':
+            result = self.Cir.fit(fc)
         elif larsmll == '>':
             result = self.y[-1] - self.Cir.fit(fc)
         else:

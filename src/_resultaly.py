@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 19:04:04
- FilePath: /circuit/src/_resultaly.py
+ LastEditTime: 19-07-2021 00:53:04
+ FilePath: /spice/src/_resultaly.py
 '''
 import threading
 from timeit import default_timer as timer
@@ -46,8 +46,7 @@ def resultdata(self, worst=False, add=False, mode=None):
             self.stdcutoff = self.wst_cutoff[-1]
             self.wstindex = self.wst_cutoff.argsort()
             self.wst_cutoff = self.wst_cutoff[self.wstindex]
-            wstframe.loc[0] = ['Frequency',
-                               self.wst_cutoff[0], self.wst_cutoff[-1]]
+            wstframe.loc[0] = ['Frequency', self.wst_cutoff[0], self.wst_cutoff[-1]]
 
             for i in range(self.lengthc):
                 wstframe.loc[i + 1] = [self.alter_c[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i].split()[-1])]
@@ -73,12 +72,12 @@ def resultdata(self, worst=False, add=False, mode=None):
             cutoff[i] = line.split()[1]
             i += 1
 
-        comp, index = np.unique(cutoff, return_index=True)
+        comp, index = np.unique(comp, return_index=True)
         cutoff = cutoff[index]
 
         self.p = cutoff
         self.cutoff = comp
-
+        self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)
         return
     else:
         with open('paramlist', 'r') as paramlist:
@@ -201,11 +200,9 @@ def report(self):
     cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))
     rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))
     for i in range(self.lengthc):
-        cframe.loc[i] = [self.alter_c[i].name,
-                         self.alter_c[i].c, self.alter_c[i].tol]
+        cframe.loc[i] = [self.alter_c[i].name, self.alter_c[i].c, self.alter_c[i].tol]
     for i in range(self.lengthr):
-        rframe.loc[i] = [self.alter_r[i].name,
-                         self.alter_r[i].r, self.alter_r[i].tol]
+        rframe.loc[i] = [self.alter_r[i].name, self.alter_r[i].r, self.alter_r[i].tol]
 
     cframehtml = '\n{% block ctable %}\n' + \
         cframe.to_html(index=False) + '\n{% endblock %}\n'
@@ -230,8 +227,7 @@ def report(self):
     ltail = pd.DataFrame(columns=('Frequency/Hz (Smaller than)', 'Probability'))
 
     if yd >= self.yd:
-        index1 = np.linspace((1 - self.yd) / 2 + 0.05,
-                             (1 - self.yd) / 2, 5, endpoint=False)
+        index1 = np.linspace((1 - self.yd) / 2 + 0.05, (1 - self.yd) / 2, 5, endpoint=False)
         index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, (1 - yd) / 2, 5, endpoint=False)))
 
         index2 = np.linspace(self.p0[-1] - (1 - self.yd) / 2 - 0.05, self.p0[-1] - (1 - yd) / 2, 5, endpoint=False)
