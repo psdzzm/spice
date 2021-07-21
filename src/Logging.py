@@ -1,11 +1,11 @@
 # !usr/bin/env python
 # -*- coding:utf-8 -*-
 '''
- Description:
+ Description: Initialize log file and doing some check
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 17:55:17
+ LastEditTime: 21-07-2021 15:52:19
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -68,30 +68,31 @@ for item in modulelist:
         raise ModuleNotFoundError("Module: {} not found".format(item))
 
 
-def GetHashofDirs(directory):
+# Get md5sum of directories
+def GetHashofDirs(directory) -> str:
     SHAhash = hashlib.md5()
     for item in directory:
         if not os.path.exists(item):
             return -1
         else:
             filepath = []
-            for root, _, files in os.walk(item):
+            for root, _, files in os.walk(item):    # Iterate files in directory
                 for names in files:
-                    filepath.append(os.path.join(root, names))
+                    filepath.append(os.path.join(root, names))  # Return every file path in directory
             for subfile in sorted(filepath):
                 try:
                     f1 = open(subfile, 'rb')
-                    SHAhash.update(f1.read())
+                    SHAhash.update(f1.read())   # Update md5sum
                     f1.close()
-                    # print(subfile,SHAhash.hexdigest())
                 except:
                     # You can't open the file for some reason
                     f1.close()
-                    return
+                    return -2
 
     return SHAhash.hexdigest()
 
 
+# Setup logging file
 def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
     """
     | **@author:** Prathyush SP
@@ -105,29 +106,31 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         with open(path, 'rt') as f:
             try:
                 config = yaml.safe_load(f.read())
-                logging.config.dictConfig(config)
+                logging.config.dictConfig(config)   # Load logging settings from file logging.yaml
             except Exception as e:
                 print(e)
                 print('Error in Logging Configuration. Using default configs')
-                logging.basicConfig(level=default_level)
+                logging.basicConfig(format='%(asctime)s - %(filename)s - %(levelname)s - %(message)s', level=logging.INFO)
     else:
-        logging.basicConfig(level=default_level)
+        logging.basicConfig(format='%(asctime)s - %(filename)s - %(levelname)s - %(message)s', level=logging.INFO)
         print('Failed to load configuration file. Using default configs')
 
     logger = logging.getLogger('default')
     check = check_module('coloredlogs')
-    if check:
+    if check:   # If has module coleredlogs
         coloredlogs = import_module(check)
         coloredlogs.install(level=default_level, milliseconds=True, logger=logger, fmt='%(asctime)s - %(filename)s - %(levelname)s - %(message)s')
 
     return logger
 
 
+# Initialize
 def init():
+    # Check md5sum of ngspice folders
     if GetHashofDirs(['Workspace/bin', 'Workspace/share', 'Workspace/include', 'Workspace/lib/ngspice']) == '5691f9bebed5eee48e85997573b89f83':
-        os.makedirs('lib/user', exist_ok=True)
+        os.makedirs('lib/user', exist_ok=True)  # Make directory that contains include files uploaded by users
         home = os.path.expanduser('~') + '/.spiceinit'
-        if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):
+        if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):  # Check if file .spiceinit exists
             logger.info("Create '.spiceinit' file")
             with open(home, 'w') as f:
                 f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')

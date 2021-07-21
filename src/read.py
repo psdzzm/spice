@@ -21,6 +21,8 @@ from matplotlib import pyplot as plt
 import operator
 from quantiphy import Quantity
 
+# Delete files
+
 
 def rm(*filename):
     for item in filename:
@@ -30,21 +32,15 @@ def rm(*filename):
             pass
 
 
-def getfile():
-    filename = input('Please enter the filename: ')
-    while True:
-        if os.path.isfile(filename):
-            return filename
-        else:
-            filename = input(f'{filename} does no exist! Please enter the correct filename: ')
-
-
+# Resistor
 class R:
     def __init__(self, name, r, tol=0.01):
         self.name = name
-        self.r = r
-        self.tol = tol
-        self.resistance = []    # Alter paramater list
+        self.r = r              # Component Value
+        self.tol = tol          # Component Tolerance
+        self.resistance = []    # Altered value list
+
+# Capacitor
 
 
 class C:
@@ -59,17 +55,25 @@ class circuit:
     def __init__(self, filename):
         self.name = filename
         self.seed = int(time.time())
-        self.mc_runs = 1000
+        self.mc_runs = 1000     # Run time
         self.tolc = 0.05
         self.tolr = 0.01
-        self.tol = 0.01
-        self.yd = 0.98
+        self.tol = 0.01         # Acceptable output tolerance
+        self.yd = 0.98          # Acceptable yield
 
-        self.libpath = os.path.abspath(os.getcwd() + '/../lib') + '/'
+        self.libpath = os.path.abspath(os.getcwd() + '/../lib') + '/'   # Default include file directory
 
+    # Read in file
     def read(self):
-        fileo, files = [], []
+        fileo, files = [], []   # fileo : original file content; files: spilted file content
         start, stop1, stop2, self.includetime = 0, 0, 0, 0
+        '''
+        start: line number where '.control' is
+        stop1: line number where '.endc' is
+        stop2: line number where '.end' is
+        includetime: how many time '.include' and '.lib'
+        matches: acceptable command
+        '''
         matches = ['.model', '.subckt', '.global', '.include', '.lib', '.param', '.func', '.temp', '.ends', '.ac', '.probe']
         with open(self.name) as file_object:
             i = -1
@@ -78,7 +82,7 @@ class circuit:
                 row = lines.split()
                 if row == []:
                     continue
-                elif not start:
+                elif not start:     # All content between .control and .endc is ignored
                     if row[0].lower() == '.control':
                         start = i
                         continue
@@ -90,10 +94,10 @@ class circuit:
                 if row[0].lower() == '.end':
                     stop2 = i
                     break
-                # Filter other control command
+                # Filter other control command that is not in matches list
                 elif row[0].lower() not in matches and '.' in row[0].lower():
                     continue
-                elif row[0].lower() == '.ac':
+                elif row[0].lower() == '.ac':   # If ac command is in file, read it in
                     try:
                         self.startac = Quantity(row[3]).real
                         self.stopac = Quantity(row[4]).real
@@ -104,10 +108,10 @@ class circuit:
                         self.netselect = row[1]
                     except IndexError:
                         pass
-                elif row[0].lower() == '.include' or row[0].lower() == '.lib':
+                elif row[0].lower() == '.include' or row[0].lower() == '.lib':  # Read in include file
                     self.includetime += 1
-                    inclname = os.path.basename(row[1]).split('.')[0].upper()
-                    path2check = self.libpath + 'user/' + inclname  # Only file name without extension
+                    inclname = os.path.basename(row[1]).split('.')[0].upper()   # Include file name without extension
+                    path2check = self.libpath + 'user/' + inclname      # Only file name without extension
                     # Directory lib has include file
                     if os.path.isfile(self.libpath + inclname):
                         lines = '.include ../lib/' + inclname + '\n'
@@ -145,6 +149,7 @@ class circuit:
 
             tsc.write('*ng_script\n\n.control\n\tset wr_vecnames\n\tsource test.cir\n\tshow r : resistance , c : capacitance > list\n\top\n\twrdata op all\n.endc\n\n.end')
 
+    # Fix include file not exist error
     def fixinclude(self, repl, mode):
         with open('test.cir', 'r+') as file_object, open('run.cir', 'r+') as b:
             test = file_object.read()

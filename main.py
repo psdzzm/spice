@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 09:08:23
+ LastEditTime: 21-07-2021 15:54:53
  FilePath: /circuit/main.py
 '''
 
@@ -22,7 +22,7 @@ logger.info('Main Function started')
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 root = os.getcwd()
 path = root + '/Workspace/bin'
-if path not in os.environ['PATH']:
+if path not in os.environ['PATH']:  # Add ngspice path to environ
     os.environ['PATH'] += ':' + path
 del path
 

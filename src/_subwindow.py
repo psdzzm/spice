@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets, uic, QtCore
 from quantiphy import Quantity
 
 
+# Processing... window
 class processing(QtWidgets.QDialog):
     """
     This "window" is a QWidget. If it has no parent, it
@@ -12,13 +13,14 @@ class processing(QtWidgets.QDialog):
 
     def __init__(self):
         super().__init__()
-        uic.loadUi('../src/processing.ui', self)
+        uic.loadUi('../src/processing.ui', self)    # Load ui file
         self.setWindowTitle('Processing')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         # self.show()
 
 
+# Configuration window
 class config(QtWidgets.QDialog):
 
     def __init__(self, root):
@@ -43,7 +45,7 @@ class config(QtWidgets.QDialog):
 
         self.analmode_2.currentTextChanged.connect(self.analchange)
 
-        self.measmode.currentTextChanged.connect(self.showhide)
+        self.measmode.currentTextChanged.connect(self.analchange)
 
         self.stepcomp.currentTextChanged.connect(self.compchange)
 
@@ -103,10 +105,9 @@ class config(QtWidgets.QDialog):
         self.MplWidget.canvas.draw()
         self.show()
 
+    # Node to measure in Configuration window changes, update the matplotlib figure
     def netchange(self):
         node = self.measnode.currentIndex()
-        # line = self.line1.pop(0)
-        # line.remove()
         self.ax.clear()
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node, :])
@@ -116,20 +117,21 @@ class config(QtWidgets.QDialog):
         self.ax.set_ylabel('vdb')
         self.MplWidget.canvas.draw()
 
+    # Simulation mode changes
     def analchange(self):
-        if self.analmode.currentIndex() == 1:
-            self.tabWidget.setTabVisible(1, False)
+        if self.analmode.currentIndex() == 1:   # Simulation mode is Step
+            self.tabWidget.setTabVisible(1, False)  # Set tab2 to invisible as no tolerance is needed
             self.widget_8.setHidden(False)
             self.label_2.setHidden(True)
             self.totaltime.setHidden(True)
-            mode = self.analmode_2.currentIndex()
-            if mode == 0:
+            mode = self.analmode_2.currentIndex()   # Step type is linear to list
+            if mode == 0:   # Linear
                 self.widget_4.setHidden(True)
                 self.widget_7.setHidden(False)
-            else:
+            else:           # List
                 self.widget_4.setHidden(False)
                 self.widget_7.setHidden(True)
-        else:
+        else:   # Simulation mode is ac analysis
             self.tabWidget.setTabVisible(1, True)
             self.label_2.setHidden(False)
             self.totaltime.setHidden(False)
@@ -137,26 +139,23 @@ class config(QtWidgets.QDialog):
             self.widget_7.setHidden(True)
             self.widget_8.setHidden(True)
 
-            mode = self.analmode.currentIndex()
-            if mode == 0:
-                self.widget_3.setHidden(False)
-            else:
-                self.widget_3.setHidden(True)
-
-    def showhide(self):
-        mode = self.measmode.currentIndex()
-        if mode == 0:
+        mode = self.measmode.currentIndex()  # Get Measure mode
+        if mode == 0:   # Measure mode is cutoff frequency
             self.widget_5.setHidden(False)
         else:
             self.widget_5.setHidden(True)
 
+    # Component to alter in step mode changes
+
     def compchange(self):
         index = self.stepcomp.currentIndex()
-        if index < self.Cir.lengthc:
-            q = Quantity(self.Cir.alter_c[index].c, units='F')
-            temp = setunit(q.real, -12, 5)
+
+        # Change unit based on component type
+        if index < self.Cir.lengthc:    # Capacitor
+            q = Quantity(self.Cir.alter_c[index].c, units='F')  # Get standard component value
+            temp = setunit(q.real, -12, 5)  # samllest unit is pF, base = -12, have 5 units, see function definition for more detail
             self.CompValue.setText(f"Original Value: {q.render()}")
-            if 'F' not in self.startunit_2.currentText():
+            if 'F' not in self.startunit_2.currentText():   # Update unit list
                 self.startunit_2.clear()
                 self.stopunit_2.clear()
                 self.increunit_2.clear()
@@ -164,7 +163,7 @@ class config(QtWidgets.QDialog):
                 self.stopunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
                 self.increunit_2.addItems(['pF', 'nF', 'μF', 'mF', 'F'])
 
-        elif index >= self.Cir.lengthc:
+        elif index >= self.Cir.lengthc:  # Component selected is resistor
             q = Quantity(self.Cir.alter_r[index - self.Cir.lengthc].r, units='Ω')
             temp = setunit(q.real, -3, 4)
             self.CompValue.setText(f"Original Value: {q.render()}")
@@ -176,6 +175,7 @@ class config(QtWidgets.QDialog):
                 self.stopunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
                 self.increunit_2.addItems(['mΩ', 'Ω', 'kΩ', 'MΩ'])
 
+        # Update alter list in linear mode
         self.startac_2.setValue(temp[0])
         self.stopac_2.setValue(temp[0])
         self.stopac_3.setValue(temp[0] / 10)
@@ -183,7 +183,10 @@ class config(QtWidgets.QDialog):
         self.stopunit_2.setCurrentIndex(temp[1])
         self.increunit_2.setCurrentIndex(temp[1])
 
+    # Initialize tab2: tolerance
+
     def tab2UI(self):
+        # Delete all existing widget in tab2
         for i in reversed(range(self.scroll.count())):
             self.scroll.itemAt(i).widget().deleteLater()
 
@@ -250,39 +253,27 @@ class config(QtWidgets.QDialog):
         self.scroll.addWidget(self.scrollr)
         self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
-        # self.tab2.setLayout(self.scroll)
-
-    def tolcolor(self):
-        for i in range(self.Cir.lengthc):
-            if self.Ctol[i].value() != self.Cir.alter_c[i].tol:
-                self.Ctol[i].setStyleSheet("color: red")
-            else:
-                self.Ctol[i].setStyleSheet("color: black")
-        for i in range(self.Cir.lengthr):
-            if self.Rtol[i].value() != self.Cir.alter_r[i].tol:
-                self.Rtol[i].setStyleSheet("color: red")
-            else:
-                self.Rtol[i].setStyleSheet("color: black")
+    # Set component tolerance to the same
 
     def sametol(self, i):
-        if self.sender() is self.checkC:
+        if self.sender() is self.checkC:    # If checkbox for capacitor is checked
             for i in range(1, self.Cir.lengthc):
                 self.Ctol[i].setValue(self.Ctol[0].value())
-        elif self.sender() is self.checkR:
+        elif self.sender() is self.checkR:  # If checkbox for resistor is checked
             for i in range(1, self.Cir.lengthr):
                 self.Rtol[i].setValue(self.Rtol[0].value())
-        elif i[0] == 'C':
-            i = int(i[1:])
-            if self.checkC.isChecked():
+        elif i[0] == 'C':       # Tolerance of capacitor is changed
+            i = int(i[1:])      # Get which capacitor is changed
+            if self.checkC.isChecked():    # checkbox for capacitor is checked
                 k = list(range(self.Cir.lengthc))
                 k.remove(i)
                 for j in k:
-                    self.Ctol[j].blockSignals(True)
+                    self.Ctol[j].blockSignals(True)     # Block signal sending
                     self.Ctol[j].setValue(self.Ctol[i].value())
                     self.Ctol[j].blockSignals(False)
-        elif i[0] == 'R':
-            i = int(i[1:])
-            if self.checkR.isChecked():
+        elif i[0] == 'R':   # Tolerance of resistor is changed
+            i = int(i[1:])  # Get which resistor is changed
+            if self.checkR.isChecked():     # checkbox for resistor is checked
                 k = list(range(self.Cir.lengthr))
                 k.remove(i)
                 for j in k:
@@ -291,18 +282,27 @@ class config(QtWidgets.QDialog):
                     self.Rtol[j].blockSignals(False)
 
 
+# Reconnect pyqt handler
 def reconnect(signal, newhandler=None, oldhandler=None):
-    try:
+    try:    # Disconnect all old signals
         if oldhandler is None:
             signal.disconnect()
         else:
             while True:
                 signal.disconnect(oldhandler)
-    except TypeError:
+    except TypeError:   # No old signal is connected
         pass
-    finally:
+    finally:    # Connect to new handler
         if newhandler is not None:
             signal.connect(newhandler)
+
+
+'''
+Calculate value based on unit
+value: standard value in SI
+base: the smallest unit. For explame, if nF is the smallest, base is -9 as n is 10^-9
+level: how many units are available. For example: nF, uF, mF, F ,then level = 4
+'''
 
 
 def setunit(value, base, level):

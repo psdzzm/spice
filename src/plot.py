@@ -16,37 +16,29 @@ from quantiphy import Quantity
 import psutil
 
 
-def pyqt5plot():
-    app = QtWidgets.QApplication(sys.argv)
-    main = plotGUI()
-    main.show()
-    app.exec_()
-
-
 class plotGUI(QtWidgets.QMainWindow):
     def __init__(self, root):
         super().__init__()
 
-        self.root = root
+        self.root = root    # Root directory
         os.chdir('./src')
         uic.loadUi('main.ui', self)
         os.chdir('../Workspace')
         self.setWindowTitle("Tolerance Analysis Tool")
 
+        # Add matplotlib tool bar
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
         self.scroll = QtWidgets.QVBoxLayout(self.rightwidget)
         self.scroll.setAlignment(QtCore.Qt.AlignTop)
 
-        self.dialog = processing()
+        self.dialog = processing()  # Initialize processing window
         self.dialog.rejected.connect(self.kill)
-        self.configGUI = config(self.root)
+        self.configGUI = config(self.root)  # Initialize configuration window
         self.configGUI.accepted.connect(self.configCreate)
         self.configGUI.rejected.connect(self.configreject)
 
         self.onlyInt = QIntValidator()
         self.addtimetext.setValidator(self.onlyInt)
-
-        self.totaltime.setText('Total simulation time: 0')
 
         doubleval = QtGui.QDoubleValidator()
         doubleval.setBottom(0)
@@ -58,17 +50,19 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def openfile(self):
 
-        if hasattr(self, 'Cir'):
+        if hasattr(self, 'Cir'):    # There is a file opened
             ret = QtWidgets.QMessageBox.warning(self, 'Warning', 'You will lose currenct analysis result', QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
             if ret == QtWidgets.QMessageBox.Cancel:
                 return
             else:
                 del self.Cir
-        try:
+        try:    # Delete all widgets in right panel
             for i in reversed(range(self.scroll.count())):
                 self.scroll.itemAt(i).widget().deleteLater()
         except AttributeError:
             pass
+
+        # Clear figure and disconnect signals
         self.MplWidget.figure.clear()
         self.MplWidget.canvas.draw()
         reconnect(self.analButton.clicked)
@@ -81,35 +75,37 @@ class plotGUI(QtWidgets.QMainWindow):
         if fname:
             name = os.path.basename(fname)
             if os.path.abspath(fname + '/../../') != self.root + '/Workspace':
+                # Create a folder to save uploaded file
                 dir = name.split('.')[0] + ' ' + datetime.now().strftime("%d%m%Y_%H%M%S")
                 os.mkdir(self.root + '/Workspace/' + dir)
                 os.chdir(self.root + '/Workspace/' + dir)
                 shutil.copyfile(fname, os.getcwd() + f'/{name}')
                 logger.info('Copy ' + fname + ' to ' + os.getcwd() + f'/{name}')
             else:
+                # The uploaded file is in existing Workspace foler
                 os.chdir(os.path.dirname(fname))
                 files = os.listdir()
                 files.remove(name)
                 for item in files:
                     os.remove(item)
 
-            self.Cir = read.circuit(fname)
+            self.Cir = read.circuit(fname)  # Instantiate circuit
             self.Cir.shortname = name
             self.Cir.dir = os.getcwd()
 
-            message = self.Cir.read()
+            message = self.Cir.read()   # Read circuit file
 
-            if message:
+            if message:  # Fail to read
                 QtWidgets.QMessageBox.critical(self, 'Error', message)
                 return
             else:
-                message, flag = self.Cir.init()
+                message, flag = self.Cir.init()  # Initialize circuit
 
-                i = -1
+                i = -1  # Count how many include files are needed
                 includefile = []
                 while True:
                     i += 1
-                    if flag:
+                    if flag:    # Some error occur
                         if i < self.Cir.includetime:
                             ret = QtWidgets.QMessageBox.critical(self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
 
@@ -137,20 +133,20 @@ class plotGUI(QtWidgets.QMainWindow):
                             i = -1
                             includefile = []
 
-                    elif message:
+                    elif message:   # Fatal error occur
                         QtWidgets.QMessageBox.critical(self, 'Error', message)
                         for file in includefile:
                             read.rm('../lib/user/' + file)
                         return
 
-                    else:
+                    else:   # No error occur
                         break
 
-            self.configGUI.init(self.Cir)
+            self.configGUI.init(self.Cir)   # Initialize configuration based on circuit
             reconnect(self.configGUI.rejected, self.configreject)
             self.configGUI.show()
 
-        else:
+        else:   # No file opened
             return
 
     def configCreate(self):
