@@ -16,13 +16,14 @@ from quantiphy import Quantity
 import psutil
 
 
+# The top GUI calss
 class plotGUI(QtWidgets.QMainWindow):
     def __init__(self, root):
         super().__init__()
 
         self.root = root    # Root directory
         os.chdir('./src')
-        uic.loadUi('main.ui', self)
+        uic.loadUi('main.ui', self) # Load ui file
         os.chdir('../Workspace')
         self.setWindowTitle("Tolerance Analysis Tool")
 
@@ -109,9 +110,11 @@ class plotGUI(QtWidgets.QMainWindow):
                         if i < self.Cir.includetime:
                             ret = QtWidgets.QMessageBox.critical(self, 'Error', message, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Open)
 
-                            if ret == QtWidgets.QMessageBox.Open:
+                            if ret == QtWidgets.QMessageBox.Open:   # 'Open' is clicked
+                                # Get opened file full name
                                 temp, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Select file for ' + self.Cir.subckt, '', "Model Files (*)")
-                                includefile.append(temp.split('/')[-1].split('.')[0])
+                                # Get opened file base name //TODO: Open file cancelled
+                                includefile.append(os.path.basename(temp).split('.')[0])
                                 if temp:
                                     shutil.copyfile(temp, self.root + '/Workspace/lib/user/' + includefile[i])
                                     logger.info('Copy ' + temp + ' to ' + self.root + '/Workspace/lib/user/' + includefile[i])
@@ -121,7 +124,8 @@ class plotGUI(QtWidgets.QMainWindow):
                                 for file in includefile:
                                     read.rm('../lib/user/' + file)
                                 return
-                        else:
+
+                        else:   # Incorrect include file is provided
                             logger.error('Incorrect include file provided! Reset the input circuit')
                             for file in includefile:
                                 read.rm('../lib/user/' + file)
@@ -149,6 +153,8 @@ class plotGUI(QtWidgets.QMainWindow):
         else:   # No file opened
             return
 
+
+    # Ok is clicked in configuration window
     def configCreate(self):
         def pre_run():
             self.Cir.create_prerun()
@@ -252,14 +258,17 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.start_process('Open', 1)
 
+
+    # Cancel is clicked in configuration window
     def configreject(self):
         logger.warning('Configuration Rejected')
         os.chdir('..')
-        reconnect(self.analButton.clicked, None, None)
-        shutil.rmtree(self.Cir.dir)
+        reconnect(self.analButton.clicked, None, None)  # Disconnect all signal of Analysis button
+        shutil.rmtree(self.Cir.dir) # Delete folder
         logger.warning('Delete ' + self.Cir.dir)
         logger.warning(os.getcwd())
         del self.Cir
+
 
     def start_process(self, finishmode, runmode=0):
         if self.p is None:  # No process running.

@@ -19,9 +19,9 @@ import sys
 init()
 logger.info('Main Function started')
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-root = os.getcwd()
-path = root + '/Workspace/bin'
+root = os.path.dirname(os.path.abspath(__file__))   # Root directory of main function
+os.chdir(root)
+path = os.path.join(root,'Workspace','bin')
 if path not in os.environ['PATH']:  # Add ngspice path to environ
     os.environ['PATH'] += ':' + path
 del path
