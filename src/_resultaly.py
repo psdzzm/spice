@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 09:11:21
+ LastEditTime: 23-07-2021 17:14:06
  FilePath: /circuit/src/_resultaly.py
 '''
 import threading
@@ -79,6 +79,7 @@ def resultdata(self, worst=False, add=False, mode=None):
         self.cutoff = comp
         self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)
         return
+
     else:
         with open('paramlist', 'r') as paramlist:
             if add:
@@ -196,6 +197,7 @@ def resultdata2(self, worst=False):
     self.p = np.arange(1, 1 + length) / length
 
 
+# Create report
 def report(self):
     cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))
     rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))
@@ -247,7 +249,6 @@ def report(self):
     ltailhtml = '\n{% block lefttail %}\n' + ltail.to_html(index=False) + '\n{% endblock %}\n'
     rtailhtml = '\n{% block righttail %}\n' + rtail.to_html(index=False) + '\n{% endblock %}\n'
 
-    # from django.template.loader import render_to_string
     from django.template import Context, Template
     import django
 
@@ -260,9 +261,7 @@ def report(self):
 
         table.seek(0)
 
-        files = table.read()
-
-        t = Template(files)
+        t = Template(table.read())
 
         renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 

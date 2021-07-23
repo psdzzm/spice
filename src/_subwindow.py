@@ -40,11 +40,12 @@ class config(QtWidgets.QDialog):
         self.widget_8.setHidden(True)
 
         self.measnode.currentTextChanged.connect(self.netchange)
+        self.inputnode1.currentTextChanged.connect(self.netchange)
+        self.inputnode2.currentTextChanged.connect(self.netchange)
+        self.outputnode.currentTextChanged.connect(self.netchange)
 
         self.analmode.currentTextChanged.connect(self.analchange)
-
         self.analmode_2.currentTextChanged.connect(self.analchange)
-
         self.measmode.currentTextChanged.connect(self.analchange)
 
         self.stepcomp.currentTextChanged.connect(self.compchange)
@@ -63,6 +64,22 @@ class config(QtWidgets.QDialog):
         self.measnode.currentTextChanged.connect(self.netchange)
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
+
+        self.inputnode1.currentTextChanged.disconnect()
+        self.inputnode1.clear()
+        self.inputnode1.addItem('out')
+        self.inputnode1.addItems(self.Cir.net)
+        self.inputnode1.currentTextChanged.connect(self.netchange)
+        self.inputnode2.currentTextChanged.disconnect()
+        self.inputnode2.clear()
+        self.inputnode2.addItem('out')
+        self.inputnode2.addItems(self.Cir.net)
+        self.inputnode2.currentTextChanged.connect(self.netchange)
+        self.outputnode.currentTextChanged.disconnect()
+        self.outputnode.clear()
+        self.outputnode.addItem('out')
+        self.outputnode.addItems(self.Cir.net)
+        self.outputnode.currentTextChanged.connect(self.netchange)
 
         self.stepcomp.currentTextChanged.disconnect()
         self.stepcomp.clear()
@@ -107,7 +124,7 @@ class config(QtWidgets.QDialog):
 
     # Node to measure in Configuration window changes, update the matplotlib figure
     def netchange(self):
-        node = self.measnode.currentIndex()
+        node = self.sender().currentIndex()
         self.ax.clear()
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node, :])
