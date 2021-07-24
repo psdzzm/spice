@@ -1,8 +1,8 @@
 * User defined ngspice init file
 
-    set filetype=ascii
+	set filetype=ascii
 	set color0=white
-	set wr_vecnames		$ wrdata: scale and data vector names are printed on the first row
+	*set wr_vecnames		$ wrdata: scale and data vector names are printed on the first row
 	set wr_singlescale	$ the scale vector will be printed only once
 
 * unif: uniform distribution, deviation relativ to nominal value

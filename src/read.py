@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 11:58:54
+ LastEditTime: 24-07-2021 19:20:34
  FilePath: /circuit/src/read.py
 '''
 
@@ -171,11 +171,11 @@ class circuit:
 
         return self.init()
 
+    # Initialize the circuit, check if any error in circuit file
     def init(self):
-        rm('run.log')
         logger.info('Checking if the input circuit is valid.')
         proc = subprocess.Popen('ngspice -b test_control.sp -o test.log', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        _, stderr = proc.communicate()
+        _, stderr = proc.communicate()  # Listen to the std error output
         if stderr:
             logger.error(stderr.decode('ASCII') + 'Please check if the netlist file or include file is valid')
             return stderr.decode('ASCII') + 'Please check if the netlist file or include file is valid', False
@@ -215,12 +215,14 @@ class circuit:
             if error_r:
                 logger.error(''.join(error_r))
                 return ''.join(error_r), flag
-            else:
+            else:   # Sort nets
                 try:
                     self.net.remove('out')
                     self.netc.remove('out')
-                    self.net.sort()
-                    self.netc.sort()
+                    # Use index sorting
+                    index = sorted(range(len(self.net)), key=self.net.__getitem__)
+                    self.net = ['out'] + [self.net[i] for i in index]
+                    self.netc = ['out'] + [self.netc[i] for i in index]
                 except ValueError:
                     logger.error("Error! No 'out' port!")
                     return "Error! No 'out' port!", flag
@@ -230,28 +232,29 @@ class circuit:
 
         subprocess.run('ngspice test_control2.sp -b -o test2.log', shell=True, stdout=subprocess.DEVNULL)
 
+        # Read raw ac analysis data
         with open('ac') as file_object:
             title = file_object.readline().split()
             data = file_object.readlines()
             self.initx = np.zeros(len(data))
-            length = len(self.net) + 1
+            length = len(self.net)
             self.inity = np.zeros([length, len(data)], dtype=np.complex_)
 
-            index = [i for i, x in enumerate(title) if x == "out"]
+            index = [i for i, x in enumerate(title) if x == "out"]  # Get index of all 'out' net data
             i = 0
-            if len(index) == 1:
-                for item in self.netc:
-                    index.append(title.index(item))
-                for line in data:
+            if len(index) == 1:     # 'out' net data is real number
+                for item in self.netc[1:]:
+                    index.append(title.index(item))  # Get index of all nets
+                for line in data:       # Read in data
                     line = line.split()
                     self.initx[i] = float(line[0])
                     for j in range(length):
                         self.inity[j, i] = float(line[index[j]])
                     i += 1
-            else:
-                index = [index]
-                for item in self.netc:
-                    index.append([i for i, x in enumerate(title) if x == item])
+            else:   # 'out' net data is real number
+                index = [index]  # Generate 2-D list from 1-D
+                for item in self.netc[1:]:
+                    index.append([i for i, x in enumerate(title) if x == item])  # Get index of all nets
                 for line in data:
                     line = line.split()
                     self.initx[i] = float(line[0])
@@ -259,8 +262,9 @@ class circuit:
                         self.inity[j, i] = float(line[index[j][0]]) + float(line[index[j][1]]) * 1j
                     i += 1
 
-            self.inity = 20 * np.log10(np.abs(self.inity))
+            self.inity = 20 * np.log10(np.abs(self.inity))  # Convert to dB
 
+        # Get Resistors and Capacitors
         with open('list') as file_object:
             self.alter_r = []
             self.alter_c = []
@@ -280,11 +284,12 @@ class circuit:
 
         self.lengthc = len(self.alter_c)
         self.lengthr = len(self.alter_r)
+        # Sort classes based on the component's name
         self.alter_c.sort(key=operator.attrgetter('name'))
         self.alter_r.sort(key=operator.attrgetter('name'))
-        logger.info('Check successfully! Running simulation.')
+        logger.info('Check successfully!')
 
-        return flag, flag
+        return flag, flag   # No error occur,0,0
 
     def readnet(self):
         with open('op') as file_object:

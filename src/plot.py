@@ -87,12 +87,12 @@ class plotGUI(QtWidgets.QMainWindow):
                 os.chdir(os.path.dirname(fname))
                 files = os.listdir()
                 files.remove(name)
-                for item in files:
+                for item in files:      # Delete all other files
                     os.remove(item)
 
             self.Cir = read.circuit(fname)  # Instantiate circuit
-            self.Cir.shortname = name
-            self.Cir.dir = os.getcwd()
+            self.Cir.basename = name
+            self.Cir.dir = os.getcwd()  # Record where it is
 
             message = self.Cir.read()   # Read circuit file
 
@@ -462,7 +462,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.ax = self.MplWidget.figure.add_subplot(111)
         # self.ax.set_ylim(-0.05, 1.05)
         self.line1 = self.ax.plot(self.x, self.y)
-        self.ax.set_title(f"Tolerance Analysis of {self.Cir.shortname}")
+        self.ax.set_title(f"Tolerance Analysis of {self.Cir.basename}")
         self.ax.grid()
 
         if mode == 'Step':  # Step mode is selected
@@ -474,6 +474,8 @@ class plotGUI(QtWidgets.QMainWindow):
             self.ax.set_xlabel(f'{self.Cir.compselect}/{self.__unit}')
             if self.Cir.measmode == 'Cutoff Frequency':
                 self.ax.set_ylabel('Cutoff Frequency/Hz')
+            elif self.Cir.measmode == 'Cutoff Frequency Phase':
+                self.ax.set_ylabel('Phase/rad')
             elif self.Cir.measmode == 'Gain Ripple':
                 self.ax.set_ylabel('Gain Ripple/dB')
             else:
@@ -482,6 +484,8 @@ class plotGUI(QtWidgets.QMainWindow):
         else:
             if self.Cir.measmode == 'Cutoff Frequency':
                 self.ax.set_xlabel('Cutoff Frequency/Hz')
+            elif self.Cir.measmode == 'Cutoff Frequency Phase':
+                self.ax.set_xlabel('Phase/rad')
             elif self.Cir.measmode == 'Gain Ripple':
                 self.ax.set_xlabel('Gain Ripple/dB')
             else:

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 21-07-2021 15:52:19
+ LastEditTime: 24-07-2021 19:27:11
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -15,6 +15,7 @@ import logging
 import hashlib
 import yaml
 import importlib
+from shutil import copyfile
 
 
 def check_module(module_name):
@@ -132,8 +133,7 @@ def init():
         home = os.path.expanduser('~') + '/.spiceinit'
         if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):  # Check if file .spiceinit exists
             logger.info("Create '.spiceinit' file")
-            with open(home, 'w') as f:
-                f.write('* User defined ngspice init file\n\n\tset filetype=ascii\n\tset color0=white\n\t*set wr_vecnames\t\t$ wrdata: scale and data vector names are printed on the first row\n\tset wr_singlescale\t$ the scale vector will be printed only once\n\n* unif: uniform distribution, deviation relativ to nominal value\n* aunif: uniform distribution, deviation absolut\n* gauss: Gaussian distribution, deviation relativ to nominal value\n* agauss: Gaussian distribution, deviation absolut\n* limit: if unif. distributed value >=0 then add +avar to nom, else -avar\n\n\tdefine unif(nom, rvar) (nom + (nom*rvar) * sunif(0))\n\tdefine aunif(nom, avar) (nom + avar * sunif(0))\n\tdefine gauss(nom, rvar, sig) (nom + (nom*rvar)/sig * sgauss(0))\n\tdefine agauss(nom, avar, sig) (nom + avar/sig * sgauss(0))\n\tdefine limit(nom, avar) (nom + ((sgauss(0) >= 0) ? avar : -avar))\n')
+            copyfile('Workspace/.spiceinit', home)
         logger.info('Initialization Successfully')
     else:
         logger.error('Initialization Failed')

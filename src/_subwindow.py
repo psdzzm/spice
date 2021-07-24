@@ -59,7 +59,6 @@ class config(QtWidgets.QDialog):
         self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))
         self.measnode.currentTextChanged.disconnect()
         self.measnode.clear()
-        self.measnode.addItem('out')
         self.measnode.addItems(self.Cir.net)
         self.measnode.currentTextChanged.connect(self.netchange)
         self.rfnum.setSpecialValueText('LAST')
@@ -67,17 +66,14 @@ class config(QtWidgets.QDialog):
 
         self.inputnode1.currentTextChanged.disconnect()
         self.inputnode1.clear()
-        self.inputnode1.addItem('out')
         self.inputnode1.addItems(self.Cir.net)
         self.inputnode1.currentTextChanged.connect(self.netchange)
         self.inputnode2.currentTextChanged.disconnect()
         self.inputnode2.clear()
-        self.inputnode2.addItem('out')
         self.inputnode2.addItems(self.Cir.net)
         self.inputnode2.currentTextChanged.connect(self.netchange)
         self.outputnode.currentTextChanged.disconnect()
         self.outputnode.clear()
-        self.outputnode.addItem('out')
         self.outputnode.addItems(self.Cir.net)
         self.outputnode.currentTextChanged.connect(self.netchange)
 
@@ -101,10 +97,7 @@ class config(QtWidgets.QDialog):
 
         if hasattr(Cir, 'netselect'):
             try:
-                if Cir.netselect == 'out':
-                    pass
-                else:
-                    self.measnode.setCurrentIndex(Cir.net.index(Cir.netselect) + 1)
+                self.measnode.setCurrentIndex(Cir.net.index(Cir.netselect))
             except:
                 Logger.exception()
 
@@ -114,7 +107,7 @@ class config(QtWidgets.QDialog):
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[0, :])
-        self.ax.set_title(f"Default AC Analysis of {self.Cir.shortname}")
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
@@ -128,7 +121,7 @@ class config(QtWidgets.QDialog):
         self.ax.clear()
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node, :])
-        self.ax.set_title(f"Default AC Analysis of {self.Cir.shortname}")
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
         self.ax.grid()
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
@@ -157,7 +150,7 @@ class config(QtWidgets.QDialog):
             self.widget_8.setHidden(True)
 
         mode = self.measmode.currentIndex()  # Get Measure mode
-        if mode == 0:   # Measure mode is cutoff frequency
+        if mode < 2:   # Measure mode is cutoff frequency or phase
             self.widget_5.setHidden(False)
         else:
             self.widget_5.setHidden(True)

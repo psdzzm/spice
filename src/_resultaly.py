@@ -263,7 +263,7 @@ def report(self):
 
         t = Template(table.read())
 
-        renddict = {'title': self.shortname, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
+        renddict = {'title': self.basename, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
             renddict['comment'] = f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."

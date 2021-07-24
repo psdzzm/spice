@@ -5,14 +5,14 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 19-07-2021 09:12:11
+ LastEditTime: 24-07-2021 17:59:31
  FilePath: /circuit/src/_write.py
 '''
 import time
 
 
 def create_prerun(self):
-    if self.measmode == 'Cutoff Frequency':     # Max and Min no need to check
+    if 'Cutoff Frequency' in self.measmode:     # Max and Min no need to check
         if self.risefall:
             self.rfmode = 'fall='
         else:
@@ -91,6 +91,9 @@ def create_sp(self, add=False):
 
     if self.measmode == 'Cutoff Frequency':
         self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {self.rfmode}\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
+
+    elif self.measmode == 'Cutoff Frequency Phase':
+        self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX v({self.netselect})\n\t\tlet v3db = ymax/sqrt(2)\n\t\tmeas ac cut when v({self.netselect})=v3db {self.rfmode}\n\t\tlet ph=cph({self.netselect})\n\t\tmeas ac cut FIND ph when frequency=cut\n\t\tlet {{$scratch}}.cutoff[run] = cut\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')
 
     elif self.measmode == 'Gain Ripple':
         self.control.append(f'ac dec 40 {self.startac} {self.stopac}\n\n\t\tmeas ac ymax MAX vdb({self.netselect})\n\t\tmeas ac ymin MIN vdb({self.netselect})\n\t\tlet {{$scratch}}.cutoff[run] = ymax - ymin\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\t')

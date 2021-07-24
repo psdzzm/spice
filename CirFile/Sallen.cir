@@ -36,7 +36,7 @@ ROUT    out       6       10
 .ENDS
 *
 * ANALYSIS
-.AC 	DEC 	10 100 1MEG
+.AC 	DEC 	10 1 1k
 * VIEW RESULTS
 .PLOT	AC 	V(5)
 .PROBE
