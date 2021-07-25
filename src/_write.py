@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 24-07-2021 17:59:31
+ LastEditTime: 25-07-2021 10:53:05
  FilePath: /circuit/src/_write.py
 '''
 import time
@@ -13,11 +13,11 @@ import time
 
 def create_prerun(self):
     if 'Cutoff Frequency' in self.measmode:     # Max and Min no need to check
-        if self.risefall:
+        if self.risefall:       # Measure on rising or falling slope
             self.rfmode = 'fall='
         else:
             self.rfmode = 'rise='
-        if self.rfnum == 0:
+        if self.rfnum == 0:     # Measure the last slope
             self.rfmode = self.rfmode + 'last'
         else:
             self.rfmode = self.rfmode + str(self.rfnum)
@@ -68,6 +68,8 @@ def create_sp2(self, add=False):
         file_object.write(self.control[2])
 
 
+# Create main simulation control file run_control.sp
+# 'add': represent whether to add more simulation times
 def create_sp(self, add=False):
     self.seed = int(time.time())
 
@@ -77,11 +79,13 @@ def create_sp(self, add=False):
         self.control = [f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n"]
     loop = '\tdowhile run < mc_runs\n\t\t'
 
+    # Alter component value
     for i in range(self.lengthc):
         loop = loop + 'alter ' + self.alter_c[i].name + '=unif(' + self.alter_c[i].c + f',{self.alter_c[i].tol})\n\t\t'
     for i in range(self.lengthr):
         loop = loop + 'alter ' + self.alter_r[i].name + '=unif(' + self.alter_r[i].r + f',{self.alter_r[i].tol})\n\t\t'
 
+    # Print altered value to file paramlist (Append mode)
     loop = loop + 'print '
     for i in range(self.lengthc):
         loop = loop + f'@{self.alter_c[i].name}[capacitance] '
@@ -110,6 +114,7 @@ def create_sp(self, add=False):
         file_object.write(self.control[2])
 
 
+# Create worst case simulation control file run_control_wst.sp
 def create_wst(self):
     self.wst_run = 2**(self.lengthc + self.lengthr)
 
@@ -135,6 +140,7 @@ def create_wst(self):
         file_object.write('wrdata fc_wst cutoff\n.endc\n\n.end')
 
 
+# Create control file 'run_control.sp' for step mode
 def create_step(self):
     control = [f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tcompose comp {self.stepValue}\n\tlet cutoff = unitvec(length(comp))\n\n\tdowhile run < length(comp)\n\t\talter {self.compselect}=comp[run]\n\t\t"]
 

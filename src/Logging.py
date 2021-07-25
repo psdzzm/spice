@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 03-07-2021 18:53:46
  LastEditors: Yichen Zhang
- LastEditTime: 24-07-2021 19:27:11
+ LastEditTime: 25-07-2021 22:49:51
  FilePath: /circuit/src/Logging.py
 '''
 
@@ -129,7 +129,7 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
 def init():
     # Check md5sum of ngspice folders
     if GetHashofDirs(['Workspace/bin', 'Workspace/share', 'Workspace/include', 'Workspace/lib/ngspice']) == '5691f9bebed5eee48e85997573b89f83':
-        os.makedirs('lib/user', exist_ok=True)  # Make directory that contains include files uploaded by users
+        os.makedirs('Workspace/lib/user', exist_ok=True)  # Make directory that contains include files uploaded by users
         home = os.path.expanduser('~') + '/.spiceinit'
         if (not os.path.isfile(home)) or (hashlib.md5(open(home, 'rb').read()).hexdigest() != '2dff7b8b4b76866c7114bb9a866ab600'):  # Check if file .spiceinit exists
             logger.info("Create '.spiceinit' file")

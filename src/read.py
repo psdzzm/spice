@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 24-07-2021 19:20:34
+ LastEditTime: 26-07-2021 00:20:19
  FilePath: /circuit/src/read.py
 '''
 
@@ -297,16 +297,16 @@ class circuit:
             self.net = []
             self.netc = []
             for item in nets:
-                if '#branch' in item:
+                if '#branch' in item:   # Current branch, pass
                     continue
                 else:
-                    temp = re.match(r'x[\d\w]+\.', item)
+                    temp = re.match(r'x[\d\w]+\.', item)    # Net in the subcircuit, ignored
                     if not temp:
-                        m = re.match(r'V\((\d+)\)', item)
+                        m = re.match(r'V\((\d+)\)', item)   # Net name is only a digit number
                         if m:
-                            self.netc.append(m.group())
-                            self.net.append(m.group(1))
-                        else:
+                            self.netc.append(m.group())  # Full name
+                            self.net.append(m.group(1))  # Number name
+                        else:   # Net name is not a digit number
                             self.netc.append(item)
                             self.net.append(item)
 

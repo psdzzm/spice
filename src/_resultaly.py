@@ -5,36 +5,42 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 23-07-2021 17:14:06
+ LastEditTime: 26-07-2021 00:22:13
  FilePath: /circuit/src/_resultaly.py
 '''
-import threading
+from threading import Thread
 from timeit import default_timer as timer
 import numpy as np
-from scipy import stats
-from scipy.special import erf
 from scipy import interpolate
+from scipy.special import erf
 import pandas as pd
 import os
 import sys
 from .Logging import check_module, import_module, logger
-import threading
 from datetime import datetime
-import psutil
 
+# Import weasyprint.HTML and bs4.BeautifulSoup if exist
 wypt = import_module(check_module('weasyprint'), 'HTML')
 btf = import_module(check_module('bs4'), 'BeautifulSoup')
+
+
+'''
+Analyse simulation data
+'worst': If analysis worst case data
+'add': If analysis only added result data
+'mode': Analysis mode
+'''
 
 
 def resultdata(self, worst=False, add=False, mode=None):
     start = timer()
 
-    if worst:
+    if worst:   # Analyse worst case data
         with open('fc_wst', 'r') as wst, open('paramwstlist', 'r') as paramwstlist:
-            wst.readline()
-            lines_wst = wst.readlines()
+            wst.readline()  # Read variable name line
+            lines_wst = wst.readlines()     # Read data
             paramwst = paramwstlist.readlines()
-            wstframe = pd.DataFrame(columns=('', 'Left', 'Right'))
+            wstframe = pd.DataFrame(columns=('', 'Left', 'Right'))  # Create dataframe to record the component value under worst case
 
             self.wst_cutoff = np.zeros(len(lines_wst))
             i = 0
@@ -43,45 +49,48 @@ def resultdata(self, worst=False, add=False, mode=None):
                 self.wst_cutoff[i] = line.split()[1]
                 i += 1
 
-            self.stdcutoff = self.wst_cutoff[-1]
-            self.wstindex = self.wst_cutoff.argsort()
-            self.wst_cutoff = self.wst_cutoff[self.wstindex]
-            wstframe.loc[0] = ['Frequency', self.wst_cutoff[0], self.wst_cutoff[-1]]
+            self.stdcutoff = self.wst_cutoff[-1]        # Cutoff frequency of standard component value
+            self.wstindex = self.wst_cutoff.argsort()   # Sort cutoff frequency using index sorting
+            self.wst_cutoff = self.wst_cutoff[self.wstindex]    # Sort cutoff frequency
+            wstframe.loc[0] = ['Frequency', self.wst_cutoff[0], self.wst_cutoff[-1]]    # Worst cutoff frequency
 
+            # Find the component value of the worst case
             for i in range(self.lengthc):
                 wstframe.loc[i + 1] = [self.alter_c[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i].split()[-1])]
             for i in range(self.lengthr):
                 wstframe.loc[i + 1 + self.lengthc] = [self.alter_r[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i + self.lengthc].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i + self.lengthc].split()[-1])]
 
+            # Convert dataframe to html string
             self.wstframehtml = '\n{% block wsttable %}\n' + wstframe.to_html(index=False, justify='center') + '\n{% endblock %}\n'
 
+    # Read results
     with open('fc', 'r') as fileobject:
         fileobject.readline()
-        if add:
+        if add:     # If add mode, move the pointer to the last read time
             fileobject.seek(self._fctell)
 
         lines = fileobject.readlines()
-        self._fctell = fileobject.tell()
+        self._fctell = fileobject.tell()    # Record position of pointer
 
     cutoff = np.zeros(len(lines))
     i = 0
-    if mode == 'Step':
+    if mode == 'Step':      # Step mode
         comp = np.zeros(len(lines))
         for line in lines:
-            comp[i] = line.split()[0]
-            cutoff[i] = line.split()[1]
+            comp[i] = line.split()[0]   # Component value
+            cutoff[i] = line.split()[1]  # Cutoff Frequency
             i += 1
 
-        comp, index = np.unique(comp, return_index=True)
+        comp, index = np.unique(comp, return_index=True)    # Remove duplicate value and sort
         cutoff = cutoff[index]
 
-        self.p = cutoff
-        self.cutoff = comp
-        self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)
+        self.p = cutoff     # y axis
+        self.cutoff = comp  # x axis
+        self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)   # Interpolate
         return
 
     else:
-        with open('paramlist', 'r') as paramlist:
+        with open('paramlist') as paramlist:   # Read raw altered component values
             if add:
                 paramlist.seek(self._paramtell)
 
@@ -93,22 +102,25 @@ def resultdata(self, worst=False, add=False, mode=None):
             cutoff[i] = line.split()[1]
             i += 1
 
-    if add:
+    if add:     # Add mode, append results to the data befpre
         self.cutoff = np.concatenate([self.cutoff, cutoff])
     else:
         self.cutoff = cutoff
     del cutoff
 
-    index = self.cutoff.argsort()
+    index = self.cutoff.argsort()   # Use index sort method
     self.cutoff = self.cutoff[index]
-    self.cutoff0, index0 = np.unique(self.cutoff, return_index=True)
+    self.cutoff0, index0 = np.unique(self.cutoff, return_index=True)    # Remove duplicate value and sort
     length = len(self.cutoff)
     logger.info(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
 
+    # Analyse altered component value
     i, j = 0, 0
-    alterc = np.zeros([self.lengthc, self.mc_runs])
-    alterr = np.zeros([self.lengthr, self.mc_runs])
+    alterc = np.zeros([self.lengthc, self.mc_runs])  # Capacitor, 2-D array
+    alterr = np.zeros([self.lengthr, self.mc_runs])  # Resistor
     while i < len(param):
+        # k: number of components
+        # j: alter time
         for k in range(self.lengthc):
             alterc[k, j] = param[i].split()[-1]
             i += 1
@@ -117,6 +129,7 @@ def resultdata(self, worst=False, add=False, mode=None):
             i += 1
         j += 1
 
+    # Concatenate results with original data
     if add:
         for i in range(self.lengthc):
             self.alter_c[i].capacitance = np.concatenate([self.alter_c[i].capacitance, alterc[i]])
@@ -131,41 +144,44 @@ def resultdata(self, worst=False, add=False, mode=None):
     del alterc, alterr
     logger.debug(f'Length:{len(self.alter_c[0].capacitance)}')
 
+    # Apply importance sampling
+    # Function 'f' refers to p(x)/q(x)
     product = 1
     for i in range(self.lengthc):
-        self.alter_c[i].fx = f(self.alter_c[i].capacitance, float(self.alter_c[i].c), float(self.alter_c[i].c) * self.alter_c[i].tol / 3, self.alter_c[i].tol) * (float(self.alter_c[i].c) * self.alter_c[i].tol * 2)
-        product *= self.alter_c[i].fx
+        # self.alter_c[i].fx
+        product *= f(self.alter_c[i].capacitance, float(self.alter_c[i].c), float(self.alter_c[i].c) * self.alter_c[i].tol / 3, self.alter_c[i].tol) * (float(self.alter_c[i].c) * self.alter_c[i].tol * 2)
     for i in range(self.lengthr):
-        self.alter_r[i].fx = f(self.alter_r[i].resistance, float(self.alter_r[i].r), float(self.alter_r[i].r) * self.alter_r[i].tol / 3, self.alter_r[i].tol) * (float(self.alter_r[i].r) * self.alter_r[i].tol * 2)
-        product *= self.alter_r[i].fx
+        # self.alter_r[i].fx
+        product *= f(self.alter_r[i].resistance, float(self.alter_r[i].r), float(self.alter_r[i].r) * self.alter_r[i].tol / 3, self.alter_r[i].tol) * (float(self.alter_r[i].r) * self.alter_r[i].tol * 2)
 
+    # Calculate probability in ascending order
     seq = 0
     self.p = np.zeros(length)
     for i in range(length):
-        seq += product[index[i]]
-        self.p[i] = 1 / length * seq
+        seq += product[index[i]]    # As result of altered component value is not in ascending order, call the result of index sorting to get the ascending order result
+        self.p[i] = 1 / length * seq    # Get original probability
 
     # self.p = (self.p-self.p[0])/(self.p[-1]-self.p[0])  # Normalization
+
+    # Below code is used to correct the probability of duplicate value
     for i in range(len(index0) - 1):
-        if index0[i + 1] - index0[i] != 1:
-            index0[i] = index0[i + 1] - 1
-    if length - 1 - i != 1:
+        if index0[i + 1] - index0[i] != 1:  # index0 is created from np.unique(), if the difference of adjcant value is not 1, this means duplicate occur
+            index0[i] = index0[i + 1] - 1   # Get index of the occurance of last duplicate occur
+    if length - 1 - i != 1:     # Duplicate of the last number
         index0[i + 1] = length - 1
-    self.p0 = self.p[index0]
+    self.p0 = self.p[index0]    # Generate fixed probablity
     self._fit = interpolate.PchipInterpolator(self.p0, self.cutoff0)
     self.fit = interpolate.PchipInterpolator(self.cutoff0, self.p0)
     logger.info(f'Analyse Data Time: {timer()-start}s')
 
-    thread = threading.Thread(target=self.report, args=())
+    # Create a new thread to generate report
+    thread = Thread(target=self.report, args=())
     thread.start()
 
 
+# Importance sampling, calculate p(x)/q(x)
 def f(x, miu=2000, sigma=1, tol=0.01):
     return np.exp(-1 / 2 * ((x - miu) / sigma)**2) / (sigma * np.sqrt(2 * np.pi) * (erf(tol * miu / sigma / np.sqrt(2)) - erf(-tol * miu / sigma / np.sqrt(2))) / 2)
-
-
-def unif(miu=2000, tol=0.01):
-    return stats.uniform(miu * (1 - tol), 2 * miu * tol)
 
 
 def resultdata2(self, worst=False):
@@ -250,18 +266,18 @@ def report(self):
     rtailhtml = '\n{% block righttail %}\n' + rtail.to_html(index=False) + '\n{% endblock %}\n'
 
     from django.template import Context, Template
-    import django
+    from django import setup
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'report.settings')
     sys.path.append(os.path.dirname(__file__) + '/report')
-    django.setup()
+    setup()
 
     with open(os.path.dirname(__file__) + '/report/htmlreport/templates/inherit.html', 'w+') as table, open(os.path.dirname(__file__) + '/report/htmlreport/templates/report.html', 'w') as rendered:
         table.write("{% extends 'base.html' %}\n" + cframehtml + rframehtml + ltailhtml + rtailhtml + self.wstframehtml)
 
         table.seek(0)
 
-        t = Template(table.read())
+        t = Template(table.read())  # Html5 file to render
 
         renddict = {'title': self.basename, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
@@ -280,15 +296,15 @@ def report(self):
         else:
             renddict['rnumber'] = f'{self.lengthr} Resistor'
 
-        context = Context(renddict)
+        context = Context(renddict)  # Context to render
 
-        renderhtml = t.render(context)
-        if btf:
+        renderhtml = t.render(context)  # Render html
+        if btf:  # If could, prettify the html string
             renderhtml = btf(renderhtml, 'html5lib').prettify()
 
         rendered.write(renderhtml)
 
-        if wypt:
+        if wypt:    # If could ,convert to pdf
             html = wypt(string=renderhtml)
             html.write_pdf('report.pdf')
             logger.info('Exporting report to ' + self.dir)

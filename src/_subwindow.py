@@ -1,4 +1,4 @@
-from logging import Logger, exception
+from logging import Logger
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtWidgets, uic, QtCore
 from quantiphy import Quantity

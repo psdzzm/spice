@@ -83,4 +83,4 @@ pip install numpy scipy pandas matplotlib pyyaml django quantiphy PyQt5
 ```
 
 ## Flowchart
-![flowchart](spice.svg)
+![flowchart](src/spice.svg)

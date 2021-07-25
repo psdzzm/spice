@@ -12,7 +12,6 @@ from datetime import datetime
 from timeit import default_timer as timer
 from ._subwindow import processing, config, reconnect
 from quantiphy import Quantity
-import psutil
 
 
 # The top GUI calss
