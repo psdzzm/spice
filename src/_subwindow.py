@@ -40,6 +40,7 @@ class config(QtWidgets.QDialog):
         self.widget_8.setHidden(True)
 
         self.measnode.currentTextChanged.connect(self.netchange)
+        self.measnode_2.currentTextChanged.connect(self.netchange)
         self.inputnode1.currentTextChanged.connect(self.netchange)
         self.inputnode2.currentTextChanged.connect(self.netchange)
         self.outputnode.currentTextChanged.connect(self.netchange)
@@ -47,11 +48,13 @@ class config(QtWidgets.QDialog):
         self.analmode.currentTextChanged.connect(self.analchange)
         self.analmode_2.currentTextChanged.connect(self.analchange)
         self.measmode.currentTextChanged.connect(self.analchange)
-
+        self.simmode.currentTextChanged.connect(self.opampmode)
         self.stepcomp.currentTextChanged.connect(self.compchange)
+        self.replace.currentTextChanged.connect(self.replacenum)
 
         self.scroll = QtWidgets.QVBoxLayout(self.tab2)
 
+    # Initialize the configuration window, require initialized circuit class instance parameter
     def init(self, Cir):
         self.Cir = Cir
         self.tab2UI()
@@ -61,6 +64,10 @@ class config(QtWidgets.QDialog):
         self.measnode.clear()
         self.measnode.addItems(self.Cir.net)
         self.measnode.currentTextChanged.connect(self.netchange)
+        self.measnode_2.currentTextChanged.disconnect()
+        self.measnode_2.clear()
+        self.measnode_2.addItems(self.Cir.net)
+        self.measnode_2.currentTextChanged.connect(self.netchange)
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
 
@@ -192,6 +199,26 @@ class config(QtWidgets.QDialog):
         self.startunit_2.setCurrentIndex(temp[1])
         self.stopunit_2.setCurrentIndex(temp[1])
         self.increunit_2.setCurrentIndex(temp[1])
+
+    def opampmode(self):
+        if self.opamp.currentIndex():
+            self.startunit_4.clear()
+            self.stopunit_4.clear()
+            self.startunit_4.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+            self.stopunit_4.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+        else:
+            self.startunit_4.clear()
+            self.stopunit_4.clear()
+            self.startunit_4.addItems(['ns', 'μs', 'ms', 's'])
+            self.stopunit_4.addItems(['ns', 'μs', 'ms', 's'])
+
+    def replacenum(self):
+        num = int(self.replace.currentText())
+        widget = [self.first, self.second, self.third, self.fourth, self.fifth]
+        for i in range(num):
+            widget[i].setHidden(False)
+        for i in range(num, 6):
+            widget[i].setHidden(True)
 
     # Initialize tab2: tolerance
 
