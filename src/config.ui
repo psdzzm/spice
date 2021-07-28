@@ -71,7 +71,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab1">
       <attribute name="title">
@@ -1067,7 +1067,7 @@
          <height>25</height>
         </rect>
        </property>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>0</x>
@@ -1273,13 +1273,13 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
          <width>281</width>
-         <height>171</height>
+         <height>181</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
@@ -1314,6 +1314,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QComboBox" name="simmode">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
           <item>
            <property name="text">
             <string>transiant</string>
@@ -1334,12 +1337,12 @@
              <x>0</x>
              <y>0</y>
              <width>281</width>
-             <height>51</height>
+             <height>56</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_4">
             <item row="1" column="2">
-             <widget class="QComboBox" name="stopunit_4">
+             <widget class="QComboBox" name="stopunit_5">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>1</horstretch>
@@ -1410,7 +1413,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="stopac_4">
+             <widget class="QDoubleSpinBox" name="stopac_5">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>3</horstretch>
@@ -1451,7 +1454,7 @@
              </widget>
             </item>
             <item row="0" column="2">
-             <widget class="QComboBox" name="startunit_4">
+             <widget class="QComboBox" name="startunit_5">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>1</horstretch>
@@ -1570,8 +1573,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>1027</x>
+     <y>37</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -1586,8 +1589,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>1069</x>
+     <y>37</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

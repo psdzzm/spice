@@ -202,13 +202,30 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.Cir.startac = self.configGUI.startac.value() * 10**(self.configGUI.startunit.currentIndex() * 3)
         self.Cir.stopac = self.configGUI.stopac.value() * 10**(self.configGUI.stopunit.currentIndex() * 3)
-        if self.Cir.startac >= self.Cir.stopac:
+
+        if self.configGUI.tabWidget.currentIndex() == 3:
+            self.Cir.netselect = self.configGUI.measnode_2.currentText()
+            self.Cir.simmode = self.configGUI.simmode.currentIndex()
+            if self.Cir.simmode:
+                self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3)
+                self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3)
+            else:
+                self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3 - 9)
+                self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3 - 9)
+
+            if self.Cir.startac >= self.Cir.stopac:
+                QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
+                reconnect(self.analButton.clicked, self.analy)
+                self.Cir.total = 0
+                return
+
+        elif self.Cir.startac >= self.Cir.stopac:
             QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
             reconnect(self.analButton.clicked, self.analy)
             self.Cir.total = 0
             return
 
-        if self.Cir.analmode == 1:  # Step mode
+        elif self.Cir.analmode == 1:  # Step mode
             # Step component is capacitor
             if self.configGUI.stepcomp.currentIndex() < self.Cir.lengthc:
                 self.__unit = 'F'

@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 25-07-2021 10:53:05
- FilePath: /circuit/src/_write.py
+ LastEditTime: 28-07-2021 17:49:49
+ FilePath: /spice/src/_write.py
 '''
 import time
 
@@ -167,3 +167,7 @@ def create_step(self):
         file_object.write(control[0])
         file_object.write(control[1])
         file_object.write(control[2])
+
+
+def create_opamp(self):
+    control = []

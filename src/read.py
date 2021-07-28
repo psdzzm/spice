@@ -5,8 +5,8 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 26-07-2021 00:20:19
- FilePath: /circuit/src/read.py
+ LastEditTime: 28-07-2021 17:49:39
+ FilePath: /spice/src/read.py
 '''
 
 
@@ -67,6 +67,7 @@ class circuit:
     def read(self):
         fileo, files = [], []   # fileo : original file content; files: spilted file content
         start, stop1, stop2, self.includetime = 0, 0, 0, 0
+        self.op = []
         '''
         start: line number where '.control' is
         stop1: line number where '.endc' is
@@ -108,6 +109,8 @@ class circuit:
                         self.netselect = row[1]
                     except IndexError:
                         pass
+                elif lines[0].lower() == 'x':
+                    self.op.append(lines.split('*', 1)[0].split()[-1])
                 elif row[0].lower() == '.include' or row[0].lower() == '.lib':  # Read in include file
                     self.includetime += 1
                     inclname = os.path.basename(row[1]).split('.')[0].upper()   # Include file name without extension
@@ -310,7 +313,7 @@ class circuit:
                             self.netc.append(item)
                             self.net.append(item)
 
-    from ._write import create_prerun, create_sp, create_wst, create_sp2, create_step
+    from ._write import create_prerun, create_sp, create_wst, create_sp2, create_step, create_opamp
 
     from ._resultaly import resultdata, resultdata2, report
 

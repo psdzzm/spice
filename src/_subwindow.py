@@ -1,10 +1,13 @@
-from logging import Logger
+from .Logging import logger
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtWidgets, uic, QtCore
 from quantiphy import Quantity
-
+import os
+import shutil
 
 # Processing... window
+
+
 class processing(QtWidgets.QDialog):
     """
     This "window" is a QWidget. If it has no parent, it
@@ -27,6 +30,7 @@ class config(QtWidgets.QDialog):
         super().__init__()
 
         uic.loadUi(root + '/src/config.ui', self)
+        self.root = root
 
         self.barlayout = QtWidgets.QHBoxLayout(self.widget)
         self.bar = NavigationToolbar(self.MplWidget.canvas, self)
@@ -51,6 +55,12 @@ class config(QtWidgets.QDialog):
         self.simmode.currentTextChanged.connect(self.opampmode)
         self.stepcomp.currentTextChanged.connect(self.compchange)
         self.replace.currentTextChanged.connect(self.replacenum)
+
+        self.open1.clicked.connect(self.opampopen)
+        self.open2.clicked.connect(self.opampopen)
+        self.open3.clicked.connect(self.opampopen)
+        self.open4.clicked.connect(self.opampopen)
+        self.open5.clicked.connect(self.opampopen)
 
         self.scroll = QtWidgets.QVBoxLayout(self.tab2)
 
@@ -84,6 +94,9 @@ class config(QtWidgets.QDialog):
         self.outputnode.addItems(self.Cir.net)
         self.outputnode.currentTextChanged.connect(self.netchange)
 
+        self.opamp.clear()
+        self.opamp.addItems(self.Cir.op)
+
         self.stepcomp.currentTextChanged.disconnect()
         self.stepcomp.clear()
         for i in range(Cir.lengthc):
@@ -106,9 +119,11 @@ class config(QtWidgets.QDialog):
             try:
                 self.measnode.setCurrentIndex(Cir.net.index(Cir.netselect))
             except:
-                Logger.exception()
+                logger.exception()
 
         self.compchange()
+        self.replacenum()
+        self.opampmode()
 
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
@@ -202,23 +217,48 @@ class config(QtWidgets.QDialog):
 
     def opampmode(self):
         if self.opamp.currentIndex():
-            self.startunit_4.clear()
-            self.stopunit_4.clear()
-            self.startunit_4.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
-            self.stopunit_4.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+            self.startunit_5.clear()
+            self.stopunit_5.clear()
+            self.startunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
+            self.stopunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
         else:
-            self.startunit_4.clear()
-            self.stopunit_4.clear()
-            self.startunit_4.addItems(['ns', 'μs', 'ms', 's'])
-            self.stopunit_4.addItems(['ns', 'μs', 'ms', 's'])
+            self.startunit_5.clear()
+            self.stopunit_5.clear()
+            self.startunit_5.addItems(['ns', 'μs', 'ms', 's'])
+            self.stopunit_5.addItems(['ns', 'μs', 'ms', 's'])
 
     def replacenum(self):
         num = int(self.replace.currentText())
         widget = [self.first, self.second, self.third, self.fourth, self.fifth]
         for i in range(num):
             widget[i].setHidden(False)
-        for i in range(num, 6):
+        for i in range(num, 5):
             widget[i].setHidden(True)
+
+    def opampopen(self):
+        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]
+        i = int(self.sender().objectName()[-1]) - 1
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Subcircuit File (*)")
+        if fname:
+            base = os.path.basename(fname)
+            if os.path.isfile(base):
+                QtWidgets.QMessageBox.critical(self, 'Error', f'File {base} already exists')
+                return
+
+            with open(fname) as f:
+                subckt = None
+                for line in f:
+                    if line.upper().startswith('.SUBCKT '):
+                        subckt = line.split()[1]
+                        logger.debug(subckt)
+                        break
+
+            if subckt == None:
+                QtWidgets.QMessageBox.critical(self, 'Error', f'File {base} is invalid')
+                return
+
+            widget[i].setText(base + ' - ' + subckt)
+            shutil.copyfile(fname, os.path.join(os.getcwd(), base))
 
     # Initialize tab2: tolerance
 

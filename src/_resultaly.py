@@ -1,12 +1,12 @@
 # !usr/bin/env python
 # -*- coding:utf-8 -*-
 '''
- Description:
+ Description: Analyse results and create report
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 26-07-2021 00:22:13
- FilePath: /circuit/src/_resultaly.py
+ LastEditTime: 27-07-2021 12:37:22
+ FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
 from timeit import default_timer as timer
