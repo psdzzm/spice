@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 27-07-2021 12:37:22
+ LastEditTime: 29-07-2021 18:47:42
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -62,6 +62,47 @@ def resultdata(self, worst=False, add=False, mode=None):
 
             # Convert dataframe to html string
             self.wstframehtml = '\n{% block wsttable %}\n' + wstframe.to_html(index=False, justify='center') + '\n{% endblock %}\n'
+
+    if mode == 'Opamp':
+        with open('fc', 'r') as fileobject:
+            title = fileobject.readline().split()
+            lines = fileobject.readlines()
+
+        if self.netselect.isdigit():
+            index = [i for i, x in enumerate(title) if x == 'V(' + self.netselect + ')']  # Get index of all selected net data
+        else:
+            index = [i for i, x in enumerate(title) if x == self.netselect]
+
+        i = 0
+        freq = np.zeros(len(lines))
+        result = np.zeros(len(lines), dtype=np.complex_)
+        if len(index) == 1:
+            for line in lines:
+                temp = line.split()
+                try:
+                    freq[i] = temp[0]
+                    result[i] = temp[index]
+                except ValueError:
+                    result[i] = np.NaN
+                i += 1
+        else:
+            for line in lines:
+                temp = line.split()
+                try:
+                    freq[i] = temp[0]
+                    result[i] = float(temp[index[0]]) + float(temp[index[1]]) * 1j
+                except ValueError:
+                    result[i] = np.NaN
+                i += 1
+
+        nan = np.isnan(result)
+        sub = np.split(result[np.logical_not(nan)], np.where(nan)[0])
+        self.cutoff = freq[0:len(sub[0])]
+        self.p = np.zeros([len(sub), len(sub[0])])
+        for i in range(len(sub)):
+            self.p[i] = 20 * np.log10(np.abs(sub[i]))
+
+        return
 
     # Read results
     with open('fc', 'r') as fileobject:

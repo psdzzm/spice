@@ -203,13 +203,15 @@ class plotGUI(QtWidgets.QMainWindow):
         self.Cir.startac = self.configGUI.startac.value() * 10**(self.configGUI.startunit.currentIndex() * 3)
         self.Cir.stopac = self.configGUI.stopac.value() * 10**(self.configGUI.stopunit.currentIndex() * 3)
 
-        if self.configGUI.tabWidget.currentIndex() == 3:
+        if self.configGUI.tabWidget.currentIndex() == 3:    # Op amp mode
             self.Cir.netselect = self.configGUI.measnode_2.currentText()
+            self.Cir.opselect = self.configGUI.opamp.currentText()
             self.Cir.simmode = self.configGUI.simmode.currentIndex()
-            if self.Cir.simmode:
+            self.Cir.opnum = self.configGUI.replace.currentIndex() + 1
+            if self.Cir.simmode:    # Ac analysis
                 self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3)
                 self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3)
-            else:
+            else:   # transient analysis
                 self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3 - 9)
                 self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3 - 9)
 
@@ -218,6 +220,9 @@ class plotGUI(QtWidgets.QMainWindow):
                 reconnect(self.analButton.clicked, self.analy)
                 self.Cir.total = 0
                 return
+
+            self.Cir.create_opamp()
+            self.start_process('Opamp')  # Runmode 0, only run control.sp
 
         elif self.Cir.startac >= self.Cir.stopac:
             QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
@@ -388,6 +393,10 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.total = 0
             self.Cir.resultdata(mode='Step')
             self.postinit('Step')
+        elif mode == 'Opamp':
+            self.Cir.total = 0
+            self.Cir.resultdata(mode='Opamp')
+            self.postinit('Opamp')
 
         self.dialog.close()  # Close processing window
 
@@ -411,6 +420,9 @@ class plotGUI(QtWidgets.QMainWindow):
             self.stepinfo.setReadOnly(True)
             self.stepinfo.setMaximumSize(QtCore.QSize(180, 150))
             self.scroll.addWidget(self.stepinfo)
+            return
+        elif mode == 'Opamp':
+            self.plot('Opamp')
             return
 
         # Below code is excuted if not step mode
@@ -476,10 +488,26 @@ class plotGUI(QtWidgets.QMainWindow):
 
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
-        # self.ax.set_ylim(-0.05, 1.05)
-        self.line1 = self.ax.plot(self.x, self.y)
         self.ax.set_title(f"Tolerance Analysis of {self.Cir.basename}")
         self.ax.grid()
+
+        if mode == 'Opamp':
+            self.line1 = []
+            self.line1.append(self.ax.plot(self.x, self.y[0], label=self.Cir.opselect))
+            for i in range(1, np.shape(self.y)[0]):
+                self.line1.append(self.ax.plot(self.x, self.y[i], label=self.Cir.opamp[i - 1]))
+            if self.Cir.simmode:
+                self.ax.set_xlabel('Frequency/Hz')
+                self.ax.set_ylabel('Gain/dB')
+            else:
+                self.ax.set_xlabel('Time/s')
+                # self.ax.set_ylabel('')
+            self.ax.legend()
+            self.ax.set_xscale('log')
+            self.MplWidget.canvas.draw()
+            return
+
+        self.line1 = self.ax.plot(self.x, self.y)
 
         if mode == 'Step':  # Step mode is selected
             if len(self.x) < 25:
@@ -514,8 +542,8 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.x == []:
             return
 
-        self.ax.legend()    # Delete legend
         try:
+            self.ax.get_legend().remove()    # Delete legend
             line = self.line2.pop(0)    # Delete line
             line.remove()
         except:
@@ -591,15 +619,17 @@ class plotGUI(QtWidgets.QMainWindow):
 
     def reset(self):
         logger.info('Reset')
-        self.ax.legend()
+        self.ax.get_legend().remove()
         try:
-            line = self.line1.pop(0)
-            line.remove()
+            for i in range(len(self.line1)):
+                line = self.line1[i].pop(0)
+                line.remove()
         except IndexError:
             pass
         try:
-            line = self.line2.pop(0)
-            line.remove()
+            for i in range(len(self.line2)):
+                line = self.line2[i].pop(0)
+                line.remove()
         except (IndexError, AttributeError):
             pass
 

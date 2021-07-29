@@ -5,10 +5,11 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-07-2021 17:49:49
+ LastEditTime: 29-07-2021 16:38:23
  FilePath: /spice/src/_write.py
 '''
 import time
+from .Logging import logger
 
 
 def create_prerun(self):
@@ -170,4 +171,26 @@ def create_step(self):
 
 
 def create_opamp(self):
-    control = []
+    ctrl = open('run_control.sp', 'w')
+    if self.simmode:
+        run = f'ac dec 40 {self.startac} {self.stopac}\n\twrdata fc all\n\n'
+    else:
+        run = f'tran {(self.stopac-self.startac)/1000} {self.stopac} {self.startac}\n\twrdata fc all\n\n'
+
+    ctrl.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\t{run}")
+
+    for i in range(self.opnum):
+        ctrl.write(f"\tsource run{i+1}.cir\n\tsave {self.netselect}\n\tset appendwrite\n\t{run}")
+        with open(f'run{i+1}.cir', 'w') as f:
+            for line in self.runtext.splitlines(keepends=True):
+                if line == '':
+                    continue
+                elif line[0].lower() == 'x' and self.opselect == line.split('*', 1)[0].split()[-1]:
+                    f.write(line.replace(self.opselect, self.opamp[i]))
+                else:
+                    f.write(line)
+            f.seek(f.tell() - 4)
+            f.write(f'.include {self.opampfilename[i]}\n.end')
+
+    ctrl.write('.endc\n.end')
+    ctrl.close()

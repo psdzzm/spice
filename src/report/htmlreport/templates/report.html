@@ -33,21 +33,21 @@
         }
   </style>
   <title>
-   Sallen.cir report
+   Audio_AmpV3.net report
   </title>
  </head>
  <body>
   <h1>
-   Sallen.cir Tolerance Analysis Report
+   Audio_AmpV3.net Tolerance Analysis Report
   </h1>
   <p style="text-align:center;margin-top:-15px;">
-   Creation date: 25/07/2021 23:13:50 UTC
+   Creation date: 29/07/2021 18:22:33 UTC
   </p>
   <h2>
    Component
   </h2>
   <p style="text-align:center;margin-bottom:1px;">
-   3 Capacitors
+   4 Capacitors
   </p>
   <table border="1" class="dataframe">
    <thead>
@@ -69,18 +69,7 @@
       c1
      </td>
      <td>
-      2e-09
-     </td>
-     <td>
-      0.05
-     </td>
-    </tr>
-    <tr>
-     <td>
-      c10
-     </td>
-     <td>
-      1e-09
+      4.4e-10
      </td>
      <td>
       0.05
@@ -91,7 +80,29 @@
       c2
      </td>
      <td>
-      1e-09
+      1e-06
+     </td>
+     <td>
+      0.05
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c3
+     </td>
+     <td>
+      4.4e-10
+     </td>
+     <td>
+      0.05
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c4
+     </td>
+     <td>
+      1e-06
      </td>
      <td>
       0.05
@@ -122,18 +133,7 @@
       r1
      </td>
      <td>
-      11200
-     </td>
-     <td>
-      0.01
-     </td>
-    </tr>
-    <tr>
-     <td>
-      r10
-     </td>
-     <td>
-      15900
+      100000
      </td>
      <td>
       0.01
@@ -144,7 +144,7 @@
       r2
      </td>
      <td>
-      11200
+      100000
      </td>
      <td>
       0.01
@@ -152,10 +152,10 @@
     </tr>
     <tr>
      <td>
-      ra
+      r3
      </td>
      <td>
-      1e+08
+      100000
      </td>
      <td>
       0.01
@@ -163,10 +163,21 @@
     </tr>
     <tr>
      <td>
-      rb
+      r4
      </td>
      <td>
-      1
+      1000
+     </td>
+     <td>
+      0.01
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r5
+     </td>
+     <td>
+      1000
      </td>
      <td>
       0.01
@@ -179,18 +190,18 @@
   </h2>
   AC analysis command: ac dec 40 10 100
   <br/>
-  Running time: 800
+  Running time: 21
   <br/>
   Measure port: out
   <br/>
-  Standard cutoff frequency: 63.99055 Hz
+  Standard cutoff frequency: 2492.805 Hz
   <br/>
   Acceptable tolerance of cutoff frequency: 0.01
   <br/>
   Acceptable lowest yield: 0.98
   <br/>
   <p>
-   This circuit design is acceptable. The estimated yield from simulation is 1.
+   This circuit design is not acceptable. The estimated yield from simulation is only 0.8156.
   </p>
   <p style="text-align:center;margin-bottom:1px;">
    Left Tail Probability Table
@@ -209,82 +220,82 @@
    <tbody>
     <tr>
      <td>
-      63.96970388705164
+      2008.1185212228554
      </td>
      <td>
-      0.060
-     </td>
-    </tr>
-    <tr>
-     <td>
-      63.96968377766691
-     </td>
-     <td>
-      0.050
+      0.092187
      </td>
     </tr>
     <tr>
      <td>
-      63.9672895087383
+      1749.0786757781386
      </td>
      <td>
-      0.040
-     </td>
-    </tr>
-    <tr>
-     <td>
-      63.96489710928392
-     </td>
-     <td>
-      0.030
+      0.075750
      </td>
     </tr>
     <tr>
      <td>
-      63.96488623824899
+      1697.217480768386
      </td>
      <td>
-      0.020
-     </td>
-    </tr>
-    <tr>
-     <td>
-      63.96465024065891
-     </td>
-     <td>
-      0.010
+      0.059312
      </td>
     </tr>
     <tr>
      <td>
-      63.96377245328544
+      850.6869815425348
      </td>
      <td>
-      0.008
-     </td>
-    </tr>
-    <tr>
-     <td>
-      63.963380480355966
-     </td>
-     <td>
-      0.006
+      0.042875
      </td>
     </tr>
     <tr>
      <td>
-      63.961741211923126
+      531.5388010820427
      </td>
      <td>
-      0.004
+      0.026437
      </td>
     </tr>
     <tr>
      <td>
-      63.95769410967143
+      143.5319423717128
      </td>
      <td>
-      0.002
+      0.010000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      140.58405670206506
+     </td>
+     <td>
+      0.008000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      139.34265162081144
+     </td>
+     <td>
+      0.006000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      138.54878716207915
+     </td>
+     <td>
+      0.004000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      136.81959063419492
+     </td>
+     <td>
+      0.002000
      </td>
     </tr>
    </tbody>
@@ -306,82 +317,82 @@
    <tbody>
     <tr>
      <td>
-      64.00849691907896
+      820.1174934338261
      </td>
      <td>
-      0.060
-     </td>
-    </tr>
-    <tr>
-     <td>
-      64.01214360455793
-     </td>
-     <td>
-      0.050
+      0.092187
      </td>
     </tr>
     <tr>
      <td>
-      64.01535578876513
+      1740.7514789328613
      </td>
      <td>
-      0.040
-     </td>
-    </tr>
-    <tr>
-     <td>
-      64.01560738945157
-     </td>
-     <td>
-      0.030
+      0.075750
      </td>
     </tr>
     <tr>
      <td>
-      64.018327655564
+      2017.635034231419
      </td>
      <td>
-      0.020
-     </td>
-    </tr>
-    <tr>
-     <td>
-      64.01884150167241
-     </td>
-     <td>
-      0.010
+      0.059312
      </td>
     </tr>
     <tr>
      <td>
-      64.01887118483397
+      2053.898562943166
      </td>
      <td>
-      0.008
-     </td>
-    </tr>
-    <tr>
-     <td>
-      64.01887759198753
-     </td>
-     <td>
-      0.006
+      0.042875
      </td>
     </tr>
     <tr>
      <td>
-      64.01893959407685
+      2057.451990360352
      </td>
      <td>
-      0.004
+      0.026437
      </td>
     </tr>
     <tr>
      <td>
-      64.02025619016439
+      2098.8589812584355
      </td>
      <td>
-      0.002
+      0.010000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      2105.517947779742
+     </td>
+     <td>
+      0.008000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      2112.8279299242445
+     </td>
+     <td>
+      0.006000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      2674.8503277412838
+     </td>
+     <td>
+      0.004000
+     </td>
+    </tr>
+    <tr>
+     <td>
+      2740.8481639036354
+     </td>
+     <td>
+      0.002000
      </td>
     </tr>
    </tbody>
@@ -408,10 +419,10 @@
       Frequency
      </td>
      <td>
-      6.394102e+01
+      2.358444e+03
      </td>
      <td>
-      6.403921e+01
+      2.640658e+03
      </td>
     </tr>
     <tr>
@@ -419,21 +430,10 @@
       c1
      </td>
      <td>
-      1.900000e-09
+      4.620000e-10
      </td>
      <td>
-      2.100000e-09
-     </td>
-    </tr>
-    <tr>
-     <td>
-      c10
-     </td>
-     <td>
-      1.050000e-09
-     </td>
-     <td>
-      9.500000e-10
+      4.180000e-10
      </td>
     </tr>
     <tr>
@@ -441,10 +441,32 @@
       c2
      </td>
      <td>
-      1.050000e-09
+      1.050000e-06
      </td>
      <td>
-      9.500000e-10
+      9.500000e-07
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c3
+     </td>
+     <td>
+      4.620000e-10
+     </td>
+     <td>
+      4.180000e-10
+     </td>
+    </tr>
+    <tr>
+     <td>
+      c4
+     </td>
+     <td>
+      1.050000e-06
+     </td>
+     <td>
+      9.500000e-07
      </td>
     </tr>
     <tr>
@@ -452,21 +474,10 @@
       r1
      </td>
      <td>
-      1.131200e+04
+      1.010000e+05
      </td>
      <td>
-      1.108800e+04
-     </td>
-    </tr>
-    <tr>
-     <td>
-      r10
-     </td>
-     <td>
-      1.605900e+04
-     </td>
-     <td>
-      1.574100e+04
+      9.900000e+04
      </td>
     </tr>
     <tr>
@@ -474,32 +485,43 @@
       r2
      </td>
      <td>
-      1.131200e+04
+      1.010000e+05
      </td>
      <td>
-      1.108800e+04
-     </td>
-    </tr>
-    <tr>
-     <td>
-      ra
-     </td>
-     <td>
-      9.900000e+07
-     </td>
-     <td>
-      9.900000e+07
+      9.900000e+04
      </td>
     </tr>
     <tr>
      <td>
-      rb
+      r3
      </td>
      <td>
-      1.010000e+00
+      1.010000e+05
      </td>
      <td>
-      9.900000e-01
+      9.900000e+04
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r4
+     </td>
+     <td>
+      1.010000e+03
+     </td>
+     <td>
+      9.900000e+02
+     </td>
+    </tr>
+    <tr>
+     <td>
+      r5
+     </td>
+     <td>
+      1.010000e+03
+     </td>
+     <td>
+      9.900000e+02
      </td>
     </tr>
    </tbody>

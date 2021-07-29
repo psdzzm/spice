@@ -216,7 +216,7 @@ class config(QtWidgets.QDialog):
         self.increunit_2.setCurrentIndex(temp[1])
 
     def opampmode(self):
-        if self.opamp.currentIndex():
+        if self.simmode.currentIndex():
             self.startunit_5.clear()
             self.stopunit_5.clear()
             self.startunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
@@ -236,29 +236,32 @@ class config(QtWidgets.QDialog):
             widget[i].setHidden(True)
 
     def opampopen(self):
+        if not hasattr(self.Cir, 'opamp'):
+            self.Cir.opamp = [None] * 5
+            self.Cir.opampfilename = [None] * 5
+
         widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]
         i = int(self.sender().objectName()[-1]) - 1
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Subcircuit File (*)")
         if fname:
-            base = os.path.basename(fname)
-            if os.path.isfile(base):
-                QtWidgets.QMessageBox.critical(self, 'Error', f'File {base} already exists')
+            self.Cir.opampfilename[i] = os.path.basename(fname)
+            if os.path.isfile(self.Cir.opampfilename[i]):
+                QtWidgets.QMessageBox.critical(self, 'Error', f'File {self.Cir.opampfilename[i]} already exists')
                 return
 
             with open(fname) as f:
-                subckt = None
                 for line in f:
                     if line.upper().startswith('.SUBCKT '):
-                        subckt = line.split()[1]
-                        logger.debug(subckt)
-                        break
+                        if line.split()[1] in self.Cir.opampfilename:
+                            QtWidgets.QMessageBox.critical(self, 'Error', 'Duplicate subcircuit!')
+                            return
+                        else:
+                            self.Cir.opamp[i] = line.split()[1]
+                            logger.debug(self.Cir.opamp[i])
+                            break
 
-            if subckt == None:
-                QtWidgets.QMessageBox.critical(self, 'Error', f'File {base} is invalid')
-                return
-
-            widget[i].setText(base + ' - ' + subckt)
-            shutil.copyfile(fname, os.path.join(os.getcwd(), base))
+            widget[i].setText(self.Cir.opampfilename[i] + ' - ' + self.Cir.opamp[i])
+            shutil.copyfile(fname, os.path.join(os.getcwd(), self.Cir.opampfilename[i]))
 
     # Initialize tab2: tolerance
 

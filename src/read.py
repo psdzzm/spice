@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 28-07-2021 17:49:39
+ LastEditTime: 29-07-2021 15:02:28
  FilePath: /spice/src/read.py
 '''
 
@@ -109,7 +109,7 @@ class circuit:
                         self.netselect = row[1]
                     except IndexError:
                         pass
-                elif lines[0].lower() == 'x':
+                elif lines[0].lower() == 'x':   # subcircuit
                     self.op.append(lines.split('*', 1)[0].split()[-1])
                 elif row[0].lower() == '.include' or row[0].lower() == '.lib':  # Read in include file
                     self.includetime += 1
