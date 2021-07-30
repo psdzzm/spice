@@ -5,11 +5,10 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 18-07-2021 23:11:18
- FilePath: /circuit/CirFile/runtime.py
+ LastEditTime: 30-07-2021 15:55:32
+ FilePath: /spice/CirFile/runtime.py
 '''
-from PyQt5.QtWidgets import (
-    QApplication, QLabel, QLineEdit, QMainWindow, QPushButton, QPlainTextEdit, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QApplication, QLabel, QLineEdit, QMainWindow, QPushButton, QPlainTextEdit, QVBoxLayout, QWidget)
 from PyQt5.QtCore import QProcess
 import sys
 

@@ -107,23 +107,27 @@ class config(QtWidgets.QDialog):
 
         self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[0].c,units='F').render()}")
 
+        self.compchange()
+        self.replacenum()
+        self.opampmode()
+
         if hasattr(Cir, 'startac'):
             temp = setunit(Cir.startac, 0, 4)
             self.startac.setValue(temp[0])
+            self.startac_5.setValue(temp[0])
             self.startunit.setCurrentIndex(temp[1])
+            self.startunit_5.setCurrentIndex(temp[1])
             temp = setunit(Cir.stopac, 0, 4)
             self.stopac.setValue(temp[0])
+            self.stopac_5.setValue(temp[0])
             self.stopunit.setCurrentIndex(temp[1])
+            self.stopunit_5.setCurrentIndex(temp[1])
 
         if hasattr(Cir, 'netselect'):
             try:
                 self.measnode.setCurrentIndex(Cir.net.index(Cir.netselect))
             except:
                 logger.exception()
-
-        self.compchange()
-        self.replacenum()
-        self.opampmode()
 
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)

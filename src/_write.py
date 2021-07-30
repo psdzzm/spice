@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 29-07-2021 16:38:23
+ LastEditTime: 30-07-2021 18:20:33
  FilePath: /spice/src/_write.py
 '''
 import time
@@ -175,7 +175,7 @@ def create_opamp(self):
     if self.simmode:
         run = f'ac dec 40 {self.startac} {self.stopac}\n\twrdata fc all\n\n'
     else:
-        run = f'tran {(self.stopac-self.startac)/1000} {self.stopac} {self.startac}\n\twrdata fc all\n\n'
+        run = f'tran {self.tstep} {self.stopac} {self.startac}\n\twrdata fc all\n\n'
 
     ctrl.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\t{run}")
 
@@ -194,3 +194,7 @@ def create_opamp(self):
 
     ctrl.write('.endc\n.end')
     ctrl.close()
+
+
+def create_cmrr(self):
+    control = []

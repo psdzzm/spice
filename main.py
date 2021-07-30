@@ -5,13 +5,13 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 21-07-2021 15:54:53
- FilePath: /circuit/main.py
+ LastEditTime: 30-07-2021 15:54:11
+ FilePath: /spice/main.py
 '''
 
 from src.Logging import init, logger
 from src.plot import plotGUI
-from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication
 import os
 import sys
 
@@ -21,7 +21,7 @@ logger.info('Main Function started')
 
 root = os.path.dirname(os.path.abspath(__file__))   # Root directory of main function
 os.chdir(root)
-path = os.path.join(root,'Workspace','bin')
+path = os.path.join(root, 'Workspace', 'bin')
 if path not in os.environ['PATH']:  # Add ngspice path to environ
     os.environ['PATH'] += ':' + path
 del path
@@ -29,7 +29,7 @@ del path
 logger.debug(os.environ['PATH'])
 
 
-app = QtWidgets.QApplication(sys.argv)
+app = QApplication(sys.argv)
 main = plotGUI(root)
 main.show()
 app.exec_()

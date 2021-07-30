@@ -54,7 +54,7 @@ loggers:
         handlers: [console]
         propogate: no
 
-    <module.x>:
+    debugger:
         level: DEBUG
-        handlers: [info_file_handler, error_file_handler, debug_file_handler]
+        handlers: [console, debug_file_handler]
         propogate: yes

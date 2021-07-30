@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 29-07-2021 18:47:42
+ LastEditTime: 30-07-2021 17:38:57
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -81,7 +81,7 @@ def resultdata(self, worst=False, add=False, mode=None):
                 temp = line.split()
                 try:
                     freq[i] = temp[0]
-                    result[i] = temp[index]
+                    result[i] = temp[index[0]]
                 except ValueError:
                     result[i] = np.NaN
                 i += 1
@@ -95,12 +95,22 @@ def resultdata(self, worst=False, add=False, mode=None):
                     result[i] = np.NaN
                 i += 1
 
-        nan = np.isnan(result)
-        sub = np.split(result[np.logical_not(nan)], np.where(nan)[0])
-        self.cutoff = freq[0:len(sub[0])]
-        self.p = np.zeros([len(sub), len(sub[0])])
+        notnan = np.where(np.logical_not(np.isnan(result)))[0]
+        loc = np.where(np.diff(notnan) != 1)[0] + 1
+        sub = np.split(result[notnan], loc)
+        freq = np.split(freq[notnan], loc)
+        length = 0
         for i in range(len(sub)):
-            self.p[i] = 20 * np.log10(np.abs(sub[i]))
+            length = max(length, len(sub[i]))
+        self.cutoff = np.full([len(sub), length], np.inf)
+        self.p = np.full([len(sub), length], np.inf)
+
+        for i in range(len(sub)):
+            self.cutoff[i, 0:len(freq[i])] = freq[i]
+            if title[0] == 'frequency':
+                self.p[i, 0:len(sub[i])] = 20 * np.log10(np.abs(sub[i]))
+            else:
+                self.p[i, 0:len(sub[i])] = sub[i].real
 
         return
 

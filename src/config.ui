@@ -71,7 +71,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab1">
       <attribute name="title">
@@ -952,7 +952,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="startac_4">
+         <widget class="QDoubleSpinBox" name="acptcmrr">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>3</horstretch>
@@ -995,7 +995,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="startac_3">
+           <widget class="QDoubleSpinBox" name="freqcmrr">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>3</horstretch>
@@ -1020,7 +1020,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="startunit_3">
+           <widget class="QComboBox" name="cmrrunit">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>1</horstretch>
@@ -1092,9 +1092,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="opened1">
-           <property name="text">
-            <string/>
+          <widget class="QLineEdit" name="opened1">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1135,9 +1135,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="opened2">
-           <property name="text">
-            <string/>
+          <widget class="QLineEdit" name="opened2">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1178,9 +1178,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="opened3">
-           <property name="text">
-            <string/>
+          <widget class="QLineEdit" name="opened3">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1221,9 +1221,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="opened4">
-           <property name="text">
-            <string/>
+          <widget class="QLineEdit" name="opened4">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1264,9 +1264,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="opened5">
-           <property name="text">
-            <string/>
+          <widget class="QLineEdit" name="opened5">
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1396,7 +1396,7 @@
                </sizepolicy>
               </property>
               <property name="minimum">
-               <double>0.010000000000000</double>
+               <double>0.000000000000000</double>
               </property>
               <property name="maximum">
                <double>1000000000000.000000000000000</double>

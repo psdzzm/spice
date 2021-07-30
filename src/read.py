@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 29-07-2021 15:02:28
+ LastEditTime: 30-07-2021 18:19:54
  FilePath: /spice/src/read.py
 '''
 
@@ -235,6 +235,9 @@ class circuit:
 
         subprocess.run('ngspice test_control2.sp -b -o test2.log', shell=True, stdout=subprocess.DEVNULL)
 
+        with open('test.log', 'a') as f, open('test2.log') as f2:
+            f.write(f2.read())
+
         # Read raw ac analysis data
         with open('ac') as file_object:
             title = file_object.readline().split()
@@ -313,7 +316,7 @@ class circuit:
                             self.netc.append(item)
                             self.net.append(item)
 
-    from ._write import create_prerun, create_sp, create_wst, create_sp2, create_step, create_opamp
+    from ._write import create_prerun, create_sp, create_wst, create_sp2, create_step, create_opamp, create_cmrr
 
     from ._resultaly import resultdata, resultdata2, report
 

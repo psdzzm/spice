@@ -214,6 +214,7 @@ class plotGUI(QtWidgets.QMainWindow):
             else:   # transient analysis
                 self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3 - 9)
                 self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3 - 9)
+                self.Cir.tstep = 10**(self.configGUI.stopunit_5.currentIndex() * 3 - 11)
 
             if self.Cir.startac >= self.Cir.stopac:
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
@@ -229,6 +230,21 @@ class plotGUI(QtWidgets.QMainWindow):
             reconnect(self.analButton.clicked, self.analy)
             self.Cir.total = 0
             return
+
+        elif self.configGUI.tabWidget.currentIndex() == 2:    # CMRR mode
+            self.Cir.inputnode1 = self.configGUI.inputnode1.currentText()
+            self.Cir.inputnode2 = self.configGUI.inputnode2.currentText()
+            self.Cir.netselect = self.configGUI.outputnode.currentText()
+            self.Cir.acptcmrr = self.configGUI.acptcmrr.value()
+            self.Cir.freqcmrr = self.configGUI.freqcmrr.value() * 10**(self.configGUI.cmrrunit.currentIndex() * 3)
+            if len(set([self.Cir.inputnode1, self.Cir.inputnode2, self.Cir.netselect])) != 3:
+                QtWidgets.QMessageBox.critical(self, 'Error!', 'Duplicate nets selected')
+                reconnect(self.analButton.clicked, self.analy)
+                self.Cir.total = 0
+                return
+
+            self.Cir.create_cmrr()
+            # self.start_process('CMRR') # Runmode 0, only run control.sp
 
         elif self.Cir.analmode == 1:  # Step mode
             # Step component is capacitor
@@ -361,7 +377,7 @@ class plotGUI(QtWidgets.QMainWindow):
             file_object.write(file)
             read.rm('run_log')
             error_r = []
-            for line in file.splitlines():
+            for line in file.splitlines(keepends=True):
                 if line.lower().lstrip().startswith('error'):
                     error_r.append(line)
 
@@ -420,9 +436,14 @@ class plotGUI(QtWidgets.QMainWindow):
             self.stepinfo.setReadOnly(True)
             self.stepinfo.setMaximumSize(QtCore.QSize(180, 150))
             self.scroll.addWidget(self.stepinfo)
+            reconnect(self.addtimetext.returnPressed)
+            reconnect(self.wstcase.toggled)
             return
         elif mode == 'Opamp':
             self.plot('Opamp')
+            reconnect(self.addtimetext.returnPressed)
+            reconnect(self.wstcase.toggled)
+            reconnect(self.calctext.returnPressed)
             return
 
         # Below code is excuted if not step mode
@@ -493,17 +514,17 @@ class plotGUI(QtWidgets.QMainWindow):
 
         if mode == 'Opamp':
             self.line1 = []
-            self.line1.append(self.ax.plot(self.x, self.y[0], label=self.Cir.opselect))
+            self.line1.append(self.ax.plot(self.x[0], self.y[0], label=self.Cir.opselect))
             for i in range(1, np.shape(self.y)[0]):
-                self.line1.append(self.ax.plot(self.x, self.y[i], label=self.Cir.opamp[i - 1]))
+                self.line1.append(self.ax.plot(self.x[i], self.y[i], label=self.Cir.opamp[i - 1]))
             if self.Cir.simmode:
                 self.ax.set_xlabel('Frequency/Hz')
                 self.ax.set_ylabel('Gain/dB')
+                self.ax.set_xscale('log')
             else:
                 self.ax.set_xlabel('Time/s')
-                # self.ax.set_ylabel('')
+                self.ax.set_ylabel('Voltage/V')
             self.ax.legend()
-            self.ax.set_xscale('log')
             self.MplWidget.canvas.draw()
             return
 
