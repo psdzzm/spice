@@ -232,19 +232,19 @@ class plotGUI(QtWidgets.QMainWindow):
             return
 
         elif self.configGUI.tabWidget.currentIndex() == 2:    # CMRR mode
-            self.Cir.inputnode1 = self.configGUI.inputnode1.currentText()
-            self.Cir.inputnode2 = self.configGUI.inputnode2.currentText()
+            self.Cir.inputnode = self.configGUI.inputnode.currentText()
             self.Cir.netselect = self.configGUI.outputnode.currentText()
+            self.Cir.mc_runs = self.configGUI.cmrrtime.value()
             self.Cir.acptcmrr = self.configGUI.acptcmrr.value()
             self.Cir.freqcmrr = self.configGUI.freqcmrr.value() * 10**(self.configGUI.cmrrunit.currentIndex() * 3)
-            if len(set([self.Cir.inputnode1, self.Cir.inputnode2, self.Cir.netselect])) != 3:
+            if self.Cir.inputnode == self.Cir.netselect:
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Duplicate nets selected')
                 reconnect(self.analButton.clicked, self.analy)
                 self.Cir.total = 0
                 return
 
             self.Cir.create_cmrr()
-            # self.start_process('CMRR') # Runmode 0, only run control.sp
+            self.start_process('CMRR')  # Runmode 0, only run control.sp
 
         elif self.Cir.analmode == 1:  # Step mode
             # Step component is capacitor
@@ -361,6 +361,7 @@ class plotGUI(QtWidgets.QMainWindow):
             self.p = None
             read.rm('run_log')
             logger.warning('Delete run_log')
+            reconnect(self.analButton.clicked, self.analy)
 
     # Ngspice finish run
     def finishrun(self, mode):
@@ -409,6 +410,10 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.total = 0
             self.Cir.resultdata(mode='Step')
             self.postinit('Step')
+        elif mode == 'CMRR':
+            self.Cir.total = self.Cir.mc_runs
+            self.Cir.resultdata(mode='CMRR')
+            self.postinit('CMRR')
         elif mode == 'Opamp':
             self.Cir.total = 0
             self.Cir.resultdata(mode='Opamp')
@@ -499,7 +504,7 @@ class plotGUI(QtWidgets.QMainWindow):
         self.scrollr.setAlignment(QtCore.Qt.AlignHCenter)
         self.scroll.addWidget(self.scrollr)
 
-        self.plot()
+        self.plot(mode)
 
     def plot(self, mode=None):
         logger.info('Plot')
@@ -545,6 +550,10 @@ class plotGUI(QtWidgets.QMainWindow):
                 self.ax.set_ylabel('Gain Ripple/dB')
             else:
                 self.ax.set_ylabel('Gain/dB')
+            self.MplWidget.canvas.draw()
+        elif mode == 'CMRR':
+            self.ax.set_xlabel('CMRR/dB')
+            self.ax.set_ylabel('CDF')
             self.MplWidget.canvas.draw()
         else:
             if self.Cir.measmode == 'Cutoff Frequency':

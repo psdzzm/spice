@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-07-2021 18:19:54
+ LastEditTime: 01-08-2021 16:16:21
  FilePath: /spice/src/read.py
 '''
 
@@ -14,7 +14,6 @@ from .Logging import logger
 import os
 import shutil
 import subprocess
-import time
 import re
 import numpy as np
 from matplotlib import pyplot as plt
@@ -54,7 +53,6 @@ class C:
 class circuit:
     def __init__(self, filename):
         self.name = filename
-        self.seed = int(time.time())
         self.mc_runs = 1000     # Run time
         self.tolc = 0.05
         self.tolr = 0.01
@@ -96,7 +94,9 @@ class circuit:
                     stop2 = i
                     break
                 # Filter other control command that is not in matches list
-                elif row[0].lower() not in matches and '.' in row[0].lower():
+                elif row[0].lower() not in matches and row[0].startswith('.'):
+                    continue
+                elif row[0].startswith(';'):
                     continue
                 elif row[0].lower() == '.ac':   # If ac command is in file, read it in
                     try:

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-07-2021 18:20:33
+ LastEditTime: 01-08-2021 18:24:51
  FilePath: /spice/src/_write.py
 '''
 import time
@@ -197,4 +197,33 @@ def create_opamp(self):
 
 
 def create_cmrr(self):
-    control = []
+    self.seed = int(time.time())
+
+    f = open('run_control.sp', 'w')
+    f.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n")
+
+    loop = '\tdowhile run < mc_runs\n\t\t'
+
+    # Alter component value
+    for i in range(self.lengthc):
+        loop = loop + 'alter ' + self.alter_c[i].name + '=unif(' + self.alter_c[i].c + f',{self.alter_c[i].tol})\n\t\t'
+    for i in range(self.lengthr):
+        loop = loop + 'alter ' + self.alter_r[i].name + '=unif(' + self.alter_r[i].r + f',{self.alter_r[i].tol})\n\t\t'
+
+     # Print altered value to file paramlist (Append mode)
+    loop = loop + 'print '
+    for i in range(self.lengthc):
+        loop = loop + f'@{self.alter_c[i].name}[capacitance] '
+    for i in range(self.lengthr):
+        loop = loop + f'@{self.alter_r[i].name}[resistance] '
+    loop = loop + '>> paramlist\n\t\t'
+
+    f.write(loop)
+
+    f.write(f'ac lin 5 {self.freqcmrr-1} {self.freqcmrr+1}\n\n\t\tmeas ac vout find V({self.netselect}) when frequency={self.freqcmrr}\n\t\tlet {{$scratch}}.cutoff[run] = db(1/vout)\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc cutoff\n.endc\n\n.end')
+    f.close()
+
+    with open('run.cir', 'w') as f:
+        f.write(self.runtext)
+        f.seek(f.tell() - 4)
+        f.write(f'Vdiff000 {self.inputnode} 0 AC 1\n.end')

@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 30-07-2021 17:38:57
+ LastEditTime: 01-08-2021 17:34:24
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -226,8 +226,8 @@ def resultdata(self, worst=False, add=False, mode=None):
     logger.info(f'Analyse Data Time: {timer()-start}s')
 
     # Create a new thread to generate report
-    thread = Thread(target=self.report, args=())
-    thread.start()
+    # thread = Thread(target=self.report, args=())
+    # thread.start()
 
 
 # Importance sampling, calculate p(x)/q(x)

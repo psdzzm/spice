@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 30-07-2021 15:54:11
+ LastEditTime: 01-08-2021 15:11:15
  FilePath: /spice/main.py
 '''
 
@@ -23,7 +23,7 @@ root = os.path.dirname(os.path.abspath(__file__))   # Root directory of main fun
 os.chdir(root)
 path = os.path.join(root, 'Workspace', 'bin')
 if path not in os.environ['PATH']:  # Add ngspice path to environ
-    os.environ['PATH'] += ':' + path
+    os.environ['PATH'] = path + ':' + os.environ['PATH']
 del path
 
 logger.debug(os.environ['PATH'])

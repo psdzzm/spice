@@ -1,0 +1,14 @@
+* Audio_AmpV3.asc
+XU1 N001 N001 N002 0 out MCP6271
+V1 N002 0 3.3
+R2 N002 N001 200k
+R3 N001 out 100k
+C1 N001 out 440p
+R4 N002 N001 1k
+R5 N001 0 1k
+C3 N001 0 440p
+R1 N001 0 200k
+*V2 N001 0 AC 1
+.ac dec 40 1 1Meg
+.include MCP6271.mod
+.end

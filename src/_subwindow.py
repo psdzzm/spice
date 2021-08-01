@@ -45,8 +45,7 @@ class config(QtWidgets.QDialog):
 
         self.measnode.currentTextChanged.connect(self.netchange)
         self.measnode_2.currentTextChanged.connect(self.netchange)
-        self.inputnode1.currentTextChanged.connect(self.netchange)
-        self.inputnode2.currentTextChanged.connect(self.netchange)
+        self.inputnode.currentTextChanged.connect(self.netchange)
         self.outputnode.currentTextChanged.connect(self.netchange)
 
         self.analmode.currentTextChanged.connect(self.analchange)
@@ -70,6 +69,7 @@ class config(QtWidgets.QDialog):
         self.tab2UI()
 
         self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))
+        self.cmrrtime.setValue(self.totaltime.value())
         self.measnode.currentTextChanged.disconnect()
         self.measnode.clear()
         self.measnode.addItems(self.Cir.net)
@@ -81,14 +81,10 @@ class config(QtWidgets.QDialog):
         self.rfnum.setSpecialValueText('LAST')
         self.risefall.setCurrentIndex(1)
 
-        self.inputnode1.currentTextChanged.disconnect()
-        self.inputnode1.clear()
-        self.inputnode1.addItems(self.Cir.net)
-        self.inputnode1.currentTextChanged.connect(self.netchange)
-        self.inputnode2.currentTextChanged.disconnect()
-        self.inputnode2.clear()
-        self.inputnode2.addItems(self.Cir.net)
-        self.inputnode2.currentTextChanged.connect(self.netchange)
+        self.inputnode.currentTextChanged.disconnect()
+        self.inputnode.clear()
+        self.inputnode.addItems(self.Cir.net)
+        self.inputnode.currentTextChanged.connect(self.netchange)
         self.outputnode.currentTextChanged.disconnect()
         self.outputnode.clear()
         self.outputnode.addItems(self.Cir.net)
