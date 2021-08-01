@@ -6,7 +6,7 @@ import numpy as np
 import os
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import QProcess
-from . import read
+from .read import circuit, rm
 import shutil
 from datetime import datetime
 from timeit import default_timer as timer
@@ -89,7 +89,7 @@ class plotGUI(QtWidgets.QMainWindow):
                 for item in files:      # Delete all other files
                     os.remove(item)
 
-            self.Cir = read.circuit(fname)  # Instantiate circuit
+            self.Cir = circuit(fname)  # Instantiate circuit
             self.Cir.basename = name
             self.Cir.dir = os.getcwd()  # Record where it is
 
@@ -123,13 +123,13 @@ class plotGUI(QtWidgets.QMainWindow):
                             else:
                                 logger.warning('Exit. Deleting the uploaded include file')
                                 for file in includefile:
-                                    read.rm('../lib/user/' + file)
+                                    rm('../lib/user/' + file)
                                 return
 
                         else:   # Incorrect include file is provided
                             logger.error('Incorrect include file provided! Reset the input circuit')
                             for file in includefile:
-                                read.rm('../lib/user/' + file)  # Delete uploaded include files
+                                rm('../lib/user/' + file)  # Delete uploaded include files
                             # Rewrite test and run circuit
                             with open('test.cir', 'w') as f1, open('run.cir', 'w') as f2:
                                 f1.write(self.Cir.testtext)
@@ -142,7 +142,7 @@ class plotGUI(QtWidgets.QMainWindow):
                     elif message:   # Fatal error occur
                         QtWidgets.QMessageBox.critical(self, 'Error', message)
                         for file in includefile:
-                            read.rm('../lib/user/' + file)
+                            rm('../lib/user/' + file)
                         return
 
                     else:   # No error occur
@@ -166,7 +166,7 @@ class plotGUI(QtWidgets.QMainWindow):
             with open('run.log', 'a') as file_object, open('run_log') as b:
                 file = b.read()
                 file_object.write(file)
-                read.rm('run_log')
+                rm('run_log')
 
             error_r = []
             for line in file.splitlines():  # Detect if any error message in log file
@@ -203,11 +203,20 @@ class plotGUI(QtWidgets.QMainWindow):
         self.Cir.startac = self.configGUI.startac.value() * 10**(self.configGUI.startunit.currentIndex() * 3)
         self.Cir.stopac = self.configGUI.stopac.value() * 10**(self.configGUI.stopunit.currentIndex() * 3)
 
+        self.Cir.tol = self.configGUI.accptol.value()
+        self.Cir.yd = self.configGUI.yd.value()
+
         if self.configGUI.tabWidget.currentIndex() == 3:    # Op amp mode
             self.Cir.netselect = self.configGUI.measnode_2.currentText()
             self.Cir.opselect = self.configGUI.opamp.currentText()
             self.Cir.simmode = self.configGUI.simmode.currentIndex()
             self.Cir.opnum = self.configGUI.replace.currentIndex() + 1
+            if not hasattr(self.Cir, 'opamp') or None in self.Cir.opamp[0:self.Cir.opnum]:
+                QtWidgets.QMessageBox.critical(self, 'Error!', 'Blank Op amp input!')
+                reconnect(self.analButton.clicked, self.analy)
+                self.Cir.total = 0
+                return
+
             if self.Cir.simmode:    # Ac analysis
                 self.Cir.startac = self.configGUI.startac_5.value() * 10**(self.configGUI.startunit_5.currentIndex() * 3)
                 self.Cir.stopac = self.configGUI.stopac_5.value() * 10**(self.configGUI.stopunit_5.currentIndex() * 3)
@@ -225,17 +234,12 @@ class plotGUI(QtWidgets.QMainWindow):
             self.Cir.create_opamp()
             self.start_process('Opamp')  # Runmode 0, only run control.sp
 
-        elif self.Cir.startac >= self.Cir.stopac:
-            QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
-            reconnect(self.analButton.clicked, self.analy)
-            self.Cir.total = 0
-            return
-
         elif self.configGUI.tabWidget.currentIndex() == 2:    # CMRR mode
             self.Cir.inputnode = self.configGUI.inputnode.currentText()
             self.Cir.netselect = self.configGUI.outputnode.currentText()
             self.Cir.mc_runs = self.configGUI.cmrrtime.value()
-            self.Cir.acptcmrr = self.configGUI.acptcmrr.value()
+            self.Cir.tol = self.configGUI.acptcmrr.value()
+            self.Cir.yd = self.configGUI.cmrryd.value()
             self.Cir.freqcmrr = self.configGUI.freqcmrr.value() * 10**(self.configGUI.cmrrunit.currentIndex() * 3)
             if self.Cir.inputnode == self.Cir.netselect:
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Duplicate nets selected')
@@ -243,8 +247,16 @@ class plotGUI(QtWidgets.QMainWindow):
                 self.Cir.total = 0
                 return
 
+            self.fcunit.clear()
+            self.fcunit.addItem('dB')
             self.Cir.create_cmrr()
-            self.start_process('CMRR')  # Runmode 0, only run control.sp
+            self.start_process('CMRR', 1)  # Runmode 1, run also worst case
+
+        elif self.Cir.startac >= self.Cir.stopac:
+            QtWidgets.QMessageBox.critical(self, 'Error!', 'Start point is larger than stop point')
+            reconnect(self.analButton.clicked, self.analy)
+            self.Cir.total = 0
+            return
 
         elif self.Cir.analmode == 1:  # Step mode
             # Step component is capacitor
@@ -351,7 +363,7 @@ class plotGUI(QtWidgets.QMainWindow):
             if runmode == 0:
                 self.p.start("/bin/bash", ['-c', 'ngspice -b run_control.sp -o run_log'])
             elif runmode == 1:
-                read.rm('fc', 'fc_wst', 'paramlist', 'paramwstlist')
+                rm('fc', 'fc_wst', 'paramlist', 'paramwstlist')
                 self.p.start("/bin/bash", ['-c', 'ngspice -b run_control.sp run_control_wst.sp -o run_log'])
 
     # Kill ngspice
@@ -359,13 +371,12 @@ class plotGUI(QtWidgets.QMainWindow):
         if self.p:
             self.p.kill()
             self.p = None
-            read.rm('run_log')
+            rm('run_log')
             logger.warning('Delete run_log')
             reconnect(self.analButton.clicked, self.analy)
 
     # Ngspice finish run
     def finishrun(self, mode):
-        logger.info(f'Spice time: {timer()-self._start}s')
         if self.p == None:
             logger.warning('Spice Killed')
             return
@@ -376,11 +387,13 @@ class plotGUI(QtWidgets.QMainWindow):
         with open('run.log', 'a') as file_object, open('run_log') as b:
             file = b.read()
             file_object.write(file)
-            read.rm('run_log')
+            rm('run_log')
             error_r = []
             for line in file.splitlines(keepends=True):
                 if line.lower().lstrip().startswith('error'):
                     error_r.append(line)
+
+        logger.info(f'Spice time: {timer()-self._start}s')
 
         if error_r:
             self.dialog.close()
@@ -388,32 +401,31 @@ class plotGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Cutoff frequency out of interval')
                 logger.error('Cutoff frequency out of interval')
             else:
-                error_r = ''.join(error_r)
+                if sum(['\n' in s for s in error_r]) > 10:
+                    error_r = ''.join(error_r[0:10]) + 'See run.log for more information'
+                else:
+                    error_r = ''.join(error_r)
                 QtWidgets.QMessageBox.critical(self, 'Error!', error_r)
                 logger.error(error_r)
             self.Cir.total = 0
             reconnect(self.analButton.clicked, self.analy)
             return
-        elif mode == 'Add':
+        elif 'Add' in mode:
             self.Cir.total = self.Cir.total + self.Cir.mc_runs
             self.Cir.resultdata(add=True)
             self.x = self.Cir.cutoff
             self.y = self.Cir.p
-            self.plot()
+            self.plot(mode)
             self.totaltime.setText(f'Total simulation time: {self.Cir.total}')
             self.calcp()
-        elif mode == 'Open':
+        elif mode == 'Open' or mode == 'CMRR':
             self.Cir.total = self.Cir.mc_runs
             self.Cir.resultdata(worst=True)
-            self.postinit()     # Doing some initialize as it is the first run after file opened
+            self.postinit(mode)     # Doing some initialize as it is the first run after file opened
         elif mode == 'Step':    # Mode is step, not ac analysis
             self.Cir.total = 0
             self.Cir.resultdata(mode='Step')
             self.postinit('Step')
-        elif mode == 'CMRR':
-            self.Cir.total = self.Cir.mc_runs
-            self.Cir.resultdata(mode='CMRR')
-            self.postinit('CMRR')
         elif mode == 'Opamp':
             self.Cir.total = 0
             self.Cir.resultdata(mode='Opamp')
@@ -551,10 +563,10 @@ class plotGUI(QtWidgets.QMainWindow):
             else:
                 self.ax.set_ylabel('Gain/dB')
             self.MplWidget.canvas.draw()
-        elif mode == 'CMRR':
+        elif 'CMRR' in mode:
             self.ax.set_xlabel('CMRR/dB')
             self.ax.set_ylabel('CDF')
-            self.MplWidget.canvas.draw()
+            self.plotwst()  # Plot worst case
         else:
             if self.Cir.measmode == 'Cutoff Frequency':
                 self.ax.set_xlabel('Cutoff Frequency/Hz')
@@ -588,11 +600,15 @@ class plotGUI(QtWidgets.QMainWindow):
     def AddTime(self):
         self.Cir.mc_runs = int(self.addtimetext.text())
         logger.info(f'Added:{self.Cir.mc_runs}')
-        self.Cir.create_sp(add=True)
-
-        self.start_process('Add')
+        if self.configGUI.tabWidget.currentIndex() == 2:
+            self.Cir.create_cmrr(add=True)
+            self.start_process('CMRR-Add')
+        else:
+            self.Cir.create_sp(add=True)
+            self.start_process('Add')
 
     # Calculate probability based on the probe input at bottom right corner
+
     def calcp(self):
         try:
             fc = float(self.calctext.text())

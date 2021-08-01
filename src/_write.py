@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 18:24:51
+ LastEditTime: 01-08-2021 23:31:22
  FilePath: /spice/src/_write.py
 '''
 import time
@@ -117,9 +117,7 @@ def create_sp(self, add=False):
 
 # Create worst case simulation control file run_control_wst.sp
 def create_wst(self):
-    self.wst_run = 2**(self.lengthc + self.lengthr)
-
-    control = [f"*ng_script\n\n.control\n\tdestroy all\n\tset wr_vecnames\n\tunlet run mc_runs\n\tunset appendwrite\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {self.wst_run}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
+    control = [f"*ng_script\n\n.control\n\tdestroy all\n\tset wr_vecnames\n\tunlet run mc_runs\n\tunset appendwrite\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {2**(self.lengthc + self.lengthr)}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n"]
     loop = '\tdowhile run <= numruns\n\t\t'
 
     for i in range(self.lengthc):
@@ -196,11 +194,14 @@ def create_opamp(self):
     ctrl.close()
 
 
-def create_cmrr(self):
+def create_cmrr(self, add=False):
     self.seed = int(time.time())
 
     f = open('run_control.sp', 'w')
-    f.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n")
+    if add:
+        f.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset appendwrite\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n")
+    else:
+        f.write(f"*ng_script\n\n.control\n\tsource run.cir\n\tsave {self.netselect}\n\tset wr_vecnames\n\tlet mc_runs = {self.mc_runs}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(mc_runs)\n\tsetseed {self.seed}\n\n")
 
     loop = '\tdowhile run < mc_runs\n\t\t'
 
@@ -219,11 +220,31 @@ def create_cmrr(self):
     loop = loop + '>> paramlist\n\t\t'
 
     f.write(loop)
-
     f.write(f'ac lin 5 {self.freqcmrr-1} {self.freqcmrr+1}\n\n\t\tmeas ac vout find V({self.netselect}) when frequency={self.freqcmrr}\n\t\tlet {{$scratch}}.cutoff[run] = db(1/vout)\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc cutoff\n.endc\n\n.end')
     f.close()
 
     with open('run.cir', 'w') as f:
-        f.write(self.runtext)
-        f.seek(f.tell() - 4)
+        f.write(self.runtext[:-4])
         f.write(f'Vdiff000 {self.inputnode} 0 AC 1\n.end')
+        if add:
+            return
+
+    f = open('run_control_wst.sp', 'w')
+    f.write(f"*ng_script\n\n.control\n\tdestroy all\n\tset wr_vecnames\n\tunlet run mc_runs\n\tunset appendwrite\n\tdefine binary(run,index) floor(run/(2^index))-2*floor(run/(2^index+1))\n\tdefine wc(nom,tol,index,run,numruns) (run >= numruns) ? nom : (binary(run,index) ? nom*(1+tol) : nom*(1-tol))\n\n\tsource run.cir\n\tsave {self.netselect}\n\tlet numruns = {2**(self.lengthc + self.lengthr)}\n\tlet run = 0\n\tset curplot=new          $ create a new plot\n\tset scratch=$curplot     $ store its name to 'scratch'\n\tlet cutoff=unitvec(numruns+1)\n")
+    loop = '\tdowhile run <= numruns\n\t\t'
+
+    for i in range(self.lengthc):
+        loop = loop + 'alter ' + self.alter_c[i].name + '=wc(' + self.alter_c[i].c + f',{self.alter_c[i].tol},{i},run,numruns)\n\t\t'
+    for i in range(self.lengthr):
+        loop = loop + 'alter ' + self.alter_r[i].name + '=wc(' + self.alter_r[i].r + f',{self.alter_r[i].tol},{i+self.lengthc},run,numruns)\n\t\t'
+
+    loop = loop + 'print '
+    for i in range(self.lengthc):
+        loop = loop + f'@{self.alter_c[i].name}[capacitance] '
+    for i in range(self.lengthr):
+        loop = loop + f'@{self.alter_r[i].name}[resistance] '
+    loop = loop + '>> paramwstlist\n\t\t'
+
+    f.write(loop)
+    f.write(f'ac lin 5 {self.freqcmrr-1} {self.freqcmrr+1}\n\n\t\tmeas ac vout find V({self.netselect}) when frequency={self.freqcmrr}\n\t\tlet {{$scratch}}.cutoff[run] = db(1/vout)\n\t\tdestroy $curplot\n\t\tlet run = run + 1\n\tend\n\n\tsetplot $scratch\n\twrdata fc_wst cutoff\n.endc\n\n.end')
+    f.close()

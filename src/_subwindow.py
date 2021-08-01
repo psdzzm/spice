@@ -1,3 +1,5 @@
+import subprocess
+import numpy as np
 from .Logging import logger
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtWidgets, uic, QtCore
@@ -60,6 +62,11 @@ class config(QtWidgets.QDialog):
         self.open3.clicked.connect(self.opampopen)
         self.open4.clicked.connect(self.opampopen)
         self.open5.clicked.connect(self.opampopen)
+        self.clear1.clicked.connect(self.opampdel)
+        self.clear2.clicked.connect(self.opampdel)
+        self.clear3.clicked.connect(self.opampdel)
+        self.clear4.clicked.connect(self.opampdel)
+        self.clear5.clicked.connect(self.opampdel)
 
         self.scroll = QtWidgets.QVBoxLayout(self.tab2)
 
@@ -125,6 +132,8 @@ class config(QtWidgets.QDialog):
             except:
                 logger.exception()
 
+        self.__node = 0
+
         self.MplWidget.figure.clear()
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
@@ -139,12 +148,45 @@ class config(QtWidgets.QDialog):
 
     # Node to measure in Configuration window changes, update the matplotlib figure
     def netchange(self):
-        node = self.sender().currentIndex()
+        self.__lastnode = self.__node
+        self.__node = self.sender().currentIndex()
         self.ax.clear()
         self.ax.set_xscale('log')
-        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[node, :])
-        self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
         self.ax.grid()
+        if self.tabWidget.currentIndex() == 2:
+            with open('test.cir', 'w') as f:
+                f.write(self.Cir.testtext[:-4])
+                f.write(f"Vdiff000 {self.inputnode.currentText()} 0 AC 1\n.control\n\tsave {self.outputnode.currentText()}\n\tset wr_vecnames\n\tac dec 40 1 1G\n\tlet vout=1/V({self.outputnode.currentText()})\n\tlet vout=vdb(vout)\n\twrdata fc vout\n.endc\n\n.end")
+            subprocess.run('ngspice -b test.cir -o test_log', shell=True, stdout=subprocess.DEVNULL)
+
+            f = open('test_log')
+            if 'error' in f.read().lower():
+                QtWidgets.QMessageBox.critical(self, 'Error!', 'Error when measuring CMRR')
+                self.sender().blockSignals(True)
+                self.sender().setCurrentIndex(self.__lastnode)
+                self.sender().blockSignals(False)
+                self.__node = self.__lastnode
+                return
+
+            f.close()
+            logger.debug(self.__lastnode)
+            f = open('fc')
+            f.readline()
+            data = f.readlines()
+            f.close()
+            length = len(data)
+            x, y = np.zeros(length), np.zeros(length)
+            for line, i in zip(data, range(length)):
+                x[i], y[i] = line.split()
+            self.line1 = self.ax.plot(x, y)
+            self.ax.set_title(f"Default CMRR Analysis of {self.Cir.basename}")
+            self.ax.set_xlabel('Frequency/Hz')
+            self.ax.set_ylabel('CMRR/dB')
+            self.MplWidget.canvas.draw()
+            return
+
+        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[self.__node, :])
+        self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
         self.ax.set_xlabel('Cutoff Frequency/Hz')
         self.ax.set_ylabel('vdb')
         self.MplWidget.canvas.draw()
@@ -262,6 +304,15 @@ class config(QtWidgets.QDialog):
 
             widget[i].setText(self.Cir.opampfilename[i] + ' - ' + self.Cir.opamp[i])
             shutil.copyfile(fname, os.path.join(os.getcwd(), self.Cir.opampfilename[i]))
+
+    def opampdel(self):
+        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]
+        i = int(self.sender().objectName()[-1]) - 1
+        if widget[i].text():
+            widget[i].clear()
+            os.remove(self.Cir.opampfilename[i])
+            self.Cir.opamp[i] = None
+            self.Cir.opampfilename[i] = None
 
     # Initialize tab2: tolerance
 

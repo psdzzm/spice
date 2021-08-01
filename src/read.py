@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 16:16:21
+ LastEditTime: 01-08-2021 20:32:32
  FilePath: /spice/src/read.py
 '''
 
@@ -237,6 +237,7 @@ class circuit:
 
         with open('test.log', 'a') as f, open('test2.log') as f2:
             f.write(f2.read())
+        rm('test2.log')
 
         # Read raw ac analysis data
         with open('ac') as file_object:

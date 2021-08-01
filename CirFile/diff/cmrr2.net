@@ -8,7 +8,17 @@ R4 N002 N001 1k
 R5 N001 0 1k
 C3 N001 0 440p
 R1 N001 0 200k
-*V2 N001 0 AC 1
-.ac dec 40 100 3k
+V2 N001 0 AC 1
+.ac dec 40 1 3k
 .include MCP6271.mod
+
+.control
+	save out
+	set wr_vecnames
+	ac dec 40 1 1G
+	let vout=1/V(out)
+	let vout=vdb(vout)
+	wrdata fc vout
+.endc
+
 .end

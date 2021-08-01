@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 17:34:24
+ LastEditTime: 01-08-2021 23:59:18
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -226,7 +226,7 @@ def resultdata(self, worst=False, add=False, mode=None):
     logger.info(f'Analyse Data Time: {timer()-start}s')
 
     # Create a new thread to generate report
-    # thread = Thread(target=self.report, args=())
+    # thread = Thread(target=self.report, args=(mode,))
     # thread.start()
 
 
@@ -265,7 +265,7 @@ def resultdata2(self, worst=False):
 
 
 # Create report
-def report(self):
+def report(self, mode=None):
     cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))
     rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))
     for i in range(self.lengthc):
@@ -330,7 +330,7 @@ def report(self):
 
         t = Template(table.read())  # Html5 file to render
 
-        renddict = {'title': self.basename, 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
+        renddict = {'title': self.basename, 'command': 'ac dec 40 1 1G', 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
             renddict['comment'] = f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."

@@ -19,14 +19,14 @@ pip install numpy scipy pandas matplotlib pyyaml django quantiphy PyQt5
 ├── src
 │   ├── config.ui       # Conifugration window ui file
 │   ├── __init__.py
-│   ├── Logging.py
+│   ├── Logging.py      # Initialize and define log
 │   ├── logging.yaml    # Log configuration file
 │   ├── main.ui         # Main window ui file
 │   ├── MplWidget.py    # Matplotlib canvas configuration file
-│   ├── plot.py
+│   ├── plot.py         # GUI Interface
 │   ├── processing.ui   # Processing window ui file
-│   ├── read.py
-│   ├── report          # Generate html5 report
+│   ├── read.py         # Read and initialize circuit
+│   ├── report          # Generate html5 report, django based project
 │   │   ├── htmlreport
 │   │   │   ├── admin.py
 │   │   │   ├── apps.py
@@ -35,9 +35,9 @@ pip install numpy scipy pandas matplotlib pyyaml django quantiphy PyQt5
 │   │   │   │   ├── __init__.py
 │   │   │   ├── models.py
 │   │   │   ├── templates
-│   │   │   │   ├── base.html
-│   │   │   │   ├── inherit.html
-│   │   │   │   └── report.html
+│   │   │   │   ├── base.html       # Report template
+│   │   │   │   ├── inherit.html    # Customized report
+│   │   │   │   └── report.html     # Final generated report
 │   │   │   ├── tests.py
 │   │   │   └── views.py
 │   │   ├── manage.py
@@ -48,14 +48,13 @@ pip install numpy scipy pandas matplotlib pyyaml django quantiphy PyQt5
 │   │   │   ├── urls.py
 │   │   │   └── wsgi.py
 │   │   └── static
-│   ├── _resultaly.py
-│   ├── runspice.py
-│   ├── _subwindow.py
-│   └── _write.py
+│   ├── _resultaly.py   # Analyze result
+│   ├── _subwindow.py   # Processing and configuration window
+│   └── _write.py       # Create circuit control files
 └── Workspace
     ├── bin             # ngspice program file, Don't touch
     │   └── ngspice
-    ├── clear.py
+    ├── clear.py        # Clear user uploaded files
     ├── include         # ngspice include file, Don't touch
     │   └── config.h
     ├── lib             # Put common used spice model in this folder
