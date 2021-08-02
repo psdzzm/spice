@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 23:59:18
+ LastEditTime: 02-08-2021 11:54:35
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -45,7 +45,6 @@ def resultdata(self, worst=False, add=False, mode=None):
             self.wst_cutoff = np.zeros(len(lines_wst))
             i = 0
             for line in lines_wst:
-                row = line.split()
                 self.wst_cutoff[i] = line.split()[1]
                 i += 1
 
@@ -128,8 +127,7 @@ def resultdata(self, worst=False, add=False, mode=None):
     if mode == 'Step':      # Step mode
         comp = np.zeros(len(lines))
         for line in lines:
-            comp[i] = line.split()[0]   # Component value
-            cutoff[i] = line.split()[1]  # Cutoff Frequency
+            comp[i], cutoff[i] = line.split()   # Component value and Cutoff Frequency
             i += 1
 
         comp, index = np.unique(comp, return_index=True)    # Remove duplicate value and sort
@@ -163,7 +161,7 @@ def resultdata(self, worst=False, add=False, mode=None):
     self.cutoff = self.cutoff[index]
     self.cutoff0, index0 = np.unique(self.cutoff, return_index=True)    # Remove duplicate value and sort
     length = len(self.cutoff)
-    logger.info(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
+    logger.debug(f'Initial length={length}, Truncated length={len(self.cutoff0)}')
 
     # Analyse altered component value
     i, j = 0, 0
@@ -266,18 +264,21 @@ def resultdata2(self, worst=False):
 
 # Create report
 def report(self, mode=None):
-    cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))
-    rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))
+    cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))     # Capacitor table
+    rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))     # Resistor table
     for i in range(self.lengthc):
         cframe.loc[i] = [self.alter_c[i].name, self.alter_c[i].c, self.alter_c[i].tol]
     for i in range(self.lengthr):
         rframe.loc[i] = [self.alter_r[i].name, self.alter_r[i].r, self.alter_r[i].tol]
 
+    # Convert to html5 code
     cframehtml = '\n{% block ctable %}\n' + cframe.to_html(index=False) + '\n{% endblock %}\n'
     rframehtml = '\n{% block rtable %}\n' + rframe.to_html(index=False) + '\n{% endblock %}\n'
 
+    # Acceptable limit
     llimit = self.stdcutoff * (1 - self.tol)
     rlimit = self.stdcutoff * (1 + self.tol)
+    # Calculate probability that is outside limit
     if llimit < self.cutoff[0]:
         lfit = 0
     else:
@@ -287,23 +288,27 @@ def report(self, mode=None):
     else:
         rfit = self.p[-1] - self.fit(rlimit)
 
-    yd = 1 - rfit - lfit
+    yd = 1 - rfit - lfit    # Yield
     logger.info(f'Estimated yield: {yd}')
 
-    rtail = pd.DataFrame(columns=('Frequency/Hz (Larger than)', 'Probability'))
-    ltail = pd.DataFrame(columns=('Frequency/Hz (Smaller than)', 'Probability'))
+    # Generate tail table
+    rtail = pd.DataFrame(columns=('Frequency/Hz (Larger than)', 'Probability'))     # Right tail
+    ltail = pd.DataFrame(columns=('Frequency/Hz (Smaller than)', 'Probability'))    # Left tail
 
-    if yd >= self.yd:
-        index1 = np.linspace((1 - self.yd) / 2 + 0.05, (1 - self.yd) / 2, 5, endpoint=False)
-        index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, (1 - yd) / 2, 5, endpoint=False)))
+    # Generate what x axis to display
+    if yd >= self.yd:   # Yield larger than acceptable
+        # Left tail index
+        index1 = np.linspace((1 - self.yd) / 2 + 0.05, (1 - self.yd) / 2, 5, endpoint=False)    # Probability within yield limit
+        index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, (1 - yd) / 2, 5, endpoint=False)))  # Probability outsilde yield limit
 
+        # Right tail index
         index2 = np.linspace(self.p0[-1] - (1 - self.yd) / 2 - 0.05, self.p0[-1] - (1 - yd) / 2, 5, endpoint=False)
         index2 = np.concatenate((index2, np.linspace(self.p0[-1] - (1 - self.yd) / 2, self.p0[-1] - (1 - yd) / 2, 5, endpoint=False)))
 
         if (1 - yd) / 2 > 0.0001:
             index1 = np.concatenate((index1, np.linspace((1 - yd) / 2, 0, 5, endpoint=False)))
             index2 = np.concatenate((index2, np.linspace(self.p0[-1] - (1 - yd) / 2, self.p0[-1], 5, endpoint=False)))
-    else:
+    else:   # Yield does not meet
         index1 = np.linspace((1 - yd) / 2, (1 - self.yd) / 2, 5, endpoint=False)
         index1 = np.concatenate((index1, np.linspace((1 - self.yd) / 2, 0, 5, endpoint=False)))
         index2 = np.linspace(self.p0[-1] - (1 - yd) / 2 - 0.05, self.p0[-1] - (1 - self.yd) / 2, 5, endpoint=False)
@@ -313,6 +318,7 @@ def report(self, mode=None):
         ltail.loc[i] = [self._fit(index1[i]), index1[i]]
         rtail.loc[i] = [self._fit(index2[i]), index1[i]]
 
+    # Convert tail table to html5
     ltailhtml = '\n{% block lefttail %}\n' + ltail.to_html(index=False) + '\n{% endblock %}\n'
     rtailhtml = '\n{% block righttail %}\n' + rtail.to_html(index=False) + '\n{% endblock %}\n'
 

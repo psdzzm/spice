@@ -22,7 +22,6 @@ class processing(QtWidgets.QDialog):
         self.setWindowTitle('Processing')
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         # self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        # self.show()
 
 
 # Configuration window
@@ -166,9 +165,12 @@ class config(QtWidgets.QDialog):
                 self.sender().setCurrentIndex(self.__lastnode)
                 self.sender().blockSignals(False)
                 self.__node = self.__lastnode
+                f.close()
+                os.remove('test_log')
                 return
 
             f.close()
+            os.remove('test_log')
             logger.debug(self.__lastnode)
             f = open('fc')
             f.readline()

@@ -9,6 +9,7 @@ This simple tool provides easy GUI interface for tolerance analysis of the circu
 ```bash
 python>=3.8
 pip install numpy scipy pandas matplotlib pyyaml django quantiphy PyQt5
+ngspice=34
 ```
 
 ## Project Structure

@@ -579,6 +579,8 @@ class plotGUI(QtWidgets.QMainWindow):
             self.ax.set_ylabel('CDF')
             self.plotwst()  # Plot worst case
 
+        self.MplWidget.figure.savefig(os.path.join(self.root, 'src/report/static/fig.svg'), format='svg', bbox_inches='tight')
+
     def plotwst(self):
         logger.info('wst')
         if self.x == []:
