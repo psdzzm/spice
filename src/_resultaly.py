@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 02-08-2021 11:54:35
+ LastEditTime: 04-08-2021 15:46:45
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -38,14 +38,14 @@ def resultdata(self, worst=False, add=False, mode=None):
     if worst:   # Analyse worst case data
         with open('fc_wst', 'r') as wst, open('paramwstlist', 'r') as paramwstlist:
             wst.readline()  # Read variable name line
-            lines_wst = wst.readlines()     # Read data
-            paramwst = paramwstlist.readlines()
+            lines_wst = wst.readlines()          # Read data
+            paramwst = paramwstlist.readlines()  # Read altered components value
             wstframe = pd.DataFrame(columns=('', 'Left', 'Right'))  # Create dataframe to record the component value under worst case
 
             self.wst_cutoff = np.zeros(len(lines_wst))
             i = 0
             for line in lines_wst:
-                self.wst_cutoff[i] = line.split()[1]
+                self.wst_cutoff[i] = line.split()[1]    # Get frequency value
                 i += 1
 
             self.stdcutoff = self.wst_cutoff[-1]        # Cutoff frequency of standard component value
@@ -53,7 +53,7 @@ def resultdata(self, worst=False, add=False, mode=None):
             self.wst_cutoff = self.wst_cutoff[self.wstindex]    # Sort cutoff frequency
             wstframe.loc[0] = ['Frequency', self.wst_cutoff[0], self.wst_cutoff[-1]]    # Worst cutoff frequency
 
-            # Find the component value of the worst case
+            # Find the component value of the worst case, both left tail and right tail
             for i in range(self.lengthc):
                 wstframe.loc[i + 1] = [self.alter_c[i].name, float(paramwst[self.wstindex[0] * (self.lengthc + self.lengthr) + i].split()[-1]), float(paramwst[self.wstindex[-1] * (self.lengthc + self.lengthr) + i].split()[-1])]
             for i in range(self.lengthr):
@@ -62,29 +62,31 @@ def resultdata(self, worst=False, add=False, mode=None):
             # Convert dataframe to html string
             self.wstframehtml = '\n{% block wsttable %}\n' + wstframe.to_html(index=False, justify='center') + '\n{% endblock %}\n'
 
+    # Op amp mode
     if mode == 'Opamp':
         with open('fc', 'r') as fileobject:
-            title = fileobject.readline().split()
+            title = fileobject.readline().split()   # Read in one line, get variable names
             lines = fileobject.readlines()
 
-        if self.netselect.isdigit():
+        # Find index of the selected net
+        if self.netselect.isdigit():    # The name of the selected net is a number, such as 1, 2, 3. In this case, its name in the file is V(1), V(2) or V(3)
             index = [i for i, x in enumerate(title) if x == 'V(' + self.netselect + ')']  # Get index of all selected net data
-        else:
+        else:   # Not a number. In this case, its name in file is its original name
             index = [i for i, x in enumerate(title) if x == self.netselect]
 
         i = 0
         freq = np.zeros(len(lines))
-        result = np.zeros(len(lines), dtype=np.complex_)
-        if len(index) == 1:
+        result = np.zeros(len(lines), dtype=np.complex_)    # Complex variable
+        if len(index) == 1:     # Only real number
             for line in lines:
                 temp = line.split()
                 try:
                     freq[i] = temp[0]
                     result[i] = temp[index[0]]
-                except ValueError:
+                except ValueError:  # At this line, it switches op amp
                     result[i] = np.NaN
                 i += 1
-        else:
+        else:       # Complex number, displayed with real part and imaginary part
             for line in lines:
                 temp = line.split()
                 try:
@@ -94,26 +96,26 @@ def resultdata(self, worst=False, add=False, mode=None):
                     result[i] = np.NaN
                 i += 1
 
-        notnan = np.where(np.logical_not(np.isnan(result)))[0]
-        loc = np.where(np.diff(notnan) != 1)[0] + 1
-        sub = np.split(result[notnan], loc)
+        notnan = np.where(np.logical_not(np.isnan(result)))[0]  # Check where are the number, return boolen array
+        loc = np.where(np.diff(notnan) != 1)[0] + 1     # Mark where is np.NaN in the total number array
+        sub = np.split(result[notnan], loc)     # Split the total number array based on the op amp
         freq = np.split(freq[notnan], loc)
         length = 0
         for i in range(len(sub)):
             length = max(length, len(sub[i]))
-        self.cutoff = np.full([len(sub), length], np.inf)
-        self.p = np.full([len(sub), length], np.inf)
+        self.cutoff = np.full([len(sub), length], np.inf)   # x axis, filled with inf, as the lenght of arrays may be different
+        self.p = np.full([len(sub), length], np.inf)        # y axis
 
         for i in range(len(sub)):
             self.cutoff[i, 0:len(freq[i])] = freq[i]
-            if title[0] == 'frequency':
-                self.p[i, 0:len(sub[i])] = 20 * np.log10(np.abs(sub[i]))
-            else:
-                self.p[i, 0:len(sub[i])] = sub[i].real
+            if title[0] == 'frequency':  # AC analysis, results are complex
+                self.p[i, 0:len(sub[i])] = 20 * np.log10(np.abs(sub[i]))    # Change to dB
+            else:   # Transient analysis, results are real
+                self.p[i, 0:len(sub[i])] = sub[i].real  # Get real part
 
         return
 
-    # Read results
+    # Not op amp mode, read results
     with open('fc', 'r') as fileobject:
         fileobject.readline()
         if add:     # If add mode, move the pointer to the last read time
@@ -135,7 +137,7 @@ def resultdata(self, worst=False, add=False, mode=None):
 
         self.p = cutoff     # y axis
         self.cutoff = comp  # x axis
-        self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)   # Interpolate
+        self.fit = interpolate.PchipInterpolator(self.cutoff, self.p)   # Interpolate, done for the probe on the main window
         return
 
     else:
@@ -144,7 +146,7 @@ def resultdata(self, worst=False, add=False, mode=None):
                 paramlist.seek(self._paramtell)
 
             param = paramlist.readlines()
-            self._paramtell = paramlist.tell()
+            self._paramtell = paramlist.tell()  # Record position of pointer
 
         for line in lines:
             # For numpy array, no need to use float() to convert first

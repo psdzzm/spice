@@ -1,0 +1,118 @@
+\ProvidesPackage{Preamble}
+
+\usepackage[UKenglish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%\usepackage[no-math]{fontspec}
+\usepackage[nodayofweek]{datetime}
+\newcommand{\mydate}{\formatdate{5}{8}{2021}}
+
+\usepackage{amsmath,amssymb,amsfonts,textcomp,blkarray,bm}
+\usepackage[toc,page]{appendix}
+\usepackage{makecell,multirow}
+\usepackage{float}
+\usepackage{graphicx,subcaption,wrapfig}
+\graphicspath{{Image/}}
+
+\usepackage{caption}
+\captionsetup{belowskip=-1ex}   %caption below skip
+\captionsetup{aboveskip=0pt}
+
+\usepackage{fancyhdr}
+% \pagestyle{fancy}
+% \fancyhf{}
+% \rhead{Overleaf}
+% \lhead{Guides and tutorials}
+% \rfoot{Page \thepage}
+
+\usepackage{enumitem}
+\setlist{topsep=0pt,itemsep=0pt}
+\usepackage{geometry}
+\geometry{left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{3pt}
+
+\usepackage{tocloft}
+%\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}} %Section dots
+\renewcommand\cftlottitlefont{\bfseries\large}  %List of Table
+\renewcommand\cftloftitlefont{\bfseries\large}  %List of Figure
+\setlength{\cftfigindent}{0pt}
+\setlength{\cfttabindent}{0pt}
+
+\usepackage{chngcntr}
+\counterwithin{figure}{section}
+\counterwithin{equation}{section}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdfauthor={Yichen Zhang},
+    pdftitle={User Guide},
+    pdfsubject={User Guide},
+}
+\usepackage[atend]{bookmark}
+\bookmarksetup{
+    numbered,
+    addtohook={\ifnum\bookmarkget{level}>2  %Numbered bookmark level
+               \DisableBookmarkNumbering\fi},
+}
+\makeatletter
+\newcommand*{\DisableBookmarkNumbering}{
+    \let\numberline\@gobble
+    % The followings are not needed for subsections and below
+    % \let\booknumberline\@gobble
+    % \let\partnumberline\@gobble
+    % \let\chapternumberline\@gobble
+}
+\renewcommand{\Hy@numberline}[1]{#1. }  %add dots
+\makeatother
+
+\usepackage{natbib}
+\setcitestyle{aysep={,}}
+
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{attachfile2}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,    % Leave one more line
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\usepackage{titling}
+\posttitle{\par\end{center}}
+\title{\textbf{User Guide for Circuit Tolerance Analysis Tool}}
+\author{Yichen Zhang\\ Supervisor: }
+\date{\mydate}
+
+\setlength{\bibhang}{0pt}
+
+\allowdisplaybreaks[3]
+
+\renewcommand{\bibsection}{\section{Reference}}

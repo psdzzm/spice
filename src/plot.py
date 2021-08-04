@@ -1,3 +1,13 @@
+# !usr/bin/env python
+# -*- coding:utf-8 -*-
+'''
+ Description: GUI Interface
+ Author: Yichen Zhang
+ Date: 01-08-2021 20:16:10
+ LastEditors: Yichen Zhang
+ LastEditTime: 04-08-2021 16:37:46
+ FilePath: /spice/src/plot.py
+'''
 import re
 from .Logging import logger
 import subprocess
@@ -31,10 +41,10 @@ class plotGUI(QtWidgets.QMainWindow):
         self.scroll.setAlignment(QtCore.Qt.AlignTop)
 
         self.dialog = processing()  # Initialize processing window
-        self.dialog.rejected.connect(self.kill)
+        self.dialog.rejected.connect(self.kill)     # Cancel clicked when analysing
         self.configGUI = config(self.root)  # Initialize configuration window
-        self.configGUI.accepted.connect(self.configCreate)
-        self.configGUI.rejected.connect(self.configreject)
+        self.configGUI.accepted.connect(self.configCreate)  # OK clicked in configuration
+        self.configGUI.rejected.connect(self.configreject)  # Cancel clicked
 
         onlyInt = QtGui.QIntValidator()
         onlyInt.setBottom(1)
@@ -44,9 +54,9 @@ class plotGUI(QtWidgets.QMainWindow):
         doubleval.setBottom(0)
         self.calctext.setValidator(doubleval)
 
-        self.actionOpen_File.triggered.connect(self.openfile)
+        self.actionOpen_File.triggered.connect(self.openfile)   # Open File clicked
 
-        self.p = None
+        self.p = None   # Initialize the variable referred to ngspice process
 
     def openfile(self):
 
@@ -72,13 +82,13 @@ class plotGUI(QtWidgets.QMainWindow):
         reconnect(self.calctext.returnPressed)
 
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Spice Netlists (*.cir *.net)")
-        if fname:
-            name = os.path.basename(fname)
+        if fname:   # Absolute path
+            name = os.path.basename(fname)  # File name
             if os.path.abspath(fname + '/../../') != self.root + '/Workspace':
                 # Create a folder to save uploaded file
                 dir = name.split('.')[0] + ' ' + datetime.now().strftime("%d%m%Y_%H%M%S")
-                os.mkdir(self.root + '/Workspace/' + dir)
-                os.chdir(self.root + '/Workspace/' + dir)
+                os.mkdir(self.root + '/Workspace/' + dir)   # Make folder
+                os.chdir(self.root + '/Workspace/' + dir)   # Change working folder
                 shutil.copyfile(fname, os.getcwd() + f'/{name}')
                 logger.info('Copy ' + fname + ' to ' + os.getcwd() + f'/{name}')
             else:
@@ -178,7 +188,10 @@ class plotGUI(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.critical(self, 'Error!', 'Measured frequency out of interval')
                     logger.error('Measured frequency out of interval')
                 else:
-                    error_r = ''.join(error_r)
+                    if sum(['\n' in s for s in error_r]) > 10:
+                        error_r = ''.join(error_r[0:10]) + 'See run.log for more information'
+                    else:
+                        error_r = ''.join(error_r)
                     QtWidgets.QMessageBox.critical(self, 'Error!', error_r)
                     logger.error(error_r)
 
