@@ -192,17 +192,78 @@ Main GUI interface.
         \end{lstlisting}
 
         Open the designer in Path-to-site-packages/qt5\textunderscore applications/Qt/bin/designer and edit it.
+        \begin{figure}[ht]
+            \centering
+            \includegraphics[width=0.9\textwidth]{Image/config.eps}
+            \caption{}
+        \end{figure}
 
-        Variable Descriptions:
+
+    \item \textcolor{blue}{openfile()}\\
+        Open a new netlist file. If there is a new opened, warn the user with a message box.
+
+        It will first copy the selected file to a new folder, named with the filename and uploaded time. Then, call the function to read the file. If no error occur, call the function to initialzie the circuit. If some error happens, it will pop out a window. Finally, show the configuration window.
+
+    \item \textcolor{blue}{configCreate()}\\
+        Read in parameters from configuration window. Check the validity of the parameters and call specific function to create control files.
+
+    \item \textcolor{blue}{configreject()}\\
+        If 'cancel' is clicked in the configuration window, this function will run if the signal is connected to this function.
+
+    \item \textcolor{blue}{start\textunderscore process(finishmode, runmode=0)}\\
+        Call ngspice to do simulation.
+
+        Parameters:
+
+        \quad finishmode: String, Required
+
+        \quad Available options:
+
+        \quad runmode: int, optional
+
+        \quad runmode=0, run only run\textunderscore control.sp
+
+        \quad runmode=1, run both run\textunderscore control.sp and run\textunderscore control\textunderscore wst.sp
+
+    \item \textcolor{blue}{kill()}\\
+        Kill the ngspice if \textit{Cancel} is clicked while it is running.
+
+    \item \textcolor{blue}{finishrun(mode)}\\
+        This function will run when ngspice simulation is finished.
+
+        mode: String, Required. It determines which method the result data would be processed.
+
+    \item \textcolor{blue}{postinit(mode=None)}\\
+        Do some post-initialization after running simulation.
+
+    \item \textcolor{blue}{plot(mode=None)}\\
+        Plot the data on the main window.
+
+    \item \textcolor{blue}{plotwst()}\\
+        Plot the worst case data.
+
+    \item \textcolor{blue}{AddTime()}\\
+        Add more simulation time.
+
+    \item \textcolor{blue}{calcp()}\\
+        Calculate the y axis value.
+
+    \item \textcolor{blue}{analy()}\\
+        If the button analysis is clicked.
+
+    \item \textcolor{blue}{reset()}\\
+        If the reset button is clicked.
 
 \end{itemize}
 
 \subsection{src/\textunderscore subwindow.py}
+Define the Processing window and configuration window.
 
 \subsection{src/MplWidget.py}
+The header file for the plotting area of both configuration window and main window.
 
 \subsection{src/Logging.py}
-
+Log file definition and some initialization of the tool.
 
 \end{itemize}
 
@@ -211,6 +272,20 @@ Main GUI interface.
 \subsection{Main Window}
 
 \subsection{Configuration Window}
+
+\subsection{Report}
+To see html5 report, under the directory src/report, run the below command.
+\lstset{backgroundcolor=\color{white},numbers=none,keepspaces=false}
+\begin{lstlisting}
+    python3 -m manage.py runserver
+\end{lstlisting}
+
+Then open 127.0.0.1:8000, you can see the result report.
+
+Or you can find the html5 code file under src/htmlreport/templates/report.html
+
+If you have the module weasyprint installed, you can find the pdf report under the circuit file base directory in folder Workspace.
+
 
 \bibliographystyle{agsm}
 %\bibliography{}

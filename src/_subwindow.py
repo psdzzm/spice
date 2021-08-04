@@ -72,11 +72,11 @@ class config(QtWidgets.QDialog):
     # Initialize the configuration window, require initialized circuit class instance parameter
     def init(self, Cir):
         self.Cir = Cir
-        self.tab2UI()
+        self.tab2UI()   # Initialize the tolerance tab
 
-        self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))
+        self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr)) # Simulation time
         self.cmrrtime.setValue(self.totaltime.value())
-        self.measnode.currentTextChanged.disconnect()
+        self.measnode.currentTextChanged.disconnect()   # Disconnect the signal emit by the text change
         self.measnode.clear()
         self.measnode.addItems(self.Cir.net)
         self.measnode.currentTextChanged.connect(self.netchange)
@@ -84,7 +84,7 @@ class config(QtWidgets.QDialog):
         self.measnode_2.clear()
         self.measnode_2.addItems(self.Cir.net)
         self.measnode_2.currentTextChanged.connect(self.netchange)
-        self.rfnum.setSpecialValueText('LAST')
+        self.rfnum.setSpecialValueText('LAST')  # When rfnum = 0, it display 'LAST'
         self.risefall.setCurrentIndex(1)
 
         self.inputnode.currentTextChanged.disconnect()
@@ -107,12 +107,14 @@ class config(QtWidgets.QDialog):
             self.stepcomp.addItem(Cir.alter_r[i].name)
         self.stepcomp.currentTextChanged.connect(self.compchange)
 
+        # Display the component value
         self.CompValue.setText(f"Original Value: {Quantity(self.Cir.alter_c[0].c,units='F').render()}")
 
         self.compchange()
         self.replacenum()
         self.opampmode()
 
+        # If the start frequency is provided in the netlist
         if hasattr(Cir, 'startac'):
             temp = setunit(Cir.startac, 0, 4)
             self.startac.setValue(temp[0])
@@ -131,9 +133,11 @@ class config(QtWidgets.QDialog):
             except:
                 logger.exception()
 
-        self.__node = 0
+        self.__node = 0     # This variable represents the node selected before final confirmation
+        Cir.opamp = [None] * 5  # This variable represents the altered op amp name
+        Cir.opampfilename = [None] * 5  # altered op amp subcircuit file name
 
-        self.MplWidget.figure.clear()
+        self.MplWidget.figure.clear()   # Clear the plot figure
         self.ax = self.MplWidget.figure.add_subplot(111)
         self.ax.set_xscale('log')
         self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[0, :])
@@ -143,26 +147,30 @@ class config(QtWidgets.QDialog):
         self.ax.set_ylabel('vdb')
 
         self.MplWidget.canvas.draw()
-        self.show()
+        self.show() # Show the configuration window
+
 
     # Node to measure in Configuration window changes, update the matplotlib figure
     def netchange(self):
-        self.__lastnode = self.__node
+        self.__lastnode = self.__node   # Record the last selected node
         self.__node = self.sender().currentIndex()
         self.ax.clear()
         self.ax.set_xscale('log')
         self.ax.grid()
+
+        # If it is in the CMRR mode
         if self.tabWidget.currentIndex() == 2:
             with open('test.cir', 'w') as f:
                 f.write(self.Cir.testtext[:-4])
                 f.write(f"Vdiff000 {self.inputnode.currentText()} 0 AC 1\n.control\n\tsave {self.outputnode.currentText()}\n\tset wr_vecnames\n\tac dec 40 1 1G\n\tlet vout=1/V({self.outputnode.currentText()})\n\tlet vout=vdb(vout)\n\twrdata fc vout\n.endc\n\n.end")
+            # Do the analysis under default component value
             subprocess.run('ngspice -b test.cir -o test_log', shell=True, stdout=subprocess.DEVNULL)
 
             f = open('test_log')
-            if 'error' in f.read().lower():
+            if 'error' in f.read().lower(): # Some error occur
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Error when measuring CMRR')
                 self.sender().blockSignals(True)
-                self.sender().setCurrentIndex(self.__lastnode)
+                self.sender().setCurrentIndex(self.__lastnode)  # Back to the last selected node
                 self.sender().blockSignals(False)
                 self.__node = self.__lastnode
                 f.close()
@@ -171,26 +179,26 @@ class config(QtWidgets.QDialog):
 
             f.close()
             os.remove('test_log')
-            logger.debug(self.__lastnode)
+            # Read in the default CMRR analyse result
             f = open('fc')
             f.readline()
             data = f.readlines()
             f.close()
             length = len(data)
-            x, y = np.zeros(length), np.zeros(length)
+            x, y = np.zeros(length), np.zeros(length)   # Frequency, CMRR
             for line, i in zip(data, range(length)):
                 x[i], y[i] = line.split()
             self.line1 = self.ax.plot(x, y)
-            self.ax.set_title(f"Default CMRR Analysis of {self.Cir.basename}")
+            self.ax.set_title(f"Default CMRR Tolerance Analysis of {self.Cir.basename}")
             self.ax.set_xlabel('Frequency/Hz')
             self.ax.set_ylabel('CMRR/dB')
-            self.MplWidget.canvas.draw()
-            return
 
-        self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[self.__node, :])
-        self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
-        self.ax.set_xlabel('Cutoff Frequency/Hz')
-        self.ax.set_ylabel('vdb')
+        else:   # not CMRR analysis
+            self.line1 = self.ax.plot(self.Cir.initx, self.Cir.inity[self.__node, :])
+            self.ax.set_title(f"Default AC Analysis of {self.Cir.basename}")
+            self.ax.set_xlabel('Cutoff Frequency/Hz')
+            self.ax.set_ylabel('vdb')
+
         self.MplWidget.canvas.draw()
 
     # Simulation mode changes
@@ -221,8 +229,8 @@ class config(QtWidgets.QDialog):
         else:
             self.widget_5.setHidden(True)
 
-    # Component to alter in step mode changes
 
+    # Component to alter in step mode changes
     def compchange(self):
         index = self.stepcomp.currentIndex()
 
@@ -259,18 +267,20 @@ class config(QtWidgets.QDialog):
         self.stopunit_2.setCurrentIndex(temp[1])
         self.increunit_2.setCurrentIndex(temp[1])
 
+    # Op amp simulation mode: ac or transient
     def opampmode(self):
-        if self.simmode.currentIndex():
+        if self.simmode.currentIndex(): # AC
             self.startunit_5.clear()
             self.stopunit_5.clear()
             self.startunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
             self.stopunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
-        else:
+        else:   # Transient
             self.startunit_5.clear()
             self.stopunit_5.clear()
             self.startunit_5.addItems(['ns', 'μs', 'ms', 's'])
             self.stopunit_5.addItems(['ns', 'μs', 'ms', 's'])
 
+    # How many op amps to replace
     def replacenum(self):
         num = int(self.replace.currentText())
         widget = [self.first, self.second, self.third, self.fourth, self.fifth]
@@ -279,24 +289,22 @@ class config(QtWidgets.QDialog):
         for i in range(num, 5):
             widget[i].setHidden(True)
 
+    # Open op amp subcircuit file
     def opampopen(self):
-        if not hasattr(self.Cir, 'opamp'):
-            self.Cir.opamp = [None] * 5
-            self.Cir.opampfilename = [None] * 5
-
-        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]
-        i = int(self.sender().objectName()[-1]) - 1
+        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5] # Text to show op amp information
+        i = int(self.sender().objectName()[-1]) - 1 # Get the order of opened
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Subcircuit File (*)")
-        if fname:
+        if fname:   # Some file uploaded
             self.Cir.opampfilename[i] = os.path.basename(fname)
-            if os.path.isfile(self.Cir.opampfilename[i]):
+            if os.path.isfile(self.Cir.opampfilename[i]):   # Already exist
                 QtWidgets.QMessageBox.critical(self, 'Error', f'File {self.Cir.opampfilename[i]} already exists')
                 return
 
             with open(fname) as f:
                 for line in f:
+                    # Find the subcircuit name
                     if line.upper().startswith('.SUBCKT '):
-                        if line.split()[1] in self.Cir.opampfilename:
+                        if line.split()[1] in self.Cir.opampfilename:   # Subcircuit duplicated
                             QtWidgets.QMessageBox.critical(self, 'Error', 'Duplicate subcircuit!')
                             return
                         else:
@@ -307,6 +315,7 @@ class config(QtWidgets.QDialog):
             widget[i].setText(self.Cir.opampfilename[i] + ' - ' + self.Cir.opamp[i])
             shutil.copyfile(fname, os.path.join(os.getcwd(), self.Cir.opampfilename[i]))
 
+    # Delete opamp
     def opampdel(self):
         widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]
         i = int(self.sender().objectName()[-1]) - 1
@@ -316,8 +325,8 @@ class config(QtWidgets.QDialog):
             self.Cir.opamp[i] = None
             self.Cir.opampfilename[i] = None
 
-    # Initialize tab2: tolerance
 
+    # Initialize tab2: tolerance
     def tab2UI(self):
         # Delete all existing widget in tab2
         for i in reversed(range(self.scroll.count())):
@@ -386,8 +395,8 @@ class config(QtWidgets.QDialog):
         self.scroll.addWidget(self.scrollr)
         self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
-    # Set component tolerance to the same
 
+    # Set component tolerance to the same
     def sametol(self, i):
         if self.sender() is self.checkC:    # If checkbox for capacitor is checked
             for i in range(1, self.Cir.lengthc):

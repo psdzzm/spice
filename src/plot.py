@@ -160,7 +160,6 @@ class plotGUI(QtWidgets.QMainWindow):
 
             self.configGUI.init(self.Cir)   # Initialize configuration based on circuit
             reconnect(self.configGUI.rejected, self.configreject)
-            self.configGUI.show()
 
         else:   # No file opened
             return
