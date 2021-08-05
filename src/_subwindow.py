@@ -67,14 +67,14 @@ class config(QtWidgets.QDialog):
         self.clear4.clicked.connect(self.opampdel)
         self.clear5.clicked.connect(self.opampdel)
 
-        self.scroll = QtWidgets.QVBoxLayout(self.tab2)
+        self.scroll = QtWidgets.QVBoxLayout(self.tab2)  # Tolerance tab basic vertical layout box
 
     # Initialize the configuration window, require initialized circuit class instance parameter
     def init(self, Cir):
         self.Cir = Cir
         self.tab2UI()   # Initialize the tolerance tab
 
-        self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr)) # Simulation time
+        self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))  # Simulation time
         self.cmrrtime.setValue(self.totaltime.value())
         self.measnode.currentTextChanged.disconnect()   # Disconnect the signal emit by the text change
         self.measnode.clear()
@@ -147,10 +147,10 @@ class config(QtWidgets.QDialog):
         self.ax.set_ylabel('vdb')
 
         self.MplWidget.canvas.draw()
-        self.show() # Show the configuration window
-
+        self.show()  # Show the configuration window
 
     # Node to measure in Configuration window changes, update the matplotlib figure
+
     def netchange(self):
         self.__lastnode = self.__node   # Record the last selected node
         self.__node = self.sender().currentIndex()
@@ -167,7 +167,7 @@ class config(QtWidgets.QDialog):
             subprocess.run('ngspice -b test.cir -o test_log', shell=True, stdout=subprocess.DEVNULL)
 
             f = open('test_log')
-            if 'error' in f.read().lower(): # Some error occur
+            if 'error' in f.read().lower():  # Some error occur
                 QtWidgets.QMessageBox.critical(self, 'Error!', 'Error when measuring CMRR')
                 self.sender().blockSignals(True)
                 self.sender().setCurrentIndex(self.__lastnode)  # Back to the last selected node
@@ -229,8 +229,8 @@ class config(QtWidgets.QDialog):
         else:
             self.widget_5.setHidden(True)
 
-
     # Component to alter in step mode changes
+
     def compchange(self):
         index = self.stepcomp.currentIndex()
 
@@ -269,7 +269,7 @@ class config(QtWidgets.QDialog):
 
     # Op amp simulation mode: ac or transient
     def opampmode(self):
-        if self.simmode.currentIndex(): # AC
+        if self.simmode.currentIndex():  # AC
             self.startunit_5.clear()
             self.stopunit_5.clear()
             self.startunit_5.addItems(['Hz', 'kHz', 'MHz', 'GHz'])
@@ -291,8 +291,8 @@ class config(QtWidgets.QDialog):
 
     # Open op amp subcircuit file
     def opampopen(self):
-        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5] # Text to show op amp information
-        i = int(self.sender().objectName()[-1]) - 1 # Get the order of opened
+        widget = [self.opened1, self.opened2, self.opened3, self.opened4, self.opened5]  # Text to show op amp information
+        i = int(self.sender().objectName()[-1]) - 1  # Get the order of opened
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', self.root + '/CirFile', "Subcircuit File (*)")
         if fname:   # Some file uploaded
             self.Cir.opampfilename[i] = os.path.basename(fname)
@@ -325,8 +325,8 @@ class config(QtWidgets.QDialog):
             self.Cir.opamp[i] = None
             self.Cir.opampfilename[i] = None
 
-
     # Initialize tab2: tolerance
+
     def tab2UI(self):
         # Delete all existing widget in tab2
         for i in reversed(range(self.scroll.count())):
@@ -395,8 +395,8 @@ class config(QtWidgets.QDialog):
         self.scroll.addWidget(self.scrollr)
         self.scroll.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
 
-
     # Set component tolerance to the same
+
     def sametol(self, i):
         if self.sender() is self.checkC:    # If checkbox for capacitor is checked
             for i in range(1, self.Cir.lengthc):

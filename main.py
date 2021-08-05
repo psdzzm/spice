@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 15:11:15
+ LastEditTime: 05-08-2021 16:43:55
  FilePath: /spice/main.py
 '''
 
@@ -16,7 +16,7 @@ import os
 import sys
 
 
-init()
+spiceinit = init()
 logger.info('Main Function started')
 
 root = os.path.dirname(os.path.abspath(__file__))   # Root directory of main function
@@ -33,5 +33,13 @@ app = QApplication(sys.argv)
 main = plotGUI(root)
 main.show()
 app.exec_()
+
+if spiceinit:
+    logger.info('Recover .spiceinit')
+    open(os.path.expanduser('~') + '/.spiceinit', 'w').write(spiceinit)
+elif spiceinit == False:
+    logger.info('Delete created .spiceinit')
+    os.remove(os.path.expanduser('~') + '/.spiceinit')
+
 logger.info(os.getcwd())
 logger.info('Main Function stopped\n\n')

@@ -1,18 +1,23 @@
 \ProvidesPackage{Preamble}
 
+% Edit Here
+\def \titlename {User Guide for Circuit Tolerance Analysis Tool}
+\def \authorname {Yichen Zhang\\ Supervisor: }
+% End Edit
+
 \usepackage[UKenglish]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 %\usepackage[no-math]{fontspec}
 \usepackage[nodayofweek]{datetime}
-\newcommand{\mydate}{\formatdate{5}{8}{2021}}
+\newcommand{\mydate}{\formatdate{5}{8}{2021}}   % Date
 
 \usepackage{amsmath,amssymb,amsfonts,textcomp,blkarray,bm}
 \usepackage[toc,page]{appendix}
 \usepackage{makecell,multirow}
 \usepackage{float}
 \usepackage{graphicx,subcaption,wrapfig}
-\graphicspath{{Image/}}
+\graphicspath{{Image/}} % Image path
 
 \usepackage{caption}
 \captionsetup{belowskip=-1ex}   %caption below skip
@@ -31,17 +36,18 @@
 \geometry{left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm}
 \usepackage{titlesec}
 \titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{3pt}
+\titlespacing*{\subsection}{0pt}{3.5ex plus 1ex minus .2ex}{3pt}
 
 \usepackage{tocloft}
-%\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}} %Section dots
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}} %Section dots
 \renewcommand\cftlottitlefont{\bfseries\large}  %List of Table
 \renewcommand\cftloftitlefont{\bfseries\large}  %List of Figure
 \setlength{\cftfigindent}{0pt}
 \setlength{\cfttabindent}{0pt}
 
-\usepackage{chngcntr}
-\counterwithin{figure}{section}
-\counterwithin{equation}{section}
+% \usepackage{chngcntr}
+% \counterwithin{figure}{section}     % Figure caption count with section
+% \counterwithin{equation}{section}   % Equation caption count with section
 
 \usepackage{hyperref}
 \hypersetup{
@@ -56,7 +62,7 @@
 \usepackage[atend]{bookmark}
 \bookmarksetup{
     numbered,
-    addtohook={\ifnum\bookmarkget{level}>2  %Numbered bookmark level
+    addtohook={\ifnum\bookmarkget{level}>2      % Numbered bookmark level
                \DisableBookmarkNumbering\fi},
 }
 \makeatletter
@@ -67,11 +73,11 @@
     % \let\partnumberline\@gobble
     % \let\chapternumberline\@gobble
 }
-\renewcommand{\Hy@numberline}[1]{#1. }  %add dots
+\renewcommand{\Hy@numberline}[1]{#1. }  % Add dots
 \makeatother
 
 \usepackage{natbib}
-\setcitestyle{aysep={,}}
+\setcitestyle{aysep={,}}    % In-text citation
 
 \usepackage{booktabs}
 \usepackage{siunitx}
@@ -107,8 +113,8 @@
 
 \usepackage{titling}
 \posttitle{\par\end{center}}
-\title{\textbf{User Guide for Circuit Tolerance Analysis Tool}}
-\author{Yichen Zhang\\ Supervisor: }
+\title{\textbf{\titlename}}
+\author{\authorname}
 \date{\mydate}
 
 \setlength{\bibhang}{0pt}
