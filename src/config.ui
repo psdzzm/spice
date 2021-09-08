@@ -590,7 +590,7 @@
                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
               </property>
               <property name="value">
-               <double>0.950000000000000</double>
+               <double>0.010000000000000</double>
               </property>
              </widget>
             </item>
@@ -1007,7 +1007,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Acceptable CMRR</string>
+           <string>Acceptable tol</string>
           </property>
          </widget>
         </item>
@@ -1035,7 +1035,7 @@
            <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
           </property>
           <property name="value">
-           <double>0.950000000000000</double>
+           <double>0.010000000000000</double>
           </property>
          </widget>
         </item>

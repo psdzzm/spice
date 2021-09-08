@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 01-08-2021 20:16:10
  LastEditors: Yichen Zhang
- LastEditTime: 04-08-2021 16:37:46
+ LastEditTime: 11-08-2021 17:21:15
  FilePath: /spice/src/plot.py
 '''
 import re
@@ -179,7 +179,7 @@ class plotGUI(QtWidgets.QMainWindow):
 
             error_r = []
             for line in file.splitlines():  # Detect if any error message in log file
-                if line.lower().lstrip().startswith('error'):
+                if 'error' in line.lower():
                     error_r.append(line)
 
             if error_r:
@@ -259,6 +259,8 @@ class plotGUI(QtWidgets.QMainWindow):
                 self.Cir.total = 0
                 return
 
+            self.psign.clear()
+            self.psign.addItems(['>', '<'])
             self.fcunit.clear()
             self.fcunit.addItem('dB')
             self.Cir.create_cmrr()
@@ -402,7 +404,7 @@ class plotGUI(QtWidgets.QMainWindow):
             rm('run_log')
             error_r = []
             for line in file.splitlines(keepends=True):
-                if line.lower().lstrip().startswith('error'):
+                if 'error' in line.lower():
                     error_r.append(line)
 
         logger.info(f'Spice time: {timer()-self._start}s')
@@ -645,7 +647,7 @@ class plotGUI(QtWidgets.QMainWindow):
             elif 'Ω' in self.fcunit.currentText():  # dB no need to change
                 fc = fc * 10**(unit * 3 - 3)
 
-        if self.Cir.analmode == 1:  # Step mode
+        if self.configGUI.tabWidget.currentIndex() == 0 and self.Cir.analmode == 1:  # Step mode
             if fc < self.x[0] or fc > self.x[-1]:   # Out of range
                 self.presult.setText('Result: Invalid')
                 return

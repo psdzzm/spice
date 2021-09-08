@@ -74,6 +74,9 @@ class config(QtWidgets.QDialog):
         self.Cir = Cir
         self.tab2UI()   # Initialize the tolerance tab
 
+        Cir.testtext = open('test.cir').read()
+        Cir.runtext = open('run.cir').read()
+
         self.totaltime.setValue(1000 * (Cir.lengthc + Cir.lengthr))  # Simulation time
         self.cmrrtime.setValue(self.totaltime.value())
         self.measnode.currentTextChanged.disconnect()   # Disconnect the signal emit by the text change
@@ -95,6 +98,12 @@ class config(QtWidgets.QDialog):
         self.outputnode.clear()
         self.outputnode.addItems(self.Cir.net)
         self.outputnode.currentTextChanged.connect(self.netchange)
+
+        self.opened1.clear()
+        self.opened2.clear()
+        self.opened3.clear()
+        self.opened4.clear()
+        self.opened5.clear()
 
         self.opamp.clear()
         self.opamp.addItems(self.Cir.op)
@@ -204,7 +213,7 @@ class config(QtWidgets.QDialog):
     # Simulation mode changes
     def analchange(self):
         if self.analmode.currentIndex() == 1:   # Simulation mode is Step
-            self.tabWidget.setTabVisible(1, False)  # Set tab2 to invisible as no tolerance is needed
+            # self.tabWidget.setTabVisible(1, False)  # Set tab2 to invisible as no tolerance is needed
             self.widget_8.setHidden(False)
             self.label_2.setHidden(True)
             self.totaltime.setHidden(True)

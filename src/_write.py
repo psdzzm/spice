@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 04-08-2021 15:00:15
+ LastEditTime: 11-08-2021 16:52:29
  FilePath: /spice/src/_write.py
 '''
 import time

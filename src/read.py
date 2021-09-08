@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 26-06-2021 14:43:04
  LastEditors: Yichen Zhang
- LastEditTime: 01-08-2021 20:32:32
+ LastEditTime: 11-08-2021 15:47:02
  FilePath: /spice/src/read.py
 '''
 

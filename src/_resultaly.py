@@ -5,7 +5,7 @@
  Author: Yichen Zhang
  Date: 30-06-2021 22:30:01
  LastEditors: Yichen Zhang
- LastEditTime: 04-08-2021 15:46:45
+ LastEditTime: 07-08-2021 21:08:32
  FilePath: /spice/src/_resultaly.py
 '''
 from threading import Thread
@@ -226,8 +226,8 @@ def resultdata(self, worst=False, add=False, mode=None):
     logger.info(f'Analyse Data Time: {timer()-start}s')
 
     # Create a new thread to generate report
-    # thread = Thread(target=self.report, args=(mode,))
-    # thread.start()
+    thread = Thread(target=self.report, args=(mode,))
+    thread.start()
 
 
 # Importance sampling, calculate p(x)/q(x)
@@ -266,6 +266,9 @@ def resultdata2(self, worst=False):
 
 # Create report
 def report(self, mode=None):
+    if mode:
+        return
+
     cframe = pd.DataFrame(columns=('Name', 'Value/F', 'Tolerance'))     # Capacitor table
     rframe = pd.DataFrame(columns=('Name', 'Value/Ω', 'Tolerance'))     # Resistor table
     for i in range(self.lengthc):
@@ -338,7 +341,7 @@ def report(self, mode=None):
 
         t = Template(table.read())  # Html5 file to render
 
-        renddict = {'title': self.basename, 'command': 'ac dec 40 1 1G', 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
+        renddict = {'title': self.basename, 'command': f'ac dec 40 {self.startac} {self.stopac}', 'mc_runs': self.total, 'date': datetime.now().strftime("%d/%m/%Y %H:%M:%S UTC"), 'port': self.netselect, 'std': self.stdcutoff, 'tol': self.tol, 'yield': self.yd}
 
         if yd >= self.yd:
             renddict['comment'] = f"This circuit design is acceptable. The estimated yield from simulation is {np.round(yd,6)}."
